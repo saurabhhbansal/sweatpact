@@ -1,0 +1,12 @@
+{
+  "name": "SweatPact",
+  "short_name": "SweatPact",
+  "description": "Commit to the gym. Pay your crew when you skip.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": []
+}

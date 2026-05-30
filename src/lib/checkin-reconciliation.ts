@@ -1,0 +1,395 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { listUserMemberships, normalizeRelation } from "@/lib/groups";
+import { localDay, normalizeTimeZone } from "@/lib/time";
+import type { CheckinStatus, DailyStatus } from "@/lib/types";
+
+const EXCUSED_STATUSES = new Set<CheckinStatus>([
+  "sick_day",
+  "gym_closed",
+  "rest_day",
+  "period_day",
+]);
+
+const ACTIVE_STATUSES = new Set<CheckinStatus>([
+  "verified",
+  "unverified",
+  "sick_day",
+  "gym_closed",
+  "rest_day",
+  "period_day",
+]);
+
+type CheckinRow = {
+  id: string;
+  submission_id: string;
+  group_id: string | null;
+  status: CheckinStatus;
+  occurred_at: string;
+};
+
+function splitCentsEvenly(total: number, n: number): number[] {
+  if (n <= 0 || total <= 0) return [];
+  const base = Math.floor(total / n);
+  const remainder = total - base * n;
+  return Array.from({ length: n }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
+function deriveStatus(checkins: CheckinRow[]): {
+  status: DailyStatus;
+  checkinId: string | null;
+  submissionId: string | null;
+} | null {
+  const active = checkins.filter((checkin) => ACTIVE_STATUSES.has(checkin.status));
+  if (active.length === 0) return null;
+
+  const verified = active.find((checkin) => checkin.status === "verified");
+  if (verified) {
+    return {
+      status: "verified",
+      checkinId: verified.id,
+      submissionId: verified.submission_id,
+    };
+  }
+
+  const excused = active.find((checkin) => EXCUSED_STATUSES.has(checkin.status));
+  if (excused) {
+    return {
+      status: excused.status as DailyStatus,
+      checkinId: excused.id,
+      submissionId: excused.submission_id,
+    };
+  }
+
+  const unverified = active.find((checkin) => checkin.status === "unverified");
+  if (!unverified) return null;
+
+  return {
+    status: "unverified",
+    checkinId: unverified.id,
+    submissionId: unverified.submission_id,
+  };
+}
+
+// A day is closed once its midnight has passed in the user's timezone — no cutoff needed.
+function isClosedDay(day: string, now: Date, timezone: string): boolean {
+  return day < localDay(now, timezone);
+}
+
+// Only clears daily missed_checkin penalties — weekly penalties are left intact.
+async function clearPenaltySideEffects(
+  admin: SupabaseClient,
+  userId: string,
+  day: string
+) {
+  const { data: penalties, error } = await admin
+    .from("penalty_events")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("local_day", day)
+    .eq("reason", "missed_checkin");
+
+  if (error) throw error;
+
+  const penaltyIds = (penalties ?? []).map((penalty) => penalty.id);
+  if (penaltyIds.length === 0) return;
+
+  const { data: obligations, error: obligationError } = await admin
+    .from("obligations")
+    .select("id")
+    .in("penalty_event_id", penaltyIds);
+
+  if (obligationError) throw obligationError;
+
+  const obligationIds = (obligations ?? []).map((obligation) => obligation.id);
+  if (obligationIds.length > 0) {
+    const { error: obligationDisputeError } = await admin
+      .from("disputes")
+      .delete()
+      .eq("target_type", "obligation")
+      .in("target_id", obligationIds);
+
+    if (obligationDisputeError) throw obligationDisputeError;
+  }
+
+  const { error: penaltyDisputeError } = await admin
+    .from("disputes")
+    .delete()
+    .eq("target_type", "penalty_event")
+    .in("target_id", penaltyIds);
+
+  if (penaltyDisputeError) throw penaltyDisputeError;
+
+  const { error: penaltyDeleteError } = await admin
+    .from("penalty_events")
+    .delete()
+    .in("id", penaltyIds);
+
+  if (penaltyDeleteError) throw penaltyDeleteError;
+}
+
+async function ensurePenaltyForGroup(
+  admin: SupabaseClient,
+  params: {
+    userId: string;
+    groupId: string;
+    localDay: string;
+    amountCents: number;
+    reason?: string;
+  }
+) {
+  const { userId, groupId, localDay: day, amountCents, reason = "missed_checkin" } = params;
+
+  const { data: existing, error: existingError } = await admin
+    .from("penalty_events")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("group_id", groupId)
+    .eq("local_day", day)
+    .eq("reason", reason)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (existing) return existing.id;
+
+  const { data: penalty, error: penaltyError } = await admin
+    .from("penalty_events")
+    .insert({
+      user_id: userId,
+      group_id: groupId,
+      local_day: day,
+      amount_cents: amountCents,
+      reason,
+    })
+    .select("id")
+    .single();
+
+  if (penaltyError || !penalty) {
+    throw penaltyError ?? new Error("Failed to create penalty event");
+  }
+
+  if (amountCents <= 0) return penalty.id;
+
+  const { data: peers, error: peersError } = await admin
+    .from("group_members")
+    .select("user_id")
+    .eq("group_id", groupId)
+    .neq("user_id", userId);
+
+  if (peersError) throw peersError;
+
+  const recipientIds = (peers ?? []).map((peer) => peer.user_id);
+  if (recipientIds.length === 0) return penalty.id;
+
+  const splits = splitCentsEvenly(amountCents, recipientIds.length);
+  const rows = recipientIds.map((recipientId, index) => ({
+    penalty_event_id: penalty.id,
+    group_id: groupId,
+    from_user: userId,
+    to_user: recipientId,
+    amount_cents: splits[index],
+    status: "pending" as const,
+  }));
+
+  const { error: obligationInsertError } = await admin.from("obligations").insert(rows);
+  if (obligationInsertError) throw obligationInsertError;
+
+  return penalty.id;
+}
+
+export async function reconcileUserDay(
+  admin: SupabaseClient,
+  params: {
+    userId: string;
+    localDay: string;
+    now?: Date;
+  }
+) {
+  const now = params.now ?? new Date();
+  const { userId, localDay: day } = params;
+
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id, timezone, rest_days")
+    .eq("id", userId)
+    .single();
+
+  if (profileError || !profile) {
+    throw profileError ?? new Error("Profile not found");
+  }
+
+  const timezone = normalizeTimeZone(profile.timezone);
+  const restDays: number[] = Array.isArray((profile as any).rest_days)
+    ? (profile as any).rest_days
+    : [];
+
+  const { data: checkins, error: checkinsError } = await admin
+    .from("checkin_events")
+    .select("id, submission_id, group_id, status, occurred_at")
+    .eq("user_id", userId)
+    .eq("local_day", day)
+    .order("occurred_at", { ascending: false });
+
+  if (checkinsError) throw checkinsError;
+
+  const resolved = deriveStatus((checkins ?? []) as CheckinRow[]);
+  const closed = isClosedDay(day, now, timezone);
+
+  if (resolved) {
+    const { error: upsertError } = await admin.from("daily_status").upsert(
+      {
+        user_id: userId,
+        local_day: day,
+        status: resolved.status,
+        checkin_id: resolved.checkinId,
+        enforced_at: closed ? now.toISOString() : null,
+      },
+      { onConflict: "user_id,local_day" }
+    );
+
+    if (upsertError) throw upsertError;
+
+    if (resolved.status !== "missed") {
+      await clearPenaltySideEffects(admin, userId, day);
+    }
+
+    return {
+      status: resolved.status,
+      closed,
+      submissionId: resolved.submissionId,
+    };
+  }
+
+  if (!closed) {
+    await clearPenaltySideEffects(admin, userId, day);
+
+    const { error: deleteDailyError } = await admin
+      .from("daily_status")
+      .delete()
+      .eq("user_id", userId)
+      .eq("local_day", day);
+
+    if (deleteDailyError) throw deleteDailyError;
+
+    return {
+      status: "pending" as const,
+      closed,
+      submissionId: null,
+    };
+  }
+
+  // If this is a scheduled rest day, auto-excuse it instead of marking missed.
+  const [dy, dm, dd] = day.split("-").map(Number);
+  const dayOfWeek = new Date(Date.UTC(dy, dm - 1, dd)).getUTCDay(); // 0=Sun
+  if (restDays.includes(dayOfWeek)) {
+    const { error: excuseUpsertError } = await admin.from("daily_status").upsert(
+      {
+        user_id: userId,
+        local_day: day,
+        status: "gym_closed",
+        checkin_id: null,
+        enforced_at: now.toISOString(),
+      },
+      { onConflict: "user_id,local_day" }
+    );
+    if (excuseUpsertError) throw excuseUpsertError;
+    return { status: "gym_closed" as const, closed, submissionId: null };
+  }
+
+  // Day is closed with no check-in → mark missed (for history/streak tracking only).
+  // Obligations are created by reconcileUserWeek, not here.
+  const { error: missedUpsertError } = await admin.from("daily_status").upsert(
+    {
+      user_id: userId,
+      local_day: day,
+      status: "missed",
+      checkin_id: null,
+      enforced_at: now.toISOString(),
+    },
+    { onConflict: "user_id,local_day" }
+  );
+
+  if (missedUpsertError) throw missedUpsertError;
+
+  return {
+    status: "missed" as const,
+    closed,
+    submissionId: null,
+  };
+}
+
+// Compute the ISO week Monday for a YYYY-MM-DD string.
+function weekMonday(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const dow = (date.getUTCDay() + 6) % 7; // 0=Mon, 6=Sun
+  date.setUTCDate(date.getUTCDate() - dow);
+  const yy = date.getUTCFullYear();
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+// Called once per week (after Sunday ends) to create obligations if the weekly
+// goal was not met. Uses weekEndDay (Sunday) as the anchor date.
+export async function reconcileUserWeek(
+  admin: SupabaseClient,
+  params: {
+    userId: string;
+    weekEndDay: string; // The Sunday YYYY-MM-DD that just ended
+    now: Date;
+  }
+) {
+  const { userId, weekEndDay } = params;
+
+  const weekStartDay = weekMonday(weekEndDay);
+
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id, weekly_goal")
+    .eq("id", userId)
+    .single();
+
+  if (profileError || !profile) throw profileError ?? new Error("Profile not found");
+
+  const weeklyGoal: number = (profile as any).weekly_goal ?? 4;
+
+  const { data: statuses, error: statusError } = await admin
+    .from("daily_status")
+    .select("local_day, status")
+    .eq("user_id", userId)
+    .gte("local_day", weekStartDay)
+    .lte("local_day", weekEndDay);
+
+  if (statusError) throw statusError;
+
+  const checkinDays = (statuses ?? []).filter(
+    (s) => s.status === "verified" || s.status === "unverified"
+  ).length;
+
+  if (checkinDays >= weeklyGoal) return; // Goal met — no penalty
+
+  const memberships = await listUserMemberships(admin, userId);
+
+  for (const membership of memberships) {
+    const group = normalizeRelation(membership.group);
+    // Flat weekly stake: missing the goal at all costs the full stake, no
+    // matter how many days short.
+    const weeklyStakeCents = membership.penalty_cents ?? group?.default_penalty_cents ?? 5000;
+
+    await ensurePenaltyForGroup(admin, {
+      userId,
+      groupId: membership.group_id,
+      localDay: weekEndDay,
+      amountCents: weeklyStakeCents,
+      reason: "missed_weekly_goal",
+    });
+  }
+}
+
+export function isActiveCheckinStatus(status: string) {
+  return ACTIVE_STATUSES.has(status as CheckinStatus);
+}
+
+export function getAcceptedSubmissionRows(checkins: CheckinRow[]) {
+  return checkins.filter((checkin) => isActiveCheckinStatus(checkin.status));
+}
