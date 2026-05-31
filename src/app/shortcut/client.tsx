@@ -228,7 +228,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "Shortcut install page with Set Up Shortcut button",
       action: { type: "gym-install" },
       // Highlight the "Set Up Shortcut" blue button at the bottom
-      highlights: [{ x: 5, y: 85, w: 90, h: 9, r: 3 }],
+      highlights: [{ x: 6, y: 86.5, w: 88, h: 6.5, r: 6 }],
     },
     {
       title: "Enter your credentials",
@@ -244,9 +244,9 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       action: { type: "credentials", userId, webhookSecret },
       // Highlight User Id row, Secret Key row, and Add Shortcut button
       highlights: [
-        { x: 5, y: 37, w: 90, h: 8, r: 2 },   // User Id row
-        { x: 5, y: 46, w: 90, h: 8, r: 2 },   // Secret Key row
-        { x: 5, y: 77, w: 90, h: 9, r: 3 },   // Add Shortcut button
+        { x: 4, y: 30, w: 92, h: 5.5, r: 2 },   // User Id row
+        { x: 4, y: 35.3, w: 92, h: 5.5, r: 2 }, // Secret Key row
+        { x: 6, y: 81, w: 88, h: 7, r: 6 },     // Add Shortcut button
       ],
     },
     {
@@ -261,7 +261,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshot: "/screenshots/shortcuts-automation-tab.png",
       screenshotAlt: "Shortcuts Automation tab with + button",
       // Highlight the + button in the top-right corner
-      highlights: [{ x: 83, y: 3, w: 14, h: 7, r: 5 }],
+      highlights: [{ x: 84, y: 7, w: 13, h: 5.5, r: 6 }],
     },
     {
       title: "Select Arrive",
@@ -275,7 +275,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshot: "/screenshots/shortcuts-arrive-type.png",
       screenshotAlt: "Personal Automation list with Arrive row",
       // Highlight the Arrive row (roughly mid-screen in the type picker)
-      highlights: [{ x: 5, y: 54, w: 90, h: 14, r: 2 }],
+      highlights: [{ x: 5, y: 52, w: 90, h: 8.5, r: 2 }],
     },
     {
       title: "Set your gym & run immediately",
@@ -290,8 +290,8 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "When config showing gym location and Run Immediately selected",
       // Highlight Location row and Run Immediately row
       highlights: [
-        { x: 5, y: 19, w: 90, h: 10, r: 2 },  // Location row
-        { x: 5, y: 67, w: 90, h: 10, r: 2 },  // Run Immediately row
+        { x: 5, y: 22.8, w: 90, h: 6.2, r: 2 },  // Location row
+        { x: 5, y: 59.5, w: 90, h: 6.5, r: 2 },  // Run Immediately row
       ],
     },
     {
@@ -307,8 +307,8 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "SweatPact CheckIn shortcut card selected with checkmark",
       // Highlight the shortcut card and the search bar
       highlights: [
-        { x: 4, y: 29, w: 56, h: 30, r: 3 },  // SweatPact Chec... card
-        { x: 5, y: 87, w: 90, h: 9, r: 4 },   // Search bar
+        { x: 5, y: 27, w: 43, h: 13, r: 3 },   // SweatPact Chec... card
+        { x: 7, y: 91, w: 70, h: 6.5, r: 8 },  // Search bar
       ],
     },
     {
