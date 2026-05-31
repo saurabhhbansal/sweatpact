@@ -167,19 +167,6 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       action: { type: "credentials", userId, webhookSecret },
     },
     {
-      title: "Allow untrusted shortcuts",
-      description: (
-        <>
-          Open the iPhone <strong>Settings</strong> app, scroll down to{" "}
-          <strong>Shortcuts</strong>, and turn on{" "}
-          <strong>Allow Untrusted Shortcuts</strong>. You only need to do this
-          once — Apple requires it before installing third-party shortcuts.
-        </>
-      ),
-      screenshot: "/screenshots/gym-02-untrusted.png",
-      screenshotAlt: "Settings app showing Allow Untrusted Shortcuts toggled on",
-    },
-    {
       title: "Install the Shortcut",
       description: (
         <>
@@ -188,7 +175,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
           Secret Key from step 1.
         </>
       ),
-      screenshot: "/screenshots/gym-03-install.png",
+      screenshot: "/screenshots/shortcuts-install-gym.png",
       screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Check In",
       action: { type: "gym-install" },
     },
@@ -201,8 +188,8 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
           the <strong>+</strong> button at the top right.
         </>
       ),
-      screenshot: "/screenshots/gym-04-automation.png",
-      screenshotAlt: "Shortcuts app on the Automation tab with + button highlighted",
+      screenshot: "/screenshots/shortcuts-automation-tab.png",
+      screenshotAlt: "Shortcuts app on the Automation tab with + button",
     },
     {
       title: "Create an Arrive automation",
@@ -214,7 +201,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
           <strong>100 m</strong> — so it only fires when you walk inside.
         </>
       ),
-      screenshot: "/screenshots/gym-05-arrive.png",
+      screenshot: "/screenshots/shortcuts-arrive-location.png",
       screenshotAlt: "Arrive automation with gym location and 100m radius set",
     },
     {
@@ -226,7 +213,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
           <strong>SweatPact Check In</strong> from the results.
         </>
       ),
-      screenshot: "/screenshots/gym-06-action.png",
+      screenshot: "/screenshots/shortcuts-add-action-gym.png",
       screenshotAlt: "Add Action search showing SweatPact Check In result",
     },
     {
@@ -240,7 +227,7 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
           <strong>Done</strong>.
         </>
       ),
-      screenshot: "/screenshots/gym-07-silent.png",
+      screenshot: "/screenshots/shortcuts-silent-mode.png",
       screenshotAlt: "Automation summary with Ask Before Running turned off",
     },
     {
@@ -284,7 +271,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           This authorises your account to accept health data from the Shortcut.
         </>
       ),
-      screenshot: "/screenshots/period-02-settings.png",
+      screenshot: "/screenshots/sweatpact-period-sync-settings.png",
       screenshotAlt: "SweatPact Settings showing Period Sync toggle turned on",
     },
     {
@@ -296,7 +283,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           prompted.
         </>
       ),
-      screenshot: "/screenshots/period-03-install.png",
+      screenshot: "/screenshots/shortcuts-install-period.png",
       screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Period Sync",
       action: { type: "period-install" },
     },
@@ -309,8 +296,8 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           <strong>+</strong> button at the top right.
         </>
       ),
-      screenshot: "/screenshots/gym-04-automation.png",
-      screenshotAlt: "Shortcuts app on the Automation tab with + button highlighted",
+      screenshot: "/screenshots/shortcuts-automation-tab.png",
+      screenshotAlt: "Shortcuts app on the Automation tab with + button",
     },
     {
       title: "Create a daily Time of Day automation",
@@ -322,7 +309,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           <strong>Daily</strong>. Tap <strong>Next</strong>.
         </>
       ),
-      screenshot: "/screenshots/period-05-timeofday.png",
+      screenshot: "/screenshots/shortcuts-time-of-day.png",
       screenshotAlt: "Time of Day automation set to 07:00 Daily",
     },
     {
@@ -333,7 +320,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           , and select <strong>SweatPact Period Sync</strong> from the results.
         </>
       ),
-      screenshot: "/screenshots/period-06-action.png",
+      screenshot: "/screenshots/shortcuts-add-action-period.png",
       screenshotAlt: "Add Action search showing SweatPact Period Sync result",
     },
     {
@@ -347,7 +334,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
           flow data from Apple Health.
         </>
       ),
-      screenshot: "/screenshots/gym-07-silent.png",
+      screenshot: "/screenshots/shortcuts-silent-mode.png",
       screenshotAlt: "Automation summary with Ask Before Running turned off",
     },
   ];
