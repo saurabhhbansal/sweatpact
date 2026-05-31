@@ -341,6 +341,8 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       ),
       screenshot: "/screenshots/sweatpact-period-sync-settings.png",
       screenshotAlt: "SweatPact Settings showing Period Sync toggle turned on",
+      // Highlight the "Sync from Apple Health" toggle card
+      highlights: [{ x: 5, y: 62, w: 90, h: 17, r: 2 }],
     },
     {
       title: "Install the Shortcut",
