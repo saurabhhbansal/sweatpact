@@ -13,6 +13,7 @@ import { NameEditor } from "./name-editor";
 import { UsernameEditor } from "./username-editor";
 import { RestDaysPicker } from "./rest-days-picker";
 import { WeeklyGoalPicker } from "./weekly-goal-picker";
+import { GenderPicker } from "./gender-picker";
 import { VisibilityToggle } from "./visibility-toggle";
 import { Avatar } from "@/components/avatar";
 
@@ -224,6 +225,12 @@ export default async function ProfilePage({
                   <RestDaysPicker
                     initialRestDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
                     weeklyGoal={profile.weekly_goal ?? 4}
+                  />
+                </div>
+                <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">Gender</p>
+                <div className="mt-3">
+                  <GenderPicker
+                    initialGender={(profile.gender as "male" | "female" | null) ?? null}
                   />
                 </div>
               </section>

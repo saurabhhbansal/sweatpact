@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, gender, period_sync_enabled, timezone")
+    .select("id, gender, timezone")
     .eq("id", user_id)
     .single();
   if (!profile) {
@@ -74,9 +74,6 @@ export async function POST(req: NextRequest) {
   }
   if (profile.gender !== "female") {
     return NextResponse.json({ error: "gender_mismatch" }, { status: 400 });
-  }
-  if (!profile.period_sync_enabled) {
-    return NextResponse.json({ error: "sync_disabled" }, { status: 423 });
   }
 
   // Restrict the date window so a misbehaving Shortcut can't dump years of data.

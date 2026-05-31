@@ -331,20 +331,6 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
 function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
   return [
     {
-      title: "Enable Period Sync in SweatPact",
-      description: (
-        <>
-          Open <strong>SweatPact → Settings</strong> and toggle on{" "}
-          <strong>Sync from Apple Health</strong> under the Period sync section.
-          This authorises your account to accept health data from the Shortcut.
-        </>
-      ),
-      screenshot: "/screenshots/sweatpact-period-sync-settings.png",
-      screenshotAlt: "SweatPact Settings showing Period Sync toggle turned on",
-      // Highlight the "Sync from Apple Health" toggle card
-      highlights: [{ x: 5, y: 62, w: 90, h: 17, r: 2 }],
-    },
-    {
       title: "Install the Shortcut",
       description: (
         <>

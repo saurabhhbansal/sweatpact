@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/browser";
 
 type NavLink = {
   href: string;
@@ -139,8 +140,16 @@ export function TopNav({
   }, []);
 
   async function handleSignOut() {
-    await fetch("/api/auth/signout", { method: "POST" });
-    window.location.href = "/login";
+    try {
+      // Clear the session client-side so auth cookies are reliably removed,
+      // then also hit the server route to clear server-side cookies.
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      await fetch("/api/auth/signout", { method: "POST" }).catch(() => {});
+    } finally {
+      // Hard navigation guarantees a fresh, unauthenticated page load.
+      window.location.assign("/login");
+    }
   }
 
   return (
