@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getTimeZones } from "@vvo/tzdb";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_TIME_ZONE, normalizeTimeZone } from "@/lib/time";
 import type { Profile } from "@/lib/types";
 import { GymsSection } from "./gyms-section";
 import { DeleteAccountButton } from "./delete-account";
 import { PushPermissionPrompt } from "@/components/push-permission";
+import { createClient as createBrowserClient } from "@/lib/supabase/browser";
 
 type Gym = {
   id: string;
@@ -217,6 +219,9 @@ export function SettingsForm({
         {busy ? "Saving…" : "Save changes"}
       </Button>
 
+      <SectionHeader title="Security" />
+      <ChangePasswordButton />
+
       {profile.username ? (
         <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4 space-y-2">
           <p className="text-sm font-medium text-red-400">Delete account</p>
@@ -235,6 +240,144 @@ function SectionHeader({ title }: { title: string }) {
     <div className="border-t border-white/8 pt-4 first:border-t-0 first:pt-0">
       <p className="text-xs uppercase tracking-[0.18em] text-white/45">{title}</p>
     </div>
+  );
+}
+
+function ChangePasswordButton() {
+  const [open, setOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  function reset() {
+    setNewPassword("");
+    setConfirm("");
+    setErr(null);
+    setSuccess(false);
+    setBusy(false);
+  }
+
+  function close() {
+    setOpen(false);
+    reset();
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+
+    if (newPassword.length < 6) {
+      setErr("Password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirm) {
+      setErr("Passwords don't match.");
+      return;
+    }
+
+    setBusy(true);
+    const supabase = createBrowserClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setBusy(false);
+
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+
+    setSuccess(true);
+    setNewPassword("");
+    setConfirm("");
+    // Auto-close after 2 seconds
+    window.setTimeout(close, 2000);
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center justify-between rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3.5 text-sm transition hover:bg-white/[0.05]"
+      >
+        <div>
+          <p className="font-medium text-white">Change password</p>
+          <p className="mt-0.5 text-xs text-white/50">Update your account password.</p>
+        </div>
+        <span className="text-white/35">›</span>
+      </button>
+
+      {open ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-xl sm:items-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !busy) close();
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-t-[2rem] border border-white/15 bg-[#0a0a0a] p-5 sm:rounded-[2rem]"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.25rem)" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-base font-semibold text-white">Change password</p>
+              <button
+                type="button"
+                onClick={close}
+                disabled={busy}
+                className="text-xs text-white/55 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {success ? (
+              <p className="py-4 text-center text-sm text-white/80">
+                Password updated successfully.
+              </p>
+            ) : (
+              <form onSubmit={submit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-password">New password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={busy}
+                    placeholder="Min. 6 characters"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-password">Confirm password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    disabled={busy}
+                    placeholder="Repeat new password"
+                  />
+                </div>
+                {err ? <p className="text-sm text-destructive">{err}</p> : null}
+                <Button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full rounded-full"
+                >
+                  {busy ? "Updating…" : "Update password"}
+                </Button>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 
