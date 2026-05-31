@@ -25,6 +25,7 @@ export type ProfileStats = {
   challengesActive: number;
   weeklyGoal: number;
   joinedAt: string;
+  history: { local_day: string; status: string }[];
 };
 
 // Rank statuses so we keep the "best" one when multiple records exist for the same day.
@@ -121,6 +122,11 @@ export async function computeProfileStats(
 
   const thisWeekCheckins = weekCheckins.get(currentWeekMonday) ?? 0;
 
+  const history = [...statusByDay.entries()].map(([local_day, status]) => ({
+    local_day,
+    status,
+  }));
+
   return {
     weekStreak,
     thisWeekCheckins,
@@ -132,6 +138,7 @@ export async function computeProfileStats(
     challengesActive: challengesActive ?? 0,
     weeklyGoal,
     joinedAt,
+    history,
   };
 }
 

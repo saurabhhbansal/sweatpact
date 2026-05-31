@@ -17,6 +17,7 @@ export type Profile = {
   period_last_synced_at: string | null;
   notify_unverified_checkin: boolean;
   notify_rest_day: boolean;
+  notify_cycle_share: boolean;
   created_at: string;
   updated_at: string;
 };

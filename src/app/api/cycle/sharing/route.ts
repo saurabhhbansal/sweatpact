@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToUser } from "@/lib/push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
   const { data: target } = await admin
     .from("profiles")
-    .select("id, username")
+    .select("id, username, notify_cycle_share")
     .ilike("username", username)
     .maybeSingle();
 
@@ -62,6 +63,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "cannot_share_self" }, { status: 400 });
   }
 
+  // Only notify on a newly added grant, not a re-add of an existing one.
+  const { data: existing } = await admin
+    .from("period_sharing")
+    .select("owner_id")
+    .eq("owner_id", auth.user.id)
+    .eq("shared_with_id", target.id)
+    .maybeSingle();
+  const isNew = existing == null;
+
   const { error } = await admin
     .from("period_sharing")
     .upsert(
@@ -70,6 +80,36 @@ export async function POST(req: NextRequest) {
     );
   if (error) {
     return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
+  }
+
+  // Notify the grantee. The recipient's `notify_cycle_share` preference governs
+  // whether they receive it (defaults on); toggling it off opts them out entirely.
+  if (isNew && target.notify_cycle_share !== false) {
+    const { data: owner } = await admin
+      .from("profiles")
+      .select("username, name")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+    const ownerUsername = owner?.username ?? null;
+    const ownerName = owner?.name ?? null;
+    const ownerDisplay = ownerName?.trim() || (ownerUsername ? `@${ownerUsername}` : "Someone");
+
+    await admin.from("notifications").insert({
+      user_id: target.id,
+      type: "cycle_share_granted",
+      payload: {
+        from_user: auth.user.id,
+        from_username: ownerUsername,
+        from_name: ownerName,
+      },
+    });
+
+    await sendPushToUser(admin, target.id, {
+      title: "Cycle data shared with you",
+      body: `${ownerDisplay} shared their cycle data with you.`,
+      url: ownerUsername ? `/u/${ownerUsername}` : "/notifications",
+      tag: `cycle-share-${auth.user.id}`,
+    });
   }
 
   return NextResponse.json({ ok: true, username: target.username });

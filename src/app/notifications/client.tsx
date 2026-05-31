@@ -305,6 +305,30 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                 <p className="text-sm text-white">Your challenge was declined.</p>
                 <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>
               </div>
+            ) : item.type === "cycle_share_granted" ? (
+              <div className="space-y-1 pr-6">
+                <p className="text-sm text-white">
+                  <span className="font-semibold">
+                    {fromUsername ? (
+                      <Link className="hover:underline" href={`/u/${fromUsername}`}>
+                        {fromName}
+                      </Link>
+                    ) : (
+                      fromName
+                    )}
+                  </span>{" "}
+                  shared their cycle data with you.
+                </p>
+                <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>
+                {fromUsername ? (
+                  <Link
+                    href={`/u/${fromUsername}`}
+                    className="text-xs text-white underline hover:no-underline"
+                  >
+                    View cycle data →
+                  </Link>
+                ) : null}
+              </div>
             ) : item.type === "group_checkin" || item.type === "group_rest_day" ? (
               <div className="space-y-1 pr-6">
                 <p className="text-sm text-white">

@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
-import { ProgressSection } from "@/components/progress-section";
+import { CheckinStrip } from "@/components/checkin-strip";
+import { StatusBadge } from "@/components/status-badge";
 import { TodayActionCard } from "@/components/today-action-card";
 import { MobileNav, TopNav } from "@/components/nav";
 import { PushPermissionPrompt } from "@/components/push-permission";
@@ -52,6 +53,7 @@ export default async function Dashboard() {
       typeof profile.timezone === "string" ? profile.timezone : undefined
     );
     const today = localDay(new Date(), timezone);
+    const joinedDay = localDay(new Date(profile.created_at), timezone);
     const weeklyGoal: number = (profile as any).weekly_goal ?? 4;
     const restDays: number[] = Array.isArray((profile as any).rest_days)
       ? (profile as any).rest_days
@@ -79,8 +81,8 @@ export default async function Dashboard() {
         .from("daily_status")
         .select("local_day, status")
         .eq("user_id", profile.id)
-        .order("local_day", { ascending: false })
-        .limit(90),
+        .gte("local_day", joinedDay)
+        .order("local_day", { ascending: false }),
       supabase
         .from("obligations")
         .select("id, amount_cents, to_user, status")
@@ -181,14 +183,31 @@ export default async function Dashboard() {
         <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
           <PushPermissionPrompt compact />
 
-          <ProgressSection
-            weekDots={weekDots}
-            fullHistory={dailyHistory ?? []}
-            today={today}
-            todayStatus={todayStatus}
-            thisWeekCheckins={thisWeekCheckins}
-            weeklyGoal={weeklyGoal}
-          />
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/45">This week</p>
+                <p className="mt-0.5 text-xs">
+                  <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/80"}>
+                    {thisWeekCheckins}
+                  </span>
+                  <span className="text-white/35">/{weeklyGoal}</span>
+                  {thisWeekCheckins >= weeklyGoal ? (
+                    <span className="ml-1.5 text-white/75">goal met</span>
+                  ) : (
+                    <span className="ml-1.5 text-white/35">days done</span>
+                  )}
+                </p>
+              </div>
+              <StatusBadge status={todayStatus} />
+            </div>
+            <CheckinStrip
+              today={today}
+              startDay={joinedDay}
+              history={[...(dailyHistory ?? []), { local_day: today, status: todayStatus }]}
+              restDays={restDays}
+            />
+          </section>
 
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-6 text-center backdrop-blur-xl">
             <div className="relative mx-auto mb-4 h-40 w-40">

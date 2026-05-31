@@ -72,6 +72,12 @@ export function SettingsForm({
           description="Let your challenge members know when you take a rest day."
           initial={profile.notify_rest_day ?? true}
         />
+        <NotifyToggle
+          field="notify_cycle_share"
+          label="Cycle data shared with you"
+          description="Get notified when someone grants you access to their cycle data."
+          initial={profile.notify_cycle_share ?? true}
+        />
       </div>
 
       <SectionHeader title="Security" />
@@ -242,7 +248,7 @@ function NotifyToggle({
   description,
   initial,
 }: {
-  field: "notify_unverified_checkin" | "notify_rest_day";
+  field: "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share";
   label: string;
   description: string;
   initial: boolean;

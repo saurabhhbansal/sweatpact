@@ -38,9 +38,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-body {
-  position: relative;
+html {
+  /* Clip horizontal overflow at the root so the viewport stays the scroll
+     container — putting overflow-x on body breaks `position: sticky` (the nav). */
   overflow-x: hidden;
+}
+
+body {
   background: #000000;
 }
 

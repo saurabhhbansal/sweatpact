@@ -16,6 +16,7 @@ import { WeeklyGoalPicker } from "./weekly-goal-picker";
 import { GenderPicker } from "./gender-picker";
 import { VisibilityToggle } from "./visibility-toggle";
 import { CycleDataPopup } from "./cycle-popup";
+import { CheckinStrip } from "@/components/checkin-strip";
 import { Avatar } from "@/components/avatar";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,7 @@ export default async function ProfilePage({
 
   const timezone = normalizeTimeZone(profile.timezone);
   const today = localDay(new Date(), timezone);
+  const joinedDay = localDay(new Date(profile.created_at), timezone);
 
   const stats = canSeeStats
     ? await computeProfileStats(
@@ -241,12 +243,15 @@ export default async function ProfilePage({
               ) : null}
             </section>
 
-            <div className="grid grid-cols-2 gap-3">
-              <StatTile label="Gym days" value={stats.totalGymDays} />
-              <RestDaysTile restDays={Array.isArray(profile.rest_days) ? profile.rest_days : []} />
-              <StatTile label="Excused" value={stats.totalExcusedDays} />
-              <StatTile label="Missed" value={stats.totalMissedDays} />
-            </div>
+            <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
+              <p className="mb-3 text-xs uppercase tracking-[0.2em] text-white/45">Activity</p>
+              <CheckinStrip
+                today={today}
+                startDay={joinedDay}
+                history={stats.history}
+                restDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
+              />
+            </section>
 
             {isOwner ? (
               <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
@@ -300,55 +305,6 @@ export default async function ProfilePage({
       </main>
       <MobileNav />
     </>
-  );
-}
-
-const DOW_LABELS: Record<number, string> = {
-  1: "Mo",
-  2: "Tu",
-  3: "We",
-  4: "Th",
-  5: "Fr",
-  6: "Sa",
-  0: "Su",
-};
-const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
-
-function RestDaysTile({ restDays }: { restDays: number[] }) {
-  const sorted = DOW_ORDER.filter((d) => restDays.includes(d));
-  return (
-    <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
-      <p className="text-xs uppercase tracking-[0.14em] text-white/55">Rest days</p>
-      {sorted.length === 0 ? (
-        <p className="mt-2 text-sm text-white/45">None scheduled</p>
-      ) : (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {sorted.map((d) => (
-            <span
-              key={d}
-              className="inline-flex h-7 min-w-[1.75rem] items-center justify-center rounded-full border border-white/30 bg-white/[0.08] px-2 text-xs font-semibold text-white"
-            >
-              {DOW_LABELS[d]}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
-      <p className="text-xs uppercase tracking-[0.14em] text-white/55">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
-    </div>
   );
 }
 

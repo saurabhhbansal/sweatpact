@@ -31,6 +31,7 @@ const Body = z.object({
   period_sync_enabled: z.boolean().optional(),
   notify_unverified_checkin: z.boolean().optional(),
   notify_rest_day: z.boolean().optional(),
+  notify_cycle_share: z.boolean().optional(),
   rotate_secret: z.boolean().optional(),
 });
 
