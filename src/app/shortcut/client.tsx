@@ -196,51 +196,48 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       description: (
         <>
           Open the <strong>Shortcuts</strong> app on your iPhone. Tap the{" "}
-          <strong>Automation</strong> tab at the bottom of the screen, then tap
-          the <strong>+</strong> button at the top right.
+          <strong>Automation</strong> tab at the bottom, then tap the{" "}
+          <strong>+</strong> button at the top right to create a new automation.
         </>
       ),
       screenshot: "/screenshots/shortcuts-automation-tab.png",
-      screenshotAlt: "Shortcuts app on the Automation tab with + button",
+      screenshotAlt: "Shortcuts Automation tab with + button highlighted",
     },
     {
-      title: "Create an Arrive automation",
+      title: "Select Arrive",
       description: (
         <>
-          Tap <strong>New Automation</strong> → scroll to and tap{" "}
-          <strong>Arrive</strong>. Tap <strong>Choose</strong> under Location,
-          search for your gym, and select it. Set a tight radius — around{" "}
-          <strong>100 m</strong> — so it only fires when you walk inside.
+          Scroll down and tap <strong>Arrive</strong> from the Personal
+          Automation list. This triggers the Shortcut whenever your iPhone
+          detects you arriving at a location you set.
         </>
       ),
-      screenshot: "/screenshots/shortcuts-arrive-location.png",
-      screenshotAlt: "Arrive automation with gym location and 100m radius set",
+      screenshot: "/screenshots/shortcuts-arrive-type.png",
+      screenshotAlt: "Personal Automation list with Arrive highlighted",
     },
     {
-      title: "Add the SweatPact action",
+      title: "Set your gym & run immediately",
       description: (
         <>
-          Tap <strong>Next</strong>, then tap <strong>Add Action</strong>.
-          Search for <strong>SweatPact</strong> and select{" "}
-          <strong>SweatPact Check In</strong> from the results.
+          Tap <strong>Location</strong> and search for your gym. Then select{" "}
+          <strong>Run Immediately</strong> so the check-in fires silently the
+          moment you arrive — no confirmation prompt. Tap <strong>Next</strong>.
+        </>
+      ),
+      screenshot: "/screenshots/shortcuts-arrive-confirm.png",
+      screenshotAlt: "When config showing gym location and Run Immediately selected",
+    },
+    {
+      title: "Select the SweatPact shortcut",
+      description: (
+        <>
+          Type <strong>SweatPact</strong> in the search bar at the bottom.
+          Tap <strong>SweatPact CheckIn</strong> when it appears — you&apos;ll
+          see a checkmark confirming it&apos;s been assigned to this automation.
         </>
       ),
       screenshot: "/screenshots/shortcuts-add-action-gym.png",
-      screenshotAlt: "Add Action search showing SweatPact Check In result",
-    },
-    {
-      title: "Turn off Ask Before Running",
-      description: (
-        <>
-          Tap <strong>Next</strong>. Toggle off{" "}
-          <strong>Ask Before Running</strong> and tap{" "}
-          <strong>Don&apos;t Ask</strong> when iOS prompts you. This lets the
-          automation fire silently the moment you arrive. Tap{" "}
-          <strong>Done</strong>.
-        </>
-      ),
-      screenshot: "/screenshots/shortcuts-silent-mode.png",
-      screenshotAlt: "Automation summary with Ask Before Running turned off",
+      screenshotAlt: "SweatPact CheckIn shortcut card selected with checkmark",
     },
     {
       title: "All set",
@@ -348,18 +345,17 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "Add Action search showing SweatPact Period Sync result",
     },
     {
-      title: "Turn off Ask Before Running",
+      title: "Select Run Immediately",
       description: (
         <>
-          Tap <strong>Next</strong>, toggle off{" "}
-          <strong>Ask Before Running</strong>, tap{" "}
-          <strong>Don&apos;t Ask</strong>, then tap <strong>Done</strong>. The
-          sync will now run silently every morning, pulling the last 60 days of
-          flow data from Apple Health.
+          On the When screen, make sure <strong>Run Immediately</strong> is
+          selected so the sync runs silently every morning without prompting
+          you. Tap <strong>Next</strong>, then <strong>Done</strong>. The sync
+          will now pull the last 60 days of flow data from Apple Health each day.
         </>
       ),
-      screenshot: "/screenshots/shortcuts-silent-mode.png",
-      screenshotAlt: "Automation summary with Ask Before Running turned off",
+      screenshot: "/screenshots/shortcuts-time-of-day-confirm.png",
+      screenshotAlt: "Time of Day automation with Run Immediately selected",
     },
   ];
 }
