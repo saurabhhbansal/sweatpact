@@ -95,10 +95,12 @@ function PhoneFrame({
   src,
   alt,
   placeholder,
+  highlights,
 }: {
   src: string | null;
   alt: string;
   placeholder?: React.ReactNode;
+  highlights?: HighlightRegion[];
 }) {
   return (
     <div className="relative mx-auto w-[220px] select-none">
@@ -107,9 +109,46 @@ function PhoneFrame({
         {/* Dynamic island */}
         <div className="absolute left-1/2 top-2.5 z-10 h-[17px] w-[76px] -translate-x-1/2 rounded-full bg-black" />
         {/* Screen */}
-        <div className="overflow-hidden rounded-[2.5rem] bg-neutral-900">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-neutral-900">
           {src ? (
-            <img src={src} alt={alt} className="w-full object-cover" draggable={false} />
+            <>
+              <img src={src} alt={alt} className="w-full object-cover" draggable={false} />
+              {highlights && highlights.length > 0 ? (
+                // SVG overlay: dark fill with rectangular cutouts over highlight regions.
+                // Using a mask so multiple highlights work without double-darkening.
+                <svg
+                  className="pointer-events-none absolute inset-0 h-full w-full"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden
+                >
+                  <defs>
+                    <mask id="highlight-mask">
+                      {/* White = show overlay; black = cut out (keep bright) */}
+                      <rect width="100" height="100" fill="white" />
+                      {highlights.map((h, i) => (
+                        <rect
+                          key={i}
+                          x={h.x}
+                          y={h.y}
+                          width={h.w}
+                          height={h.h}
+                          rx={h.r ?? 1}
+                          fill="black"
+                        />
+                      ))}
+                    </mask>
+                  </defs>
+                  <rect
+                    width="100"
+                    height="100"
+                    fill="rgba(0,0,0,0.65)"
+                    mask="url(#highlight-mask)"
+                  />
+                </svg>
+              ) : null}
+            </>
           ) : (
             <div className="flex min-h-[400px] flex-col items-center justify-center px-5 py-10">
               {placeholder ?? (
@@ -135,13 +174,24 @@ type StepAction =
   | { type: "period-install" }
   | { type: "rotate" };
 
+// Highlight region — coordinates as 0–100 percentages of the screenshot dimensions.
+// One or more regions stay at full brightness; everything outside is dimmed.
+type HighlightRegion = {
+  x: number;   // % from left
+  y: number;   // % from top
+  w: number;   // % width
+  h: number;   // % height
+  r?: number;  // border-radius in px (default 8)
+};
+
 type WizardStep = {
   title: string;
   description: React.ReactNode;
-  // Path relative to /public — null means no image yet (placeholder shown)
   screenshot: string | null;
   screenshotAlt: string;
   action?: StepAction;
+  // When provided, a dark SVG overlay dims everything outside these regions.
+  highlights?: HighlightRegion[];
 };
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
@@ -171,12 +221,14 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       description: (
         <>
           Tap the button below. Safari opens a preview sheet — tap{" "}
-          <strong>Add Shortcut</strong>.
+          <strong>Set Up Shortcut</strong>.
         </>
       ),
       screenshot: "/screenshots/shortcuts-install-gym.png",
-      screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Check In",
+      screenshotAlt: "Shortcut install page with Set Up Shortcut button",
       action: { type: "gym-install" },
+      // Highlight the "Set Up Shortcut" blue button at the bottom
+      highlights: [{ x: 5, y: 85, w: 90, h: 9, r: 3 }],
     },
     {
       title: "Enter your credentials",
@@ -188,8 +240,14 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
         </>
       ),
       screenshot: "/screenshots/shortcuts-enter-credentials.png",
-      screenshotAlt: "iOS prompt asking for User ID and Secret Key",
+      screenshotAlt: "iOS Configure This Shortcut screen with User Id and Secret Key fields",
       action: { type: "credentials", userId, webhookSecret },
+      // Highlight User Id row, Secret Key row, and Add Shortcut button
+      highlights: [
+        { x: 5, y: 37, w: 90, h: 8, r: 2 },   // User Id row
+        { x: 5, y: 46, w: 90, h: 8, r: 2 },   // Secret Key row
+        { x: 5, y: 77, w: 90, h: 9, r: 3 },   // Add Shortcut button
+      ],
     },
     {
       title: "Open Shortcuts → Automation",
@@ -201,7 +259,9 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
         </>
       ),
       screenshot: "/screenshots/shortcuts-automation-tab.png",
-      screenshotAlt: "Shortcuts Automation tab with + button highlighted",
+      screenshotAlt: "Shortcuts Automation tab with + button",
+      // Highlight the + button in the top-right corner
+      highlights: [{ x: 83, y: 3, w: 14, h: 7, r: 5 }],
     },
     {
       title: "Select Arrive",
@@ -213,7 +273,9 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
         </>
       ),
       screenshot: "/screenshots/shortcuts-arrive-type.png",
-      screenshotAlt: "Personal Automation list with Arrive highlighted",
+      screenshotAlt: "Personal Automation list with Arrive row",
+      // Highlight the Arrive row (roughly mid-screen in the type picker)
+      highlights: [{ x: 5, y: 54, w: 90, h: 14, r: 2 }],
     },
     {
       title: "Set your gym & run immediately",
@@ -226,6 +288,11 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       ),
       screenshot: "/screenshots/shortcuts-arrive-confirm.png",
       screenshotAlt: "When config showing gym location and Run Immediately selected",
+      // Highlight Location row and Run Immediately row
+      highlights: [
+        { x: 5, y: 19, w: 90, h: 10, r: 2 },  // Location row
+        { x: 5, y: 67, w: 90, h: 10, r: 2 },  // Run Immediately row
+      ],
     },
     {
       title: "Select the SweatPact shortcut",
@@ -238,6 +305,11 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       ),
       screenshot: "/screenshots/shortcuts-add-action-gym.png",
       screenshotAlt: "SweatPact CheckIn shortcut card selected with checkmark",
+      // Highlight the shortcut card and the search bar
+      highlights: [
+        { x: 4, y: 29, w: 56, h: 30, r: 3 },  // SweatPact Chec... card
+        { x: 5, y: 87, w: 90, h: 9, r: 4 },   // Search bar
+      ],
     },
     {
       title: "All set",
@@ -429,17 +501,23 @@ function Wizard({
         </a>
       ) : null}
 
-      {/* Phone frame — shown on all steps that have a screenshot */}
-      {step.screenshot !== null || (step.action?.type !== "credentials" && step.action?.type !== "rotate") ? (
-        step.action?.type !== "credentials" && step.action?.type !== "rotate" ? (
-          <PhoneFrame src={step.screenshot} alt={step.screenshotAlt} />
-        ) : null
+      {/* Phone frame — all steps except pure-action ones */}
+      {step.action?.type !== "credentials" && step.action?.type !== "rotate" ? (
+        <PhoneFrame
+          src={step.screenshot}
+          alt={step.screenshotAlt}
+          highlights={step.highlights}
+        />
       ) : null}
 
-      {/* For the credentials-entry step: phone frame above, copy fields below */}
+      {/* For the credentials-entry step: phone frame above (when screenshot exists), copy fields below */}
       {step.action?.type === "credentials" && step.screenshot ? (
         <>
-          <PhoneFrame src={step.screenshot} alt={step.screenshotAlt} />
+          <PhoneFrame
+            src={step.screenshot}
+            alt={step.screenshotAlt}
+            highlights={step.highlights}
+          />
           <div className="space-y-3 rounded-2xl border border-white/15 bg-white/[0.02] p-4">
             <p className="text-xs uppercase tracking-[0.16em] text-white/45">Paste these when prompted</p>
             <CopyField label="User ID" value={step.action.userId} />
