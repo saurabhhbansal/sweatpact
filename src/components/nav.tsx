@@ -172,7 +172,11 @@ export function TopNav({
             )}
           </Link>
           {name ? (
-            <DropdownMenu>
+            // modal={false} prevents Radix from scroll-locking and setting
+            // pointer-events:none on <body>. With modal on, navigating away
+            // (Settings / Sign out) unmounts the menu mid-transition before that
+            // cleanup runs, leaving the whole page frozen until the next click.
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
