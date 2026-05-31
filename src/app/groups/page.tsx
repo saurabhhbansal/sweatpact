@@ -1,23 +1,38 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { listUserMemberships } from "@/lib/groups";
-import { formatCents } from "@/lib/money";
+import { listUserMemberships, normalizeRelation } from "@/lib/groups";
+import { betterStatus } from "@/lib/challenge-view";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { localDay, normalizeTimeZone } from "@/lib/time";
 import { MobileNav, TopNav } from "@/components/nav";
 import { UserSearch } from "@/components/user-search";
+import { ChallengeVersusCard, type VersusPerson } from "@/components/challenge-versus-card";
 
 export const dynamic = "force-dynamic";
 
+type MemberProfileRow = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+function displayName(p: MemberProfileRow | null): string {
+  return (
+    p?.name?.trim() ||
+    (p?.username ? `@${p.username}` : null) ||
+    "Unknown"
+  );
+}
+
 export default async function ChallengesPage() {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  const supa = createClient();
+  const { data: auth } = await supa.auth.getUser();
   if (!auth.user) redirect("/login");
 
-  const { data: profile } = await supabase
+  const { data: profile } = await supa
     .from("profiles")
-    .select("id, name, email, username, onboarding_complete")
+    .select("id, name, email, username, timezone, avatar_url, onboarding_complete")
     .eq("id", auth.user.id)
     .single();
 
@@ -29,102 +44,125 @@ export default async function ChallengesPage() {
     redirect("/onboarding/schedule");
   }
 
-  const memberships = await listUserMemberships(supabase, auth.user.id);
+  const today = localDay(new Date(), normalizeTimeZone(profile.timezone));
+  const memberships = await listUserMemberships(supa, auth.user.id);
+  const groupIds = memberships.map((m) => m.group_id);
 
-  const { data: pendingInvites } = await supabase
-    .from("challenge_invitations")
-    .select("id, group_id, from_user, penalty_cents, message, created_at")
-    .eq("to_user", profile.id)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
+  // Fetch members (avatars/names) and today's check-ins for all the user's
+  // groups in two batched queries, then build a per-challenge view model.
+  const [{ data: memberRows }, { data: todayCheckins }, { data: pendingInvites }] =
+    await Promise.all([
+      groupIds.length > 0
+        ? supa
+            .from("group_members")
+            .select("group_id, user_id, profiles:user_id(id, name, username, avatar_url)")
+            .in("group_id", groupIds)
+        : Promise.resolve({ data: [] as any[] }),
+      groupIds.length > 0
+        ? supa
+            .from("checkin_events")
+            .select("group_id, user_id, status")
+            .in("group_id", groupIds)
+            .eq("local_day", today)
+        : Promise.resolve({ data: [] as any[] }),
+      supa
+        .from("challenge_invitations")
+        .select("id")
+        .eq("to_user", profile.id)
+        .eq("status", "pending"),
+    ]);
+
+  // group_id → (user_id → profile)
+  const membersByGroup = new Map<string, Map<string, MemberProfileRow>>();
+  for (const row of (memberRows ?? []) as any[]) {
+    const p = normalizeRelation<MemberProfileRow>(row.profiles);
+    if (!p) continue;
+    if (!membersByGroup.has(row.group_id)) membersByGroup.set(row.group_id, new Map());
+    membersByGroup.get(row.group_id)!.set(row.user_id, p);
+  }
+
+  // group_id → (user_id → best today status)
+  const statusByGroupUser = new Map<string, Map<string, string>>();
+  for (const row of (todayCheckins ?? []) as any[]) {
+    if (!statusByGroupUser.has(row.group_id)) statusByGroupUser.set(row.group_id, new Map());
+    const inner = statusByGroupUser.get(row.group_id)!;
+    inner.set(row.user_id, betterStatus(row.status, inner.get(row.user_id)));
+  }
+
+  const pendingCount = pendingInvites?.length ?? 0;
 
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
-      <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
+      <main className="animate-fade-up container max-w-md space-y-5 pb-28 pt-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Your active bets</h1>
-          <p className="mt-2 text-sm text-white/58">
-            Search for someone, send a challenge, then keep each other honest.
-          </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Find someone to challenge</CardTitle>
-            <CardDescription>Look them up by username or name.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UserSearch />
-          </CardContent>
-        </Card>
+        {/* New-challenge search — slim, no heavy card chrome */}
+        <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+          <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/45">
+            Challenge someone new
+          </p>
+          <UserSearch />
+        </section>
 
-        {pendingInvites && pendingInvites.length > 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending invitations</CardTitle>
-              <CardDescription>
-                You have {pendingInvites.length} unanswered challenge
-                {pendingInvites.length === 1 ? "" : "s"}.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link
-                href="/notifications"
-                className="inline-block rounded-full bg-white px-5 py-2 text-sm font-medium text-black hover:bg-white/90"
-              >
-                Review invitations
-              </Link>
-            </CardContent>
-          </Card>
+        {/* Pending invitations — slim banner */}
+        {pendingCount > 0 ? (
+          <Link
+            href="/notifications"
+            className="flex items-center justify-between gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white transition hover:bg-white/[0.1]"
+          >
+            <span>
+              {pendingCount} pending challenge{pendingCount === 1 ? "" : "s"}
+            </span>
+            <span className="text-xs uppercase tracking-[0.14em] text-white/55">Review →</span>
+          </Link>
         ) : null}
 
+        {/* Challenge versus cards */}
         <div className="space-y-3">
           {memberships.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>No challenges yet</CardTitle>
-                <CardDescription>
-                  Challenge a friend above. Once they accept, the stakes start.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
+              <p className="text-base font-semibold text-white">No challenges yet</p>
+              <p className="mt-2 text-sm text-white/55">
+                Search for a friend above. Once they accept, the stakes start.
+              </p>
+            </div>
           ) : (
             memberships.map((membership) => {
               if (!membership.group) return null;
+              const memberMap = membersByGroup.get(membership.group_id) ?? new Map();
+              const statusMap = statusByGroupUser.get(membership.group_id) ?? new Map();
+
+              const me: VersusPerson = {
+                url: profile.avatar_url,
+                name: profile.name || "You",
+                username: profile.username,
+                status: statusMap.get(profile.id),
+              };
+              const others: VersusPerson[] = [...memberMap.entries()]
+                .filter(([userId]) => userId !== profile.id)
+                .map(([userId, p]) => ({
+                  url: p.avatar_url,
+                  name: displayName(p),
+                  username: p.username,
+                  status: statusMap.get(userId),
+                }));
+
+              const totalMembers = memberMap.size || others.length + 1;
+
               return (
-                <Link key={membership.group_id} href={`/groups/${membership.group_id}`} className="block">
-                  <Card className="transition duration-200 hover:bg-white/12">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <CardTitle>{membership.group.name}</CardTitle>
-                          <CardDescription className="mt-2">
-                            {membership.group.description || "No description yet"}
-                          </CardDescription>
-                        </div>
-                        <Badge
-                          variant={
-                            membership.role === "owner"
-                              ? "default"
-                              : membership.role === "admin"
-                                ? "secondary"
-                                : "muted"
-                          }
-                        >
-                          {membership.role}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-between pt-0">
-                      <p className="text-sm text-white/72">
-                        Default stake {formatCents(membership.group.default_penalty_cents)}
-                      </p>
-                      <p className="text-xs uppercase tracking-[0.16em] text-white/35">Open</p>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <ChallengeVersusCard
+                  key={membership.group_id}
+                  challengeId={membership.group_id}
+                  groupName={membership.group.name}
+                  stakeCents={membership.group.default_penalty_cents}
+                  me={me}
+                  others={others}
+                  isOneOnOne={totalMembers === 2}
+                />
               );
             })
           )}

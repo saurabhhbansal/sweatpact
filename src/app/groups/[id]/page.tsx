@@ -5,10 +5,10 @@ import { formatCents } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
 import { MobileNav, TopNav } from "@/components/nav";
-import { Avatar } from "@/components/avatar";
+import { Avatar, AvatarStack } from "@/components/avatar";
+import { betterStatus, statusToken, TONE_TEXT } from "@/lib/challenge-view";
 import {
   GroupManagerMenu,
   InviteSection,
@@ -38,22 +38,6 @@ type GroupCheckinRow = {
   distance_m: number | null;
   source: string;
 };
-
-const statusRank: Record<string, number> = {
-  verified: 6,
-  sick_day: 5,
-  gym_closed: 5,
-  rest_day: 5,
-  period_day: 5,
-  unverified: 4,
-  rejected: 3,
-  pending: 0,
-};
-
-function betterStatus(next: string, current?: string) {
-  if (!current) return next;
-  return (statusRank[next] ?? 0) > (statusRank[current] ?? 0) ? next : current;
-}
 
 export default async function GroupPage({
   params,
@@ -210,20 +194,42 @@ export default async function GroupPage({
   const pendingObligations = [...aggregatedMap.values()];
   const activeDisputes = (disputes ?? []).filter((dispute) => dispute.status === "open");
 
+  // ── Versus hero data ────────────────────────────────────────────────────
+  const meSummary = memberSummaries.find((m) => m.user_id === profile.id);
+  const otherSummaries = memberSummaries.filter((m) => m.user_id !== profile.id);
+  const isOneOnOne = memberSummaries.length === 2;
+  const heroOther = otherSummaries[0];
+  const myToken = statusToken(todayStatusByUser.get(profile.id));
+  const otherToken = isOneOnOne
+    ? statusToken(todayStatusByUser.get(heroOther?.user_id ?? ""))
+    : null;
+
+  // Short standing line: who owes whom (1-on-1) or how many outstanding.
+  let standing = "All settled up";
+  if (pendingObligations.length > 0) {
+    if (isOneOnOne && heroOther) {
+      const iOwe = pendingObligations.find(
+        (o) => o.from_user === profile.id && o.to_user === heroOther.user_id
+      );
+      const theyOwe = pendingObligations.find(
+        (o) => o.from_user === heroOther.user_id && o.to_user === profile.id
+      );
+      if (iOwe) standing = `You owe ${formatCents(iOwe.total_cents)}`;
+      else if (theyOwe) standing = `${heroOther.name} owes you ${formatCents(theyOwe.total_cents)}`;
+      else standing = `${pendingObligations.length} outstanding`;
+    } else {
+      standing = `${pendingObligations.length} outstanding`;
+    }
+  }
+
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
       <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
         <div className="flex items-center justify-between">
-          <div>
-            <Link href="/groups" className="text-xs uppercase tracking-[0.18em] text-white/45">
-              Challenges
-            </Link>
-            <h1 className="mt-1 text-3xl font-semibold text-white">{group.name}</h1>
-            <p className="mt-1 text-sm text-white/58">
-              {group.description || "Stakes are real. Show up or pay up."}
-            </p>
-          </div>
+          <Link href="/groups" className="text-xs uppercase tracking-[0.18em] text-white/45">
+            ← Challenges
+          </Link>
           {isManager ? (
             <GroupManagerMenu
               groupId={group.id}
@@ -237,22 +243,97 @@ export default async function GroupPage({
           ) : null}
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-3">
+        {/* Versus hero */}
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
+          <div className="flex items-stretch justify-between gap-2">
+            {/* Me */}
+            <div className="flex flex-1 flex-col items-center gap-2 text-center">
+              <Avatar
+                url={meSummary?.avatar_url}
+                name={meSummary?.name}
+                username={meSummary?.username}
+                size="lg"
+              />
               <div>
-                <CardTitle>Add to challenge</CardTitle>
-                <CardDescription>Default stake {formatCents(group.default_penalty_cents)}</CardDescription>
+                <p className="text-sm font-semibold text-white">You</p>
+                <p className={`mt-0.5 text-xs ${TONE_TEXT[myToken.tone]}`}>
+                  {myToken.icon} {myToken.label}
+                </p>
               </div>
-              <Badge variant={membership.role === "owner" ? "default" : membership.role === "admin" ? "secondary" : "muted"}>
-                {membership.role}
-              </Badge>
             </div>
-          </CardHeader>
-          <CardContent>
+
+            {/* Center */}
+            <div className="flex shrink-0 items-center px-1">
+              <span className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
+                {isOneOnOne ? "VS" : "with"}
+              </span>
+            </div>
+
+            {/* Them */}
+            <div className="flex flex-1 flex-col items-center gap-2 text-center">
+              {isOneOnOne ? (
+                <Avatar
+                  url={heroOther?.avatar_url}
+                  name={heroOther?.name}
+                  username={heroOther?.username}
+                  size="lg"
+                />
+              ) : (
+                <AvatarStack
+                  members={otherSummaries.map((m) => ({
+                    url: m.avatar_url,
+                    name: m.name,
+                    username: m.username,
+                  }))}
+                  size="md"
+                  max={3}
+                />
+              )}
+              <div className="min-w-0">
+                <p className="mx-auto max-w-[9rem] truncate text-sm font-semibold text-white">
+                  {isOneOnOne
+                    ? heroOther?.name ?? group.name
+                    : `${otherSummaries.length} other${otherSummaries.length === 1 ? "" : "s"}`}
+                </p>
+                {otherToken ? (
+                  <p className={`mt-0.5 text-xs ${TONE_TEXT[otherToken.tone]}`}>
+                    {otherToken.icon} {otherToken.label}
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-xs text-white/40">in this challenge</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4">
+            <div>
+              <p className="text-xs text-white/45">Stake</p>
+              <p className="text-sm font-semibold text-white">
+                {formatCents(group.default_penalty_cents)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-white/45">Standing</p>
+              <p className="text-sm font-semibold text-white">{standing}</p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-center text-xs text-white/35">{group.name}</p>
+        </section>
+
+        {/* Add people — collapsed by default to keep the page light */}
+        <details className="group rounded-[1.7rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-medium text-white/80 transition hover:text-white">
+            <span>+ Add people to this challenge</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-white/40 group-open:hidden">
+              Open
+            </span>
+          </summary>
+          <div className="px-5 pb-5">
             <InviteSection groupId={group.id} defaultPenaltyCents={group.default_penalty_cents} />
-          </CardContent>
-        </Card>
+          </div>
+        </details>
 
         <Card>
           <CardHeader className="pb-3">
@@ -283,9 +364,11 @@ export default async function GroupPage({
                     <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-medium text-white">{member.name}</p>
-                      <Badge variant={member.role === "owner" ? "default" : member.role === "admin" ? "secondary" : "muted"}>
-                        {member.role}
-                      </Badge>
+                      {member.role !== "member" ? (
+                        <span className="text-[10px] uppercase tracking-[0.14em] text-white/40">
+                          {member.role}
+                        </span>
+                      ) : null}
                     </div>
                     {member.username ? (
                       <Link
