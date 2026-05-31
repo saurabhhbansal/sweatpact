@@ -54,3 +54,25 @@ export const TONE_TEXT: Record<StatusTone, string> = {
   red: "text-red-400",
   dim: "text-white/30",
 };
+
+// Avatar ring classes for a check-in status. Applied to a padded wrapper around
+// <Avatar> so the colour reads as a ring (verified = solid green, unverified =
+// dotted green, missed = red, excused = neutral, pending = dim).
+export function statusRing(status: string | undefined | null): string {
+  switch (status) {
+    case "verified":
+      return "border-2 border-emerald-500";
+    case "unverified":
+      return "border-2 border-dashed border-emerald-400";
+    case "missed":
+    case "rejected":
+      return "border-2 border-red-500/70";
+    case "rest_day":
+    case "sick_day":
+    case "period_day":
+    case "gym_closed":
+      return "border-2 border-white/20";
+    default:
+      return "border-2 border-white/10";
+  }
+}

@@ -4,20 +4,12 @@ import { getMembership, isManagerRole, normalizeRelation } from "@/lib/groups";
 import { formatCents } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
 import { MobileNav, TopNav } from "@/components/nav";
-import { Avatar, AvatarStack } from "@/components/avatar";
-import { betterStatus, statusToken, TONE_TEXT } from "@/lib/challenge-view";
-import {
-  GroupManagerMenu,
-  InviteSection,
-  LeaveGroupButton,
-  RemoveMemberButton,
-  ReverseCheckinButton,
-  UpdateMemberRoleButton,
-} from "./client";
-import { ObligationActions } from "./obligation-actions";
+import { AvatarStack } from "@/components/avatar";
+import { betterStatus } from "@/lib/challenge-view";
+import { GroupManagerMenu, LeaveGroupButton } from "./client";
+import { MemberStatusAvatar, type MemberCheckin } from "./member-status";
+import { LedgerButtons } from "./ledger";
 
 export const dynamic = "force-dynamic";
 
@@ -195,14 +187,11 @@ export default async function GroupPage({
   const activeDisputes = (disputes ?? []).filter((dispute) => dispute.status === "open");
 
   // ── Versus hero data ────────────────────────────────────────────────────
+  const tz = normalizeTimeZone(profile.timezone);
   const meSummary = memberSummaries.find((m) => m.user_id === profile.id);
   const otherSummaries = memberSummaries.filter((m) => m.user_id !== profile.id);
   const isOneOnOne = memberSummaries.length === 2;
   const heroOther = otherSummaries[0];
-  const myToken = statusToken(todayStatusByUser.get(profile.id));
-  const otherToken = isOneOnOne
-    ? statusToken(todayStatusByUser.get(heroOther?.user_id ?? ""))
-    : null;
 
   // Short standing line: who owes whom (1-on-1) or how many outstanding.
   let standing = "All settled up";
@@ -222,6 +211,55 @@ export default async function GroupPage({
     }
   }
 
+  // Per-member today check-ins (drives the avatar-tap manage overlay).
+  const checkinsByUser = new Map<string, MemberCheckin[]>();
+  for (const c of (todayCheckins ?? []) as GroupCheckinRow[]) {
+    const arr = checkinsByUser.get(c.user_id) ?? [];
+    arr.push({
+      id: c.id,
+      status: c.status,
+      occurredLabel: new Date(c.occurred_at).toLocaleString("en-IN", { timeZone: tz }),
+    });
+    checkinsByUser.set(c.user_id, arr);
+  }
+
+  function canManageMember(role: string, userId: string) {
+    return (
+      isManager &&
+      userId !== profile.id &&
+      role !== "owner" &&
+      (isOwner || role !== "admin")
+    );
+  }
+
+  // ── Serialized props for the Balances / Recent activity overlays ──────────
+  const balanceRows = pendingObligations.map((agg) => ({
+    fromName: nameFor(agg.from_user),
+    toName: nameFor(agg.to_user),
+    totalCents: agg.total_cents,
+    obligationIds: agg.obligation_ids,
+    isMine: agg.from_user === profile.id || agg.to_user === profile.id,
+    weeks: agg.obligation_ids.length,
+  }));
+  const disputeRows = activeDisputes.map((d) => ({
+    raisedByName: nameFor(d.raised_by),
+    targetType: d.target_type,
+    reason: d.reason,
+  }));
+  const settlementRows = (settlements ?? []).map((s) => ({
+    markedByName: nameFor(s.marked_by),
+    amountLabel: formatCents(s.amount_cents),
+    dateLabel: new Date(s.settled_at).toLocaleDateString("en-IN"),
+  }));
+  const activityRows = ((historyRows ?? []) as GroupCheckinRow[]).map((row) => ({
+    id: row.id,
+    name: nameFor(row.user_id),
+    source: row.source,
+    timeLabel: new Date(row.occurred_at).toLocaleString("en-IN", { timeZone: tz }),
+    status: row.status,
+    distanceM: row.distance_m,
+  }));
+
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
@@ -233,7 +271,6 @@ export default async function GroupPage({
           {isManager ? (
             <GroupManagerMenu
               groupId={group.id}
-              currentName={group.name}
               defaultPenaltyCents={group.default_penalty_cents}
               inviteCode={group.invite_code}
               checkinNotifications={group.checkin_notifications ?? true}
@@ -247,19 +284,24 @@ export default async function GroupPage({
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
           <div className="flex items-stretch justify-between gap-2">
             {/* Me */}
-            <div className="flex flex-1 flex-col items-center gap-2 text-center">
-              <Avatar
-                url={meSummary?.avatar_url}
-                name={meSummary?.name}
-                username={meSummary?.username}
+            <div className="flex flex-1 justify-center">
+              <MemberStatusAvatar
+                userId={profile.id}
+                member={{
+                  name: meSummary?.name ?? "You",
+                  username: meSummary?.username ?? null,
+                  avatar_url: meSummary?.avatar_url ?? null,
+                }}
+                status={todayStatusByUser.get(profile.id) ?? "pending"}
                 size="lg"
+                groupId={group.id}
+                isManager={isManager}
+                isOwner={isOwner}
+                isSelf
+                canRemove={false}
+                role={membership.role}
+                checkins={checkinsByUser.get(profile.id) ?? []}
               />
-              <div>
-                <p className="text-sm font-semibold text-white">You</p>
-                <p className={`mt-0.5 text-xs ${TONE_TEXT[myToken.tone]}`}>
-                  {myToken.icon} {myToken.label}
-                </p>
-              </div>
             </div>
 
             {/* Center */}
@@ -270,39 +312,41 @@ export default async function GroupPage({
             </div>
 
             {/* Them */}
-            <div className="flex flex-1 flex-col items-center gap-2 text-center">
-              {isOneOnOne ? (
-                <Avatar
-                  url={heroOther?.avatar_url}
-                  name={heroOther?.name}
-                  username={heroOther?.username}
+            <div className="flex flex-1 justify-center">
+              {isOneOnOne && heroOther ? (
+                <MemberStatusAvatar
+                  userId={heroOther.user_id}
+                  member={{
+                    name: heroOther.name,
+                    username: heroOther.username,
+                    avatar_url: heroOther.avatar_url,
+                  }}
+                  status={todayStatusByUser.get(heroOther.user_id) ?? "pending"}
                   size="lg"
+                  groupId={group.id}
+                  isManager={isManager}
+                  isOwner={isOwner}
+                  isSelf={false}
+                  canRemove={canManageMember(heroOther.role, heroOther.user_id)}
+                  role={heroOther.role}
+                  checkins={checkinsByUser.get(heroOther.user_id) ?? []}
                 />
               ) : (
-                <AvatarStack
-                  members={otherSummaries.map((m) => ({
-                    url: m.avatar_url,
-                    name: m.name,
-                    username: m.username,
-                  }))}
-                  size="md"
-                  max={3}
-                />
-              )}
-              <div className="min-w-0">
-                <p className="mx-auto max-w-[9rem] truncate text-sm font-semibold text-white">
-                  {isOneOnOne
-                    ? heroOther?.name ?? group.name
-                    : `${otherSummaries.length} other${otherSummaries.length === 1 ? "" : "s"}`}
-                </p>
-                {otherToken ? (
-                  <p className={`mt-0.5 text-xs ${TONE_TEXT[otherToken.tone]}`}>
-                    {otherToken.icon} {otherToken.label}
+                <div className="flex flex-col items-center">
+                  <AvatarStack
+                    members={otherSummaries.map((m) => ({
+                      url: m.avatar_url,
+                      name: m.name,
+                      username: m.username,
+                    }))}
+                    size="md"
+                    max={3}
+                  />
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {otherSummaries.length} other{otherSummaries.length === 1 ? "" : "s"}
                   </p>
-                ) : (
-                  <p className="mt-0.5 text-xs text-white/40">in this challenge</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -318,288 +362,44 @@ export default async function GroupPage({
               <p className="text-sm font-semibold text-white">{standing}</p>
             </div>
           </div>
-
-          <p className="mt-3 text-center text-xs text-white/35">{group.name}</p>
         </section>
 
-        {/* Add people — collapsed by default to keep the page light */}
-        <details className="group rounded-[1.7rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-medium text-white/80 transition hover:text-white">
-            <span>+ Add people to this challenge</span>
-            <span className="text-xs uppercase tracking-[0.14em] text-white/40 group-open:hidden">
-              Open
-            </span>
-          </summary>
-          <div className="px-5 pb-5">
-            <InviteSection groupId={group.id} defaultPenaltyCents={group.default_penalty_cents} />
-          </div>
-        </details>
+        {/* Balances + Recent activity overlays */}
+        <LedgerButtons
+          balances={balanceRows}
+          disputes={disputeRows}
+          settlements={settlementRows}
+          activity={activityRows}
+        />
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Members</CardTitle>
-            <CardDescription>Today&apos;s standing for each member</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {memberSummaries.map((member) => {
-              const todayStatus = todayStatusByUser.get(member.user_id) ?? "pending";
-              const canRemove =
-                isManager &&
-                member.user_id !== profile.id &&
-                member.role !== "owner" &&
-                (isOwner || member.role !== "admin");
-
-              return (
-                <div
+        {/* Members — only for 3+ challenges (1-on-1 status lives in the hero) */}
+        {memberSummaries.length > 2 ? (
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+            <p className="mb-4 text-xs uppercase tracking-[0.18em] text-white/45">Members</p>
+            <div className="flex flex-wrap gap-5">
+              {memberSummaries.map((member) => (
+                <MemberStatusAvatar
                   key={member.user_id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/12 bg-white/7 px-4 py-3"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar
-                      url={member.avatar_url}
-                      name={member.name}
-                      username={member.username}
-                      size="sm"
-                    />
-                    <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-medium text-white">{member.name}</p>
-                      {member.role !== "member" ? (
-                        <span className="text-[10px] uppercase tracking-[0.14em] text-white/40">
-                          {member.role}
-                        </span>
-                      ) : null}
-                    </div>
-                    {member.username ? (
-                      <Link
-                        href={`/u/${member.username}`}
-                        className="mt-1 inline-block truncate text-xs text-white/45 hover:text-white/70"
-                      >
-                        @{member.username}
-                      </Link>
-                    ) : null}
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      {isOwner && member.user_id !== profile.id ? (
-                        <UpdateMemberRoleButton
-                          groupId={group.id}
-                          userId={member.user_id}
-                          role={member.role}
-                        />
-                      ) : null}
-                      {canRemove ? (
-                        <RemoveMemberButton groupId={group.id} userId={member.user_id} name={member.name} />
-                      ) : null}
-                    </div>
-                    </div>
-                  </div>
-                  <StatusBadge status={todayStatus} />
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Today&apos;s Check-ins</CardTitle>
-            <CardDescription>Unverified check-ins can be reversed by managers right away.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(todayCheckins ?? []).length === 0 ? (
-              <p className="text-sm text-white/55">No one has logged a check-in in this group yet today.</p>
-            ) : (
-              ((todayCheckins ?? []) as GroupCheckinRow[]).map((checkin) => (
-                <div
-                  key={checkin.id}
-                  className="rounded-xl border border-white/12 bg-white/7 px-4 py-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-white">{nameFor(checkin.user_id)}</p>
-                        <span className="text-xs uppercase tracking-[0.16em] text-white/36">{checkin.source}</span>
-                      </div>
-                      <p className="mt-1 text-xs text-white/48">
-                        {new Date(checkin.occurred_at).toLocaleString("en-IN", {
-                          timeZone: normalizeTimeZone(profile.timezone),
-                        })}
-                      </p>
-                      {checkin.distance_m != null ? (
-                        <p className="mt-1 text-xs text-white/42">{Math.round(checkin.distance_m)} m from gym</p>
-                      ) : null}
-                    </div>
-                    <StatusBadge status={checkin.status} />
-                  </div>
-                  {isManager && checkin.status === "unverified" ? (
-                    <div className="mt-3">
-                      <ReverseCheckinButton
-                        groupId={group.id}
-                        checkinId={checkin.id}
-                        memberName={nameFor(checkin.user_id)}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Balances</CardTitle>
-            <CardDescription>
-              {pendingObligations.length === 0
-                ? "All settled up"
-                : `${pendingObligations.length} outstanding`}
-              {activeDisputes.length > 0 ? ` · ${activeDisputes.length} open disputes` : ""}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {pendingObligations.length === 0 ? (
-              <p className="text-sm text-white/55">No pending obligations in this group right now.</p>
-            ) : (
-              pendingObligations.map((agg) => {
-                const isMine = agg.from_user === profile.id || agg.to_user === profile.id;
-                return (
-                  <div
-                    key={`${agg.from_user}:${agg.to_user}`}
-                    className="rounded-xl border border-white/12 bg-white/7 px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm text-white">
-                        <span className="font-medium">{nameFor(agg.from_user)}</span>
-                        {" owes "}
-                        <span className="font-medium">{nameFor(agg.to_user)}</span>
-                        {" "}
-                        <span className="font-semibold">{formatCents(agg.total_cents)}</span>
-                      </div>
-                    </div>
-                    {agg.obligation_ids.length > 1 ? (
-                      <p className="mt-1 text-xs text-white/40">{agg.obligation_ids.length} unpaid weeks</p>
-                    ) : null}
-                    {isMine ? (
-                      <div className="mt-3">
-                        <ObligationActions obligationIds={agg.obligation_ids} />
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })
-            )}
-
-            {activeDisputes.length > 0 ? (
-              <div className="space-y-2 border-t border-white/10 pt-3">
-                {activeDisputes.map((dispute) => (
-                  <div
-                    key={dispute.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/12 bg-white/7 px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm text-white">
-                        {nameFor(dispute.raised_by)} · {dispute.target_type}
-                      </p>
-                      <p className="truncate text-xs text-white/45">{dispute.reason}</p>
-                    </div>
-                    <StatusBadge status={dispute.status} />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {(settlements ?? []).length > 0 ? (
-              <details className="rounded-xl border border-white/12 bg-white/7 px-4 py-3">
-                <summary className="cursor-pointer text-sm text-white/75">
-                  Recent settlements ({settlements?.length ?? 0})
-                </summary>
-                <div className="mt-3 space-y-2">
-                  {(settlements ?? []).map((settlement) => (
-                    <div key={settlement.id} className="flex items-center justify-between gap-3 text-xs">
-                      <span className="text-white/70">
-                        {nameFor(settlement.marked_by)} settled {formatCents(settlement.amount_cents)}
-                      </span>
-                      <span className="text-white/40">
-                        {new Date(settlement.settled_at).toLocaleDateString("en-IN")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        {(() => {
-          const allRows = (historyRows ?? []) as GroupCheckinRow[];
-          // historyRows is already ordered by occurred_at desc, so the first
-          // row we see for each user is their most recent one.
-          const latestPerUser: GroupCheckinRow[] = [];
-          const seenUsers = new Set<string>();
-          for (const row of allRows) {
-            if (seenUsers.has(row.user_id)) continue;
-            seenUsers.add(row.user_id);
-            latestPerUser.push(row);
-          }
-          const hasMore = allRows.length > latestPerUser.length;
-
-          function renderRow(row: GroupCheckinRow) {
-            return (
-              <div
-                key={row.id}
-                className="flex items-start justify-between gap-3 rounded-[1.4rem] border border-white/12 bg-white/[0.04] px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">
-                    {nameFor(row.user_id)}
-                    <span className="ml-2 text-xs uppercase tracking-[0.16em] text-white/35">
-                      {row.source}
-                    </span>
-                  </p>
-                  <p className="mt-1 text-xs text-white/46">
-                    {new Date(row.occurred_at).toLocaleString("en-IN", {
-                      timeZone: normalizeTimeZone(profile.timezone),
-                    })}
-                  </p>
-                  {row.distance_m != null ? (
-                    <p className="mt-1 text-xs text-white/42">{Math.round(row.distance_m)} m from gym</p>
-                  ) : null}
-                </div>
-                <StatusBadge status={row.status} />
-              </div>
-            );
-          }
-
-          return (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Most recent status per member</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {latestPerUser.length === 0 ? (
-                  <p className="text-sm text-white/55">No activity yet.</p>
-                ) : (
-                  <>
-                    {latestPerUser.map(renderRow)}
-                    {hasMore ? (
-                      <details className="group">
-                        <summary className="flex cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] text-white/70 transition hover:bg-white/[0.06] hover:text-white">
-                          <span className="group-open:hidden">Show all activity ({allRows.length})</span>
-                          <span className="hidden group-open:inline">Hide full activity</span>
-                        </summary>
-                        <div className="mt-3 space-y-3">
-                          {allRows
-                            .filter((row) => !latestPerUser.includes(row))
-                            .map(renderRow)}
-                        </div>
-                      </details>
-                    ) : null}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })()}
+                  userId={member.user_id}
+                  member={{
+                    name: member.name,
+                    username: member.username,
+                    avatar_url: member.avatar_url,
+                  }}
+                  status={todayStatusByUser.get(member.user_id) ?? "pending"}
+                  size="md"
+                  groupId={group.id}
+                  isManager={isManager}
+                  isOwner={isOwner}
+                  isSelf={member.user_id === profile.id}
+                  canRemove={canManageMember(member.role, member.user_id)}
+                  role={member.role}
+                  checkins={checkinsByUser.get(member.user_id) ?? []}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="flex items-center justify-between gap-3 px-1">
           <Link href="/groups" className="text-sm text-white/55 transition hover:text-white">

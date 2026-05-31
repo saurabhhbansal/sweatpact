@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Bell, MoreHorizontal, PencilLine, Shield, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { Bell, MoreHorizontal, Shield, ShieldCheck, UserPlus, WalletCards } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatCents, rupeesToCents } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/avatar";
 import {
   Dialog,
@@ -167,7 +166,6 @@ export function InviteSection({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
-  const [amount, setAmount] = useState(((defaultPenaltyCents) / 100).toFixed(2));
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -203,7 +201,7 @@ export function InviteSection({
       body: JSON.stringify({
         group_id: groupId,
         to_user: selected.id,
-        penalty_cents: rupeesToCents(amount),
+        penalty_cents: defaultPenaltyCents,
         message: message.trim() || undefined,
       }),
     });
@@ -240,17 +238,9 @@ export function InviteSection({
             Change
           </button>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="invite-amount">Weekly stake (Rs)</Label>
-          <Input
-            id="invite-amount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
+        <p className="text-xs text-white/55">
+          Weekly stake: <span className="text-white">{formatCents(defaultPenaltyCents)}</span>
+        </p>
         <div className="space-y-1.5">
           <Label htmlFor="invite-message">Message (optional)</Label>
           <Textarea
@@ -310,7 +300,6 @@ export function InviteSection({
 
 export function GroupManagerMenu({
   groupId,
-  currentName,
   defaultPenaltyCents,
   inviteCode,
   checkinNotifications,
@@ -318,7 +307,6 @@ export function GroupManagerMenu({
   members,
 }: {
   groupId: string;
-  currentName: string;
   defaultPenaltyCents: number;
   inviteCode: string;
   checkinNotifications: boolean;
@@ -327,19 +315,11 @@ export function GroupManagerMenu({
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [dialog, setDialog] = useState<null | "title" | "amount" | "members" | "admins" | "notifs">(null);
+  const [dialog, setDialog] = useState<null | "add" | "amount" | "admins" | "notifs">(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [title, setTitle] = useState(currentName);
   const [amount, setAmount] = useState((defaultPenaltyCents / 100).toFixed(2));
   const [notifsEnabled, setNotifsEnabled] = useState(checkinNotifications);
-  const [memberAmounts, setMemberAmounts] = useState<Record<string, string>>(
-    Object.fromEntries(
-      members.map((member) => [
-        member.user_id,
-        ((member.penalty_cents ?? defaultPenaltyCents) / 100).toFixed(2),
-      ])
-    )
-  );
+  const [copied, setCopied] = useState<null | "code" | "link">(null);
   const [error, setError] = useState<string | null>(null);
 
   const sortedMembers = useMemo(
@@ -350,24 +330,6 @@ export function GroupManagerMenu({
       }),
     [members]
   );
-
-  async function saveTitle() {
-    setBusy("title");
-    setError(null);
-    const res = await fetch("/api/groups/settings", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ group_id: groupId, name: title.trim() }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setBusy(null);
-    if (!res.ok) {
-      setError(data.error ?? "Failed");
-      return;
-    }
-    setDialog(null);
-    startTransition(() => router.refresh());
-  }
 
   async function saveAmount() {
     setBusy("amount");
@@ -410,27 +372,6 @@ export function GroupManagerMenu({
     startTransition(() => router.refresh());
   }
 
-  async function saveMemberAmount(userId: string) {
-    setBusy(`member:${userId}`);
-    setError(null);
-    const res = await fetch("/api/groups/member-penalty", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        group_id: groupId,
-        user_id: userId,
-        penalty_cents: rupeesToCents(memberAmounts[userId] ?? "0"),
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setBusy(null);
-    if (!res.ok) {
-      setError(data.error ?? "Failed");
-      return;
-    }
-    startTransition(() => router.refresh());
-  }
-
   async function updateRole(userId: string, role: "admin" | "member") {
     setBusy(`role:${userId}`);
     setError(null);
@@ -455,6 +396,8 @@ export function GroupManagerMenu({
         : `${window.location.origin}/join?code=${inviteCode}`;
     try {
       await navigator.clipboard.writeText(text);
+      setCopied(value);
+      window.setTimeout(() => setCopied(null), 1400);
     } catch {
       // ignore
     }
@@ -470,21 +413,15 @@ export function GroupManagerMenu({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Group tools</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => copyInvite("code")}>Copy invite code</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => copyInvite("link")}>Copy invite link</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setDialog("title")}>
-            <PencilLine className="mr-2 h-4 w-4" />
-            Edit title
+          <DropdownMenuLabel>Challenge tools</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => setDialog("add")}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add people
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setDialog("amount")}>
             <WalletCards className="mr-2 h-4 w-4" />
-            Group amount
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setDialog("members")}>
-            <Users className="mr-2 h-4 w-4" />
-            Member amounts
+            Stake amount
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setDialog("notifs")}>
             <Bell className="mr-2 h-4 w-4" />
@@ -499,25 +436,36 @@ export function GroupManagerMenu({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={dialog === "title"} onOpenChange={(open) => setDialog(open ? "title" : null)}>
-        <DialogContent>
+      <Dialog open={dialog === "add"} onOpenChange={(open) => setDialog(open ? "add" : null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit group title</DialogTitle>
-            <DialogDescription>Rename this group for everyone in it.</DialogDescription>
+            <DialogTitle>Add people</DialogTitle>
+            <DialogDescription>
+              Search to invite, or share the invite link.
+            </DialogDescription>
           </DialogHeader>
-          <div className="mt-5 space-y-2">
-            <Label htmlFor="group-title">Title</Label>
-            <Input id="group-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <div className="mt-5 space-y-5">
+            <InviteSection groupId={groupId} defaultPenaltyCents={defaultPenaltyCents} />
+            <div className="space-y-2 border-t border-white/10 pt-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-white/45">Invite link</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => copyInvite("link")}
+                >
+                  {copied === "link" ? "Copied!" : "Copy link"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => copyInvite("code")}
+                >
+                  {copied === "code" ? "Copied!" : `Code: ${inviteCode}`}
+                </Button>
+              </div>
+            </div>
           </div>
-          {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialog(null)}>
-              Cancel
-            </Button>
-            <Button onClick={saveTitle} disabled={busy === "title" || !title.trim()}>
-              {busy === "title" ? "Saving..." : "Save title"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -578,68 +526,6 @@ export function GroupManagerMenu({
                 }`}
               />
             </button>
-          </div>
-          {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={dialog === "members"} onOpenChange={(open) => setDialog(open ? "members" : null)}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Member amounts</DialogTitle>
-            <DialogDescription>These overrides apply only inside this group.</DialogDescription>
-          </DialogHeader>
-          <div className="mt-5 space-y-3">
-            {sortedMembers.map((member) => (
-              <div
-                key={member.user_id}
-                className="rounded-[1.4rem] border border-white/15 bg-white/8 p-4"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      url={member.avatar_url}
-                      name={member.name}
-                      username={member.username}
-                      size="sm"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-white">{member.name}</p>
-                      <p className="text-xs text-white/50">
-                        {member.username ? `@${member.username}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={member.role === "owner" ? "default" : member.role === "admin" ? "secondary" : "muted"}>
-                    {member.role}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={memberAmounts[member.user_id] ?? "0"}
-                    onChange={(e) =>
-                      setMemberAmounts((current) => ({
-                        ...current,
-                        [member.user_id]: e.target.value,
-                      }))
-                    }
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => saveMemberAmount(member.user_id)}
-                    disabled={busy === `member:${member.user_id}`}
-                  >
-                    {busy === `member:${member.user_id}` ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-white/45">
-                  Current effective amount: {formatCents(member.penalty_cents ?? defaultPenaltyCents)}
-                </p>
-              </div>
-            ))}
           </div>
           {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
         </DialogContent>

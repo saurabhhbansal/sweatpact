@@ -157,7 +157,6 @@ export default async function ChallengesPage() {
                 <ChallengeVersusCard
                   key={membership.group_id}
                   challengeId={membership.group_id}
-                  groupName={membership.group.name}
                   stakeCents={membership.group.default_penalty_cents}
                   me={me}
                   others={others}

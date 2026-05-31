@@ -15,14 +15,12 @@ export type VersusPerson = {
 // Presentational only — wraps a Link to the challenge detail page.
 export function ChallengeVersusCard({
   challengeId,
-  groupName,
   stakeCents,
   me,
   others,
   isOneOnOne,
 }: {
   challengeId: string;
-  groupName: string;
   stakeCents: number;
   me: VersusPerson;
   others: VersusPerson[];
@@ -31,9 +29,8 @@ export function ChallengeVersusCard({
   const other = others[0];
   // 1-on-1: the other person's name is the card identity. 3+: "You + N others".
   const title = isOneOnOne
-    ? other?.name ?? groupName
+    ? other?.name ?? "Challenge"
     : `You + ${others.length} other${others.length === 1 ? "" : "s"}`;
-  const showGroupSubtitle = groupName && groupName !== title;
 
   const myToken = statusToken(me.status);
   const otherToken = isOneOnOne ? statusToken(other?.status) : null;
@@ -89,10 +86,6 @@ export function ChallengeVersusCard({
           </div>
         </div>
       </div>
-
-      {showGroupSubtitle ? (
-        <p className="mt-3 truncate text-center text-xs text-white/35">{groupName}</p>
-      ) : null}
 
       {/* Footer: stake pill + open affordance */}
       <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-3">
