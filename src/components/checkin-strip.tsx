@@ -84,7 +84,7 @@ export function CheckinStrip({
   return (
     <div
       ref={scrollRef}
-      className={`flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
+      className={`relative flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
       style={{ scrollbarWidth: "none" }}
     >
       {days.map((day, i) => {
@@ -102,7 +102,7 @@ export function CheckinStrip({
         const showMonth = i === 0 || day.slice(5, 7) !== days[i - 1].slice(5, 7);
 
         return (
-          <div key={day} className="flex shrink-0 flex-col items-center gap-0.5">
+          <div key={day} data-day={day} className="flex shrink-0 flex-col items-center gap-0.5">
             <span className="h-3 text-[9px] uppercase tracking-wide text-white/35">
               {showMonth ? monthFmt.format(date) : ""}
             </span>
