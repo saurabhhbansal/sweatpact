@@ -65,6 +65,14 @@ function DateStrip({
   // Build a 6-week window: 21 days back through 21 days forward
   const days = Array.from({ length: 43 }, (_, i) => addDays(today, i - 21));
 
+  // Flow-level → pill background + ring + dot colour
+  const FLOW_STYLE: Record<FlowLevel, { pill: string; ring: string; dot: string }> = {
+    light:       { pill: "bg-rose-400/15", ring: "ring-1 ring-rose-300/30", dot: "bg-rose-300" },
+    medium:      { pill: "bg-rose-500/30", ring: "ring-1 ring-rose-400/45", dot: "bg-rose-400" },
+    heavy:       { pill: "bg-rose-600/50", ring: "ring-1 ring-rose-500/60", dot: "bg-rose-500" },
+    unspecified: { pill: "bg-rose-400/20", ring: "ring-1 ring-rose-400/30", dot: "bg-rose-400/70" },
+  };
+
   // Scroll selected day into centre on mount and whenever it changes
   useEffect(() => {
     const el = scrollRef.current;
@@ -85,7 +93,8 @@ function DateStrip({
       {days.map((day) => {
         const isSelected = day === selectedDay;
         const isToday = day === today;
-        const isPeriod = flowByDay.has(day);
+        const flow = flowByDay.get(day) ?? null;
+        const isPeriod = flow != null;
         const isPredicted =
           !isPeriod &&
           predictedStart != null &&
@@ -95,6 +104,7 @@ function DateStrip({
         const date = new Date(day);
         const d = date.getUTCDate();
         const dow = DOW[date.getUTCDay()];
+        const fs = flow ? FLOW_STYLE[flow] : null;
 
         return (
           <button
@@ -109,8 +119,8 @@ function DateStrip({
               className={`relative flex h-[2.6rem] w-9 items-center justify-center rounded-full transition-all ${
                 isSelected
                   ? "bg-white text-black"
-                  : isPeriod
-                    ? "bg-rose-500/25 text-white ring-1 ring-rose-400/40"
+                  : isPeriod && fs
+                    ? `${fs.pill} ${fs.ring} text-white`
                     : isPredicted
                       ? "border border-dashed border-white/30 text-white/60"
                       : isToday
@@ -119,9 +129,9 @@ function DateStrip({
               }`}
             >
               <span className="text-sm font-medium leading-none">{d}</span>
-              {/* Dot below number for period / predicted */}
-              {isPeriod && !isSelected ? (
-                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-rose-400" />
+              {/* Flow-level dot below number */}
+              {isPeriod && !isSelected && fs ? (
+                <span className={`absolute bottom-1 h-1 w-1 rounded-full ${fs.dot}`} />
               ) : isPredicted ? (
                 <span className="absolute bottom-1 h-1 w-1 rounded-full border border-white/35" />
               ) : null}
@@ -333,7 +343,7 @@ function BarChart({
           />
         ) : null}
         {bars.map((b, i) => (
-          <div key={i} className="flex min-w-0 flex-1 flex-col items-center justify-end">
+          <div key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
             <span className="mb-0.5 text-[9px] text-white/40">{b.value}</span>
             <div
               className="w-full rounded-t bg-rose-400/60"
