@@ -171,13 +171,25 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
       description: (
         <>
           Tap the button below. Safari opens a preview sheet — tap{" "}
-          <strong>Add Shortcut</strong>. When prompted, paste your User ID and
-          Secret Key from step 1.
+          <strong>Add Shortcut</strong>.
         </>
       ),
       screenshot: "/screenshots/shortcuts-install-gym.png",
       screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Check In",
       action: { type: "gym-install" },
+    },
+    {
+      title: "Enter your credentials",
+      description: (
+        <>
+          The Shortcut will immediately ask for your <strong>User ID</strong>{" "}
+          and <strong>Secret Key</strong>. Paste them from the fields below —
+          tap each copy button, then paste into the iOS prompt.
+        </>
+      ),
+      screenshot: "/screenshots/shortcuts-enter-credentials.png",
+      screenshotAlt: "iOS prompt asking for User ID and Secret Key",
+      action: { type: "credentials", userId, webhookSecret },
     },
     {
       title: "Open Shortcuts → Automation",
@@ -279,13 +291,25 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       description: (
         <>
           Tap the button below. Safari opens a preview — tap{" "}
-          <strong>Add Shortcut</strong>. Paste your User ID and Secret Key when
-          prompted.
+          <strong>Add Shortcut</strong>.
         </>
       ),
       screenshot: "/screenshots/shortcuts-install-period.png",
       screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Period Sync",
       action: { type: "period-install" },
+    },
+    {
+      title: "Enter your credentials",
+      description: (
+        <>
+          The Shortcut will immediately ask for your <strong>User ID</strong>{" "}
+          and <strong>Secret Key</strong>. Paste them from the fields below —
+          tap each copy button, then paste into the iOS prompt.
+        </>
+      ),
+      screenshot: "/screenshots/shortcuts-enter-credentials.png",
+      screenshotAlt: "iOS prompt asking for User ID and Secret Key",
+      action: { type: "credentials", userId, webhookSecret },
     },
     {
       title: "Open Shortcuts → Automation",
@@ -409,8 +433,24 @@ function Wizard({
         </a>
       ) : null}
 
-      {/* Phone frame or credentials */}
-      {step.action?.type === "credentials" ? (
+      {/* Phone frame — shown on all steps that have a screenshot */}
+      {step.screenshot !== null || (step.action?.type !== "credentials" && step.action?.type !== "rotate") ? (
+        step.action?.type !== "credentials" && step.action?.type !== "rotate" ? (
+          <PhoneFrame src={step.screenshot} alt={step.screenshotAlt} />
+        ) : null
+      ) : null}
+
+      {/* For the credentials-entry step: phone frame above, copy fields below */}
+      {step.action?.type === "credentials" && step.screenshot ? (
+        <>
+          <PhoneFrame src={step.screenshot} alt={step.screenshotAlt} />
+          <div className="space-y-3 rounded-2xl border border-white/15 bg-white/[0.02] p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-white/45">Paste these when prompted</p>
+            <CopyField label="User ID" value={step.action.userId} />
+            <CopyField label="Secret Key" value={step.action.webhookSecret} hidden />
+          </div>
+        </>
+      ) : step.action?.type === "credentials" && !step.screenshot ? (
         <div className="space-y-3 rounded-2xl border border-white/15 bg-white/[0.02] p-4">
           <CopyField label="User ID" value={step.action.userId} />
           <CopyField label="Secret Key" value={step.action.webhookSecret} hidden />
@@ -424,12 +464,7 @@ function Wizard({
           </p>
           <RotateSecretButton />
         </div>
-      ) : (
-        <PhoneFrame
-          src={step.screenshot}
-          alt={step.screenshotAlt}
-        />
-      )}
+      ) : null}
 
       {/* Navigation */}
       <div className="flex items-center gap-3">
