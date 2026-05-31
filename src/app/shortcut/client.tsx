@@ -331,19 +331,6 @@ function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
 function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
   return [
     {
-      title: "Copy your credentials",
-      description: (
-        <>
-          The Period Sync Shortcut uses the same <strong>User ID</strong> and{" "}
-          <strong>Secret Key</strong> as the gym check-in Shortcut. Copy them
-          now so they are ready to paste on install.
-        </>
-      ),
-      screenshot: null,
-      screenshotAlt: "Credentials ready to copy",
-      action: { type: "credentials", userId, webhookSecret },
-    },
-    {
       title: "Enable Period Sync in SweatPact",
       description: (
         <>
@@ -364,70 +351,105 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
         </>
       ),
       screenshot: "/screenshots/shortcuts-install-period.png",
-      screenshotAlt: "Safari sheet showing Add Shortcut button for SweatPact Period Sync",
+      screenshotAlt: "SweatPact Period Sync install page with Add Shortcut button",
       action: { type: "period-install" },
+      // Highlight the Add Shortcut button at the bottom
+      highlights: [{ x: 5, y: 85, w: 90, h: 9, r: 3 }],
     },
     {
-      title: "Enter your credentials",
+      title: "Enter your User ID",
       description: (
         <>
-          The Shortcut will immediately ask for your <strong>User ID</strong>{" "}
-          and <strong>Secret Key</strong>. Paste them from the fields below —
-          tap each copy button, then paste into the iOS prompt.
+          The Shortcut asks for your <strong>User ID</strong> first. Copy it
+          below and paste it into the field, then tap <strong>Next</strong>.
         </>
       ),
-      screenshot: "/screenshots/shortcuts-enter-credentials.png",
-      screenshotAlt: "iOS prompt asking for User ID and Secret Key",
+      screenshot: "/screenshots/shortcuts-period-enter-userid.png",
+      screenshotAlt: "Configure shortcut screen asking for UserID with Next button",
       action: { type: "credentials", userId, webhookSecret },
+      // Highlight the UserID text field and the Next button
+      highlights: [
+        { x: 5, y: 36, w: 90, h: 14, r: 2 },  // UserID field row
+        { x: 5, y: 77, w: 90, h: 10, r: 3 },  // Next button
+      ],
+    },
+    {
+      title: "Enter your Secret Key",
+      description: (
+        <>
+          Next it asks for your <strong>Secret Key</strong>. Copy it below,
+          paste it in, then tap <strong>Add Shortcut</strong>.
+        </>
+      ),
+      screenshot: "/screenshots/shortcuts-period-enter-secret.png",
+      screenshotAlt: "Configure shortcut screen asking for Secret with Add Shortcut button",
+      action: { type: "credentials", userId, webhookSecret },
+      // Highlight the Secret field and the Add Shortcut button
+      highlights: [
+        { x: 5, y: 36, w: 90, h: 14, r: 2 },  // Secret field row
+        { x: 5, y: 77, w: 90, h: 10, r: 3 },  // Add Shortcut button
+      ],
     },
     {
       title: "Open Shortcuts → Automation",
       description: (
         <>
           Open the <strong>Shortcuts</strong> app, tap the{" "}
-          <strong>Automation</strong> tab at the bottom, then tap the{" "}
-          <strong>+</strong> button at the top right.
+          <strong>Automation</strong> tab at the bottom, then tap{" "}
+          <strong>+</strong>.
         </>
       ),
       screenshot: "/screenshots/shortcuts-automation-tab.png",
-      screenshotAlt: "Shortcuts app on the Automation tab with + button",
+      screenshotAlt: "Shortcuts Automation tab with + button",
+      highlights: [{ x: 83, y: 3, w: 14, h: 7, r: 5 }],
     },
     {
-      title: "Create a daily Time of Day automation",
+      title: "Set up a daily Time of Day automation",
       description: (
         <>
           Tap <strong>New Automation</strong> → <strong>Time of Day</strong>.
-          Pick a time you are reliably awake with your phone nearby — e.g.{" "}
-          <strong>07:00</strong>. Set <strong>Repeat</strong> to{" "}
-          <strong>Daily</strong>. Tap <strong>Next</strong>.
+          Scroll the time picker to a time you are reliably awake. Under
+          Repeat, select <strong>Daily</strong>. Under run mode, select{" "}
+          <strong>Run Immediately</strong>. Tap <strong>Next</strong>.
         </>
       ),
       screenshot: "/screenshots/shortcuts-time-of-day.png",
-      screenshotAlt: "Time of Day automation set to 07:00 Daily",
+      screenshotAlt: "Time of Day picker with Daily and Run Immediately selected",
+      // Highlight time picker, Daily row, and Run Immediately row
+      highlights: [
+        { x: 5, y: 30, w: 90, h: 25, r: 2 },  // time picker wheel
+        { x: 5, y: 61, w: 90, h: 9, r: 2 },   // Daily row
+        { x: 5, y: 79, w: 90, h: 8, r: 2 },   // Run Immediately row
+      ],
     },
     {
-      title: "Add the Period Sync action",
+      title: "Select the SweatPact Period Sync shortcut",
       description: (
         <>
-          Tap <strong>Add Action</strong>, search for <strong>SweatPact</strong>
-          , and select <strong>SweatPact Period Sync</strong> from the results.
+          Type <strong>SweatPact</strong> in the search bar at the bottom.
+          Tap <strong>SweatPact Period Sync</strong> when it appears — a
+          checkmark confirms it has been assigned to this automation.
         </>
       ),
       screenshot: "/screenshots/shortcuts-add-action-period.png",
-      screenshotAlt: "Add Action search showing SweatPact Period Sync result",
+      screenshotAlt: "SweatPact Perio... shortcut card selected with checkmark",
+      // Highlight the shortcut card and search bar
+      highlights: [
+        { x: 4, y: 27, w: 55, h: 30, r: 3 },  // SweatPact Perio... card
+        { x: 5, y: 87, w: 90, h: 9, r: 4 },   // Search bar
+      ],
     },
     {
-      title: "Select Run Immediately",
+      title: "All set",
       description: (
         <>
-          On the When screen, make sure <strong>Run Immediately</strong> is
-          selected so the sync runs silently every morning without prompting
-          you. Tap <strong>Next</strong>, then <strong>Done</strong>. The sync
-          will now pull the last 60 days of flow data from Apple Health each day.
+          The sync will now run silently every day, pulling the last 60 days
+          of flow data from Apple Health. Period days are automatically marked
+          as excused in SweatPact — no manual logging needed.
         </>
       ),
-      screenshot: "/screenshots/shortcuts-time-of-day-confirm.png",
-      screenshotAlt: "Time of Day automation with Run Immediately selected",
+      screenshot: null,
+      screenshotAlt: "Setup complete",
     },
   ];
 }
