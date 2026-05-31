@@ -342,7 +342,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "SweatPact Period Sync install page with Add Shortcut button",
       action: { type: "period-install" },
       // Highlight the Add Shortcut button at the bottom
-      highlights: [{ x: 5, y: 85, w: 90, h: 9, r: 3 }],
+      highlights: [{ x: 6, y: 86.5, w: 88, h: 6.5, r: 6 }],
     },
     {
       title: "Enter your User ID",
@@ -357,8 +357,8 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       action: { type: "credentials", userId, webhookSecret },
       // Highlight the UserID text field and the Next button
       highlights: [
-        { x: 5, y: 36, w: 90, h: 14, r: 2 },  // UserID field row
-        { x: 5, y: 77, w: 90, h: 10, r: 3 },  // Next button
+        { x: 2, y: 30, w: 96, h: 9, r: 2 },  // UserID field row
+        { x: 6, y: 81, w: 88, h: 7, r: 6 },  // Next button
       ],
     },
     {
@@ -374,8 +374,8 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       action: { type: "credentials", userId, webhookSecret },
       // Highlight the Secret field and the Add Shortcut button
       highlights: [
-        { x: 5, y: 36, w: 90, h: 14, r: 2 },  // Secret field row
-        { x: 5, y: 77, w: 90, h: 10, r: 3 },  // Add Shortcut button
+        { x: 2, y: 30, w: 96, h: 9, r: 2 },  // Secret field row
+        { x: 6, y: 81, w: 88, h: 7, r: 6 },  // Add Shortcut button
       ],
     },
     {
@@ -389,7 +389,7 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       ),
       screenshot: "/screenshots/shortcuts-automation-tab.png",
       screenshotAlt: "Shortcuts Automation tab with + button",
-      highlights: [{ x: 83, y: 3, w: 14, h: 7, r: 5 }],
+      highlights: [{ x: 84, y: 7, w: 13, h: 5.5, r: 6 }],
     },
     {
       title: "Set up a daily Time of Day automation",
@@ -405,9 +405,9 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "Time of Day picker with Daily and Run Immediately selected",
       // Highlight time picker, Daily row, and Run Immediately row
       highlights: [
-        { x: 5, y: 30, w: 90, h: 25, r: 2 },  // time picker wheel
-        { x: 5, y: 61, w: 90, h: 9, r: 2 },   // Daily row
-        { x: 5, y: 79, w: 90, h: 8, r: 2 },   // Run Immediately row
+        { x: 5, y: 26, w: 90, h: 21, r: 2 },    // time picker wheel
+        { x: 5, y: 56.5, w: 90, h: 6.5, r: 2 }, // Daily row
+        { x: 5, y: 86, w: 90, h: 5.5, r: 2 },   // Run Immediately row
       ],
     },
     {
@@ -423,8 +423,8 @@ function periodSteps(userId: string, webhookSecret: string): WizardStep[] {
       screenshotAlt: "SweatPact Perio... shortcut card selected with checkmark",
       // Highlight the shortcut card and search bar
       highlights: [
-        { x: 4, y: 27, w: 55, h: 30, r: 3 },  // SweatPact Perio... card
-        { x: 5, y: 87, w: 90, h: 9, r: 4 },   // Search bar
+        { x: 5, y: 27, w: 43, h: 13, r: 3 },   // SweatPact Perio... card
+        { x: 7, y: 91, w: 70, h: 6.5, r: 8 },  // Search bar
       ],
     },
     {
