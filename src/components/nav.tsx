@@ -5,6 +5,7 @@ import {
   Bell,
   CalendarCheck2,
   ChevronDown,
+  Droplet,
   LogOut,
   Settings2,
   User as UserIcon,
@@ -29,19 +30,57 @@ type NavLink = {
   matchPrefix?: string;
 };
 
-const LINKS: NavLink[] = [
+const BASE_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Today", icon: CalendarCheck2 },
   { href: "/groups", label: "Challenges", icon: Users2 },
   { href: "/u/me", label: "Profile", icon: UserIcon, matchPrefix: "/u/" },
 ];
 
+const CYCLE_LINK: NavLink = { href: "/cycle", label: "Cycle", icon: Droplet };
+
 export function MobileNav() {
   const pathname = usePathname();
+  // Read the cached gender synchronously so the correct tab count renders on
+  // first paint (avoids a 3→4 tab flicker for returning female users).
+  const [gender, setGender] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem("sp_gender");
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/notifications", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const g: string | null = data.gender ?? null;
+        setGender(g);
+        if (g) window.localStorage.setItem("sp_gender", g);
+        else window.localStorage.removeItem("sp_gender");
+      } catch {
+        /* ignore */
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const links =
+    gender === "female" ? [...BASE_LINKS, CYCLE_LINK] : BASE_LINKS;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-3">
-      <div className="container mx-auto grid max-w-md grid-cols-3 rounded-[1.9rem] border border-white/18 bg-white/[0.08] p-1 backdrop-blur-2xl">
-        {LINKS.map((link) => {
+      <div
+        className={cn(
+          "container mx-auto grid max-w-md rounded-[1.9rem] border border-white/18 bg-white/[0.08] p-1 backdrop-blur-2xl",
+          links.length === 4 ? "grid-cols-4" : "grid-cols-3"
+        )}
+      >
+        {links.map((link) => {
           const active = link.matchPrefix
             ? pathname?.startsWith(link.matchPrefix)
             : pathname === link.href || pathname?.startsWith(`${link.href}/`);

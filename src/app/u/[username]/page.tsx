@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -283,7 +284,11 @@ function PeriodStatsCard({
         <CardHeader>
           <CardTitle>Period</CardTitle>
           <CardDescription>
-            No period days logged yet. Use the dashboard&apos;s &ldquo;Log excused day&rdquo; or set up Apple Health sync in Settings → Period sync.
+            No period days logged yet. Log them on the{" "}
+            <Link href="/cycle" className="underline hover:text-white">
+              Cycle tab
+            </Link>
+            , or set up Apple Health sync in Settings → Period sync.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -353,6 +358,12 @@ function PeriodStatsCard({
           <p className="mt-0.5 text-xs text-white/45">{stats.cyclesSampled} cycles, last 6 mo</p>
         </div>
       </div>
+      <Link
+        href="/cycle"
+        className="mt-4 inline-block text-xs text-white/55 underline transition hover:text-white"
+      >
+        View full cycle details →
+      </Link>
     </section>
   );
 }

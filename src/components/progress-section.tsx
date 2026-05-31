@@ -96,6 +96,7 @@ export function ProgressSection({
   weeklyGoal,
   periodRecords = [],
   canEditPeriod = false,
+  calendarOnly = false,
 }: {
   weekDots: WeekDot[];
   fullHistory: DayEntry[];
@@ -105,6 +106,9 @@ export function ProgressSection({
   weeklyGoal: number;
   periodRecords?: PeriodRecord[];
   canEditPeriod?: boolean;
+  // When true, hides the weekly gym summary + week dots and shows only the
+  // month calendar (always expanded). Used by the Cycle tab for period logging.
+  calendarOnly?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editingDay, setEditingDay] = useState<string | null>(null);
@@ -115,40 +119,46 @@ export function ProgressSection({
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-white/45">This week</p>
-          <p className="mt-0.5 text-xs">
-            <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/80"}>
-              {thisWeekCheckins}
-            </span>
-            <span className="text-white/35">/{weeklyGoal}</span>
-            {thisWeekCheckins >= weeklyGoal ? (
-              <span className="ml-1.5 text-white/75">goal met</span>
-            ) : (
-              <span className="ml-1.5 text-white/35">days done</span>
-            )}
-          </p>
-        </div>
-        <StatusBadge status={todayStatus} />
-      </div>
-
-      <div className="grid grid-cols-7 gap-2">
-        {weekDots.map((dot) => (
-          <div key={dot.key} className="text-center">
-            <div
-              className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full border-2 text-base ${dotTone(dot.status)} ${
-                dot.current ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""
-              }`}
-            >
-              {dotSymbol(dot.status)}
+      {calendarOnly ? (
+        <p className="mb-1 text-xs uppercase tracking-[0.2em] text-white/45">Calendar</p>
+      ) : (
+        <>
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/45">This week</p>
+              <p className="mt-0.5 text-xs">
+                <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/80"}>
+                  {thisWeekCheckins}
+                </span>
+                <span className="text-white/35">/{weeklyGoal}</span>
+                {thisWeekCheckins >= weeklyGoal ? (
+                  <span className="ml-1.5 text-white/75">goal met</span>
+                ) : (
+                  <span className="ml-1.5 text-white/35">days done</span>
+                )}
+              </p>
             </div>
-            <p className="mt-1 text-xs text-white/50">{dot.label}</p>
+            <StatusBadge status={todayStatus} />
           </div>
-        ))}
-      </div>
 
-      {expanded ? (() => {
+          <div className="grid grid-cols-7 gap-2">
+            {weekDots.map((dot) => (
+              <div key={dot.key} className="text-center">
+                <div
+                  className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full border-2 text-base ${dotTone(dot.status)} ${
+                    dot.current ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""
+                  }`}
+                >
+                  {dotSymbol(dot.status)}
+                </div>
+                <p className="mt-1 text-xs text-white/50">{dot.label}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {expanded || calendarOnly ? (() => {
         const statusByDay = new Map<string, string>();
         let earliest: string | null = null;
         for (const row of fullHistory) {
@@ -247,12 +257,14 @@ export function ProgressSection({
         );
       })() : null}
 
-      <button
-        onClick={() => setExpanded((value) => !value)}
-        className="mt-3 w-full text-xs text-white/42 transition-colors hover:text-white/70"
-      >
-        {expanded ? "Show less" : "View calendar"}
-      </button>
+      {calendarOnly ? null : (
+        <button
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-3 w-full text-xs text-white/42 transition-colors hover:text-white/70"
+        >
+          {expanded ? "Show less" : "View calendar"}
+        </button>
+      )}
 
       {editingDay ? (
         <PeriodDayEditor
@@ -269,7 +281,7 @@ export function ProgressSection({
   );
 }
 
-function PeriodDayEditor({
+export function PeriodDayEditor({
   day,
   currentFlow,
   onClose,

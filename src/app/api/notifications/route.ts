@@ -11,15 +11,22 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { data } = await supabase
-    .from("notifications")
-    .select("id, type, payload, read_at, created_at")
-    .eq("user_id", auth.user.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data }, { data: profile }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id, type, payload, read_at, created_at")
+      .eq("user_id", auth.user.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase.from("profiles").select("gender").eq("id", auth.user.id).maybeSingle(),
+  ]);
 
   const unreadCount = (data ?? []).filter((n) => !n.read_at).length;
-  return NextResponse.json({ notifications: data ?? [], unreadCount });
+  return NextResponse.json({
+    notifications: data ?? [],
+    unreadCount,
+    gender: profile?.gender ?? null,
+  });
 }
 
 export async function PATCH(req: NextRequest) {

@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { buttonVariants } from "@/components/ui/button";
 import { ProgressSection } from "@/components/progress-section";
 import { TodayActionCard } from "@/components/today-action-card";
-import { computePeriodStats } from "@/lib/period-stats";
 import { MobileNav, TopNav } from "@/components/nav";
 import { PushPermissionPrompt } from "@/components/push-permission";
 
@@ -98,26 +97,6 @@ export default async function Dashboard() {
         .eq("user_id", profile.id),
     ]);
 
-    // Period records for the past 6 months — drives flow indicators on the
-    // calendar and the prediction banner.
-    const periodCutoffDate = new Date();
-    periodCutoffDate.setUTCMonth(periodCutoffDate.getUTCMonth() - 6);
-    const periodCutoff = periodCutoffDate.toISOString().slice(0, 10);
-    const { data: periodRecords } = await supabase
-      .from("period_records")
-      .select("local_day, flow_level")
-      .eq("user_id", profile.id)
-      .gte("local_day", periodCutoff);
-
-    const periodStats =
-      profile.gender === "female"
-        ? computePeriodStats(periodRecords ?? [], today)
-        : null;
-    const showPrediction =
-      periodStats?.daysUntilPredicted != null &&
-      periodStats.daysUntilPredicted <= 7 &&
-      periodStats.daysUntilPredicted >= -3;
-
     const todayStatus =
       dailyHistory?.find((row) => row.local_day === today)?.status ??
       todayCheckins?.find((row) => row.status === "verified")?.status ??
@@ -202,13 +181,6 @@ export default async function Dashboard() {
         <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
           <PushPermissionPrompt compact />
 
-          {showPrediction && periodStats ? (
-            <PeriodPredictionBanner
-              daysUntilPredicted={periodStats.daysUntilPredicted!}
-              nextPredictedStart={periodStats.nextPredictedStart!}
-            />
-          ) : null}
-
           <ProgressSection
             weekDots={weekDots}
             fullHistory={dailyHistory ?? []}
@@ -216,8 +188,6 @@ export default async function Dashboard() {
             todayStatus={todayStatus}
             thisWeekCheckins={thisWeekCheckins}
             weeklyGoal={weeklyGoal}
-            periodRecords={periodRecords ?? []}
-            canEditPeriod={profile.gender === "female"}
           />
 
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-6 text-center backdrop-blur-xl">
@@ -302,38 +272,4 @@ export default async function Dashboard() {
       </main>
     );
   }
-}
-
-function PeriodPredictionBanner({
-  daysUntilPredicted,
-  nextPredictedStart,
-}: {
-  daysUntilPredicted: number;
-  nextPredictedStart: string;
-}) {
-  const niceDate = new Date(nextPredictedStart).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-  });
-  const headline =
-    daysUntilPredicted < -1
-      ? `Period ${Math.abs(daysUntilPredicted)} days late`
-      : daysUntilPredicted === -1
-        ? "Period 1 day late"
-        : daysUntilPredicted === 0
-          ? "Period predicted today"
-          : daysUntilPredicted === 1
-            ? "Period predicted tomorrow"
-            : `Period predicted in ${daysUntilPredicted} days`;
-  const sub =
-    daysUntilPredicted < 0
-      ? `Expected ${niceDate}.`
-      : `On ${niceDate}, based on your average cycle.`;
-  return (
-    <section className="rounded-[1.7rem] border border-white/15 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/45">Cycle</p>
-      <p className="mt-1 text-sm font-semibold text-white">{headline}</p>
-      <p className="mt-0.5 text-xs text-white/55">{sub}</p>
-    </section>
-  );
 }

@@ -3,6 +3,19 @@ export type PeriodRecord = {
   flow_level: "light" | "medium" | "heavy" | "unspecified";
 };
 
+export type CyclePhase = "menstrual" | "follicular" | "ovulation" | "luteal";
+
+export type CycleSummary = {
+  start: string;
+  end: string;
+  durationDays: number;
+  // Days from this cycle's start to the next cycle's start. null for the
+  // most recent cycle (no following cycle to measure against yet).
+  cycleLengthDays: number | null;
+};
+
+export type Regularity = "regular" | "irregular" | "unknown";
+
 export type PeriodStats = {
   lastPeriodStart: string | null;
   daysSinceLastPeriod: number | null;
@@ -12,6 +25,14 @@ export type PeriodStats = {
   // Prediction: only set when we have ≥2 cycles to infer cycle length.
   nextPredictedStart: string | null;
   daysUntilPredicted: number | null;
+  // Per-cycle breakdown, oldest → newest. Drives trends/history UI.
+  cycles: CycleSummary[];
+  // max − min of measured cycle lengths. null until ≥3 cycles (≥2 gaps).
+  cycleLengthSpreadDays: number | null;
+  regularity: Regularity;
+  // 1-indexed day within the current (most recent) cycle. null when no data.
+  currentCycleDay: number | null;
+  currentPhase: CyclePhase | null;
 };
 
 function addDays(localDay: string, n: number): string {
@@ -36,6 +57,37 @@ function daysBetween(a: string, b: string): number {
 }
 
 /**
+ * Rough estimate of the menstrual cycle phase for a given day. This is an
+ * approximation for display only — not medical guidance.
+ *
+ *   - menstrual:  still within the logged period (cycleDay ≤ period duration)
+ *   - ovulation:  ~14 days before the next expected period (±1 day window)
+ *   - follicular: after the period, before ovulation
+ *   - luteal:     after ovulation
+ *
+ * When the average cycle length is unknown we can only distinguish menstrual
+ * from follicular.
+ */
+export function estimatePhase(
+  cycleDay: number,
+  periodDuration: number,
+  avgCycle: number | null
+): CyclePhase | null {
+  if (cycleDay <= 0) return null;
+  if (cycleDay <= periodDuration) return "menstrual";
+  if (avgCycle == null) return "follicular";
+
+  // Luteal phase is biologically ~14 days; ovulation sits cycleLength − 14.
+  let ovulationDay = avgCycle - 14;
+  // Guard short/atypical cycles so ovulation never lands inside the period.
+  if (ovulationDay <= periodDuration) ovulationDay = Math.round(avgCycle / 2);
+
+  if (cycleDay >= ovulationDay - 1 && cycleDay <= ovulationDay + 1) return "ovulation";
+  if (cycleDay < ovulationDay) return "follicular";
+  return "luteal";
+}
+
+/**
  * Group contiguous period-day records into cycles. A new cycle starts after a
  * gap of 2+ non-period days. Records must be sorted ascending by local_day.
  */
@@ -49,13 +101,18 @@ export function computePeriodStats(records: PeriodRecord[], today: string): Peri
       cyclesSampled: 0,
       nextPredictedStart: null,
       daysUntilPredicted: null,
+      cycles: [],
+      cycleLengthSpreadDays: null,
+      regularity: "unknown",
+      currentCycleDay: null,
+      currentPhase: null,
     };
   }
 
   const sorted = [...records].sort((a, b) => a.local_day.localeCompare(b.local_day));
 
-  type Cycle = { start: string; end: string; durationDays: number };
-  const cycles: Cycle[] = [];
+  type RawCycle = { start: string; end: string; durationDays: number };
+  const raw: RawCycle[] = [];
   let curStart = sorted[0].local_day;
   let curEnd = sorted[0].local_day;
 
@@ -67,24 +124,40 @@ export function computePeriodStats(records: PeriodRecord[], today: string): Peri
       // contiguous
       curEnd = next;
     } else {
-      cycles.push({ start: curStart, end: curEnd, durationDays: daysBetween(curStart, curEnd) + 1 });
+      raw.push({ start: curStart, end: curEnd, durationDays: daysBetween(curStart, curEnd) + 1 });
       curStart = next;
       curEnd = next;
     }
   }
-  cycles.push({ start: curStart, end: curEnd, durationDays: daysBetween(curStart, curEnd) + 1 });
+  raw.push({ start: curStart, end: curEnd, durationDays: daysBetween(curStart, curEnd) + 1 });
+
+  // Attach cycle-length (gap to the next cycle's start) to each cycle.
+  const cycles: CycleSummary[] = raw.map((c, i) => ({
+    start: c.start,
+    end: c.end,
+    durationDays: c.durationDays,
+    cycleLengthDays: i < raw.length - 1 ? daysBetween(c.start, raw[i + 1].start) : null,
+  }));
 
   const last = cycles[cycles.length - 1];
   const daysSinceLastPeriod = daysBetween(last.end, today);
 
-  // Average cycle length = distance between consecutive cycle starts.
+  // Measured cycle lengths = gaps between consecutive cycle starts.
+  const gaps = cycles
+    .map((c) => c.cycleLengthDays)
+    .filter((n): n is number => n != null);
+
   let averageCycleDays: number | null = null;
-  if (cycles.length >= 2) {
-    let total = 0;
-    for (let i = 1; i < cycles.length; i++) {
-      total += daysBetween(cycles[i - 1].start, cycles[i].start);
-    }
-    averageCycleDays = Math.round(total / (cycles.length - 1));
+  if (gaps.length >= 1) {
+    averageCycleDays = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length);
+  }
+
+  // Spread (regularity) needs at least two measured cycle lengths.
+  let cycleLengthSpreadDays: number | null = null;
+  let regularity: Regularity = "unknown";
+  if (gaps.length >= 2) {
+    cycleLengthSpreadDays = Math.max(...gaps) - Math.min(...gaps);
+    regularity = cycleLengthSpreadDays <= 4 ? "regular" : "irregular";
   }
 
   const averageDurationDays = Math.round(
@@ -100,6 +173,14 @@ export function computePeriodStats(records: PeriodRecord[], today: string): Peri
     daysUntilPredicted = daysBetween(today, nextPredictedStart);
   }
 
+  // Current cycle position (day 1 = first day of the most recent cycle).
+  const dayOffset = daysBetween(last.start, today);
+  const currentCycleDay = dayOffset >= 0 ? dayOffset + 1 : null;
+  const currentPhase =
+    currentCycleDay != null
+      ? estimatePhase(currentCycleDay, last.durationDays, averageCycleDays)
+      : null;
+
   return {
     lastPeriodStart: last.start,
     daysSinceLastPeriod,
@@ -108,5 +189,10 @@ export function computePeriodStats(records: PeriodRecord[], today: string): Peri
     cyclesSampled: cycles.length,
     nextPredictedStart,
     daysUntilPredicted,
+    cycles,
+    cycleLengthSpreadDays,
+    regularity,
+    currentCycleDay,
+    currentPhase,
   };
 }
