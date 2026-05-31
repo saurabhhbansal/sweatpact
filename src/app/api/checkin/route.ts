@@ -145,7 +145,9 @@ export async function POST(req: NextRequest) {
   }
 
   const rows = (existingRows ?? []) as CheckinRow[];
-  if (rows.some((row) => row.status === "verified" || EXCUSED_STATUSES.has(row.status))) {
+  // period_day is not a hard block — the user may still check in on their period.
+  // All other excused statuses and verified are final for the day.
+  if (rows.some((row) => row.status === "verified" || (EXCUSED_STATUSES.has(row.status) && row.status !== "period_day"))) {
     return NextResponse.json(
       { error: "already_checked_in", verified: true, distance_m: distance },
       { status: 409 }

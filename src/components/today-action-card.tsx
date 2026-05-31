@@ -75,6 +75,16 @@ export function TodayActionCard({
             Managers can reverse it, otherwise it keeps your streak alive.
           </p>
         </div>
+      ) : todayStatus === "period_day" ? (
+        <div className="space-y-4 py-1">
+          <div className="text-center">
+            <p className="text-lg font-semibold text-white">Period day — you&apos;re excused</p>
+            <p className="mt-1 text-sm text-white/55">
+              No pressure to go today. But if you do, it counts.
+            </p>
+          </div>
+          <CheckInButton periodDayMode onOptimistic={(s) => setOverrideStatus(s)} />
+        </div>
       ) : EXCUSED_STATUSES.has(todayStatus) ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Excused for today</p>

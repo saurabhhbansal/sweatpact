@@ -51,23 +51,44 @@ function deriveStatus(checkins: CheckinRow[]): {
     };
   }
 
-  const excused = active.find((checkin) => EXCUSED_STATUSES.has(checkin.status));
-  if (excused) {
+  // Hard excuses (sick/rest/gym_closed) take precedence over unverified —
+  // if you deliberately logged an excuse it shouldn't be silently overridden.
+  // period_day is intentionally excluded here: an actual check-in (even
+  // unverified) should win over it because the user showed up anyway.
+  const hardExcuse = active.find(
+    (checkin) =>
+      checkin.status === "sick_day" ||
+      checkin.status === "gym_closed" ||
+      checkin.status === "rest_day"
+  );
+  if (hardExcuse) {
     return {
-      status: excused.status as DailyStatus,
-      checkinId: excused.id,
-      submissionId: excused.submission_id,
+      status: hardExcuse.status as DailyStatus,
+      checkinId: hardExcuse.id,
+      submissionId: hardExcuse.submission_id,
     };
   }
 
   const unverified = active.find((checkin) => checkin.status === "unverified");
-  if (!unverified) return null;
+  if (unverified) {
+    return {
+      status: "unverified",
+      checkinId: unverified.id,
+      submissionId: unverified.submission_id,
+    };
+  }
 
-  return {
-    status: "unverified",
-    checkinId: unverified.id,
-    submissionId: unverified.submission_id,
-  };
+  // period_day has the lowest priority — only wins if there is no check-in.
+  const periodDay = active.find((checkin) => checkin.status === "period_day");
+  if (periodDay) {
+    return {
+      status: "period_day",
+      checkinId: periodDay.id,
+      submissionId: periodDay.submission_id,
+    };
+  }
+
+  return null;
 }
 
 // A day is closed once its midnight has passed in the user's timezone — no cutoff needed.

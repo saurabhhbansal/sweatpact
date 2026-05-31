@@ -14,8 +14,11 @@ type CheckinResponse = {
 
 export function CheckInButton({
   onOptimistic,
+  periodDayMode = false,
 }: {
   onOptimistic?: (status: "verified" | "unverified") => void;
+  // When true, shows a period-specific congratulation message on success.
+  periodDayMode?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -76,13 +79,19 @@ export function CheckInButton({
 
     setPendingUnverified(null);
     setMessage(
-      data.verified
-        ? data.action === "updated"
-          ? "Your earlier unverified check-in is now verified."
-          : "Checked in and verified."
-        : data.action === "existing"
-          ? "Your unverified check-in is already on the board."
-          : "Saved as unverified. It counts now, but managers can review it."
+      periodDayMode
+        ? data.verified
+          ? "You showed up on your period. That is seriously impressive."
+          : data.action === "existing"
+            ? "Your unverified check-in is already on the board."
+            : "Logged as unverified — incredible that you showed up on your period."
+        : data.verified
+          ? data.action === "updated"
+            ? "Your earlier unverified check-in is now verified."
+            : "Checked in and verified."
+          : data.action === "existing"
+            ? "Your unverified check-in is already on the board."
+            : "Saved as unverified. It counts now, but managers can review it."
     );
     if (data.verified !== undefined) {
       onOptimistic?.(data.verified ? "verified" : "unverified");
@@ -129,7 +138,7 @@ export function CheckInButton({
   return (
     <div className="space-y-2">
       <Button size="lg" className="w-full text-base" onClick={onPrimary} disabled={busy}>
-        {busy ? "Checking in..." : "Check in now"}
+        {busy ? "Checking in..." : periodDayMode ? "Hit the gym anyway" : "Check in now"}
       </Button>
       {message ? <p className="text-sm text-success">{message}</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
