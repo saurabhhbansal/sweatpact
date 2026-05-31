@@ -174,6 +174,22 @@ export function SettingsForm({
       <SectionHeader title="Gyms" />
       <GymsSection initialGyms={initialGyms} />
 
+      <SectionHeader title="iOS Shortcuts" />
+      <Link
+        href="/shortcut"
+        className="flex items-center justify-between rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3.5 text-sm transition hover:bg-white/[0.05]"
+      >
+        <div>
+          <p className="font-medium text-white">Shortcut setup guide</p>
+          <p className="mt-0.5 text-xs text-white/50">
+            {profile.gender === "female"
+              ? "Gym check-in and Period sync automations"
+              : "Auto check-in when you arrive at the gym"}
+          </p>
+        </div>
+        <span className="text-white/35">›</span>
+      </Link>
+
       <details className="group rounded-2xl border border-white/10 bg-white/[0.02]">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-xs font-medium uppercase tracking-[0.18em] text-white/55 transition hover:text-white">
           <span>Advanced</span>
@@ -198,10 +214,9 @@ export function SettingsForm({
             </p>
           </div>
           <div className="space-y-2">
-            <Label>iOS Shortcut</Label>
+            <Label>Webhook secret</Label>
             <p className="text-xs text-muted-foreground">
-              Use your secret to authenticate webhook check-ins. See the{" "}
-              <Link className="underline" href="/shortcut">setup guide</Link>.
+              Authenticates the iOS Shortcut. Rotate if it ever leaks.
             </p>
             <ShortcutSecret userId={profile.id} secret={webhookSecret} />
           </div>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +9,7 @@ import { FinishOnboardingButtons } from "./client";
 
 export const dynamic = "force-dynamic";
 
-const SHORTCUT_URL = "https://www.icloud.com/shortcuts/e8ad937c480b4a4ea5f34dd4d8475b71";
+const GYM_SHORTCUT_URL = "https://www.icloud.com/shortcuts/e8ad937c480b4a4ea5f34dd4d8475b71";
 
 export default async function ShortcutOnboarding() {
   const supabase = createClient();
@@ -52,21 +53,30 @@ export default async function ShortcutOnboarding() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-3 rounded-2xl border border-white/15 bg-white/[0.02] p-4">
+              <p className="text-xs text-white/50">
+                Copy these — the Shortcut will ask for them on install.
+              </p>
+              <CopyField label="User ID" value={profile.id} />
+              <CopyField label="Secret Key" value={webhookSecret} hidden />
+            </div>
             <a
-              href={SHORTCUT_URL}
+              href={GYM_SHORTCUT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
             >
               <Download className="h-4 w-4" />
-              Install SweatPact Shortcut
+              Install Gym Check-in Shortcut
             </a>
-            <div className="space-y-3 rounded-2xl border border-white/15 bg-white/[0.02] p-4">
-              <CopyField label="User ID" value={profile.id} />
-              <CopyField label="Secret Key" value={webhookSecret} hidden />
-            </div>
-            <p className="text-xs text-white/55">
-              After install, go to Shortcuts → Automation → New Personal Automation → <em>Arrive</em> at your gym → run <em>SweatPact Check In</em>.
+            <p className="text-xs text-white/50">
+              After installing, set up an <strong>Arrive</strong> automation in
+              the Shortcuts app pointing at your gym. Step-by-step screenshots
+              are in the{" "}
+              <Link href="/shortcut" className="underline text-white/75">
+                full setup guide
+              </Link>
+              .
             </p>
             <FinishOnboardingButtons />
           </CardContent>
