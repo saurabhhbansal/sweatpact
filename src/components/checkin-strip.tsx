@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 type HistoryEntry = { local_day: string; status: string };
 
@@ -11,15 +11,6 @@ function addDays(day: string, n: number): string {
   const [y, m, d] = day.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() + n);
-  return date.toISOString().slice(0, 10);
-}
-
-// Sunday that ends the ISO week (Mon–Sun) containing `day`.
-function isoWeekSunday(day: string): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const dowMon = (date.getUTCDay() + 6) % 7; // 0=Mon … 6=Sun
-  date.setUTCDate(date.getUTCDate() + (6 - dowMon));
   return date.toISOString().slice(0, 10);
 }
 
@@ -38,7 +29,10 @@ function tone(status: string): string {
     case "gym_closed":
     case "period_day":
       return "border border-white/15 bg-white/[0.06] text-white/55";
-    default: // future / pending
+    case "future":
+      // No box, very dim — clearly distinct from rest days (which have a border + bg).
+      return "text-white/20";
+    default: // pending (past/today with no record yet)
       return "text-white/30";
   }
 }
@@ -59,17 +53,20 @@ export function CheckinStrip({
   const statusByDay = new Map<string, string>();
   for (const row of history) statusByDay.set(row.local_day, row.status);
 
-  // Build the day list: account creation → end of the current ISO week.
+  // Build the day list: account creation → today + 7.
+  // The extra future days let today scroll to the horizontal centre; they are
+  // visually dimmed and have no box so they're not mistaken for rest days.
   const start = startDay <= today ? startDay : today;
-  const end = isoWeekSunday(today);
+  const end = addDays(today, 7);
   const days: string[] = [];
   for (let day = start; day <= end; day = addDays(day, 1)) {
     days.push(day);
     if (days.length > 800) break; // safety cap (~2 years)
   }
 
-  // Scroll today into view on mount.
-  useEffect(() => {
+  // Scroll today to the horizontal centre before the first paint (useLayoutEffect
+  // fires synchronously, preventing the flash-from-account-start issue).
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const target = el.querySelector<HTMLElement>(`[data-day="${today}"]`);
