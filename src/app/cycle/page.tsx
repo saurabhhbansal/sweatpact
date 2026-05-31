@@ -301,11 +301,11 @@ function TrendsCard({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <CardTitle>Trends</CardTitle>
         <CardDescription>Cycle length and period duration over time</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {lengthBars.length >= 1 ? (
           <BarChart
             title="Cycle length (days)"
@@ -341,7 +341,7 @@ function BarChart({
           <p className="text-xs text-white/40">avg {referenceValue}d</p>
         ) : null}
       </div>
-      <div className="relative flex h-28 items-end gap-1.5">
+      <div className="relative flex h-16 items-end gap-1.5">
         {referenceValue != null ? (
           <div
             className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-white/25"
