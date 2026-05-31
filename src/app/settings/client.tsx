@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getTimeZones } from "@vvo/tzdb";
@@ -11,7 +11,6 @@ import type { Profile } from "@/lib/types";
 import { GymsSection } from "./gyms-section";
 import { DeleteAccountButton } from "./delete-account";
 import { PushPermissionPrompt } from "@/components/push-permission";
-import { PeriodSyncCard } from "./period-sync";
 
 type Gym = {
   id: string;
@@ -63,11 +62,9 @@ function getAvailableTimeZones(): string[] {
 export function SettingsForm({
   profile,
   initialGyms,
-  webhookSecret,
 }: {
   profile: Profile;
   initialGyms: Gym[];
-  webhookSecret: string;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -76,7 +73,6 @@ export function SettingsForm({
       normalizeTimeZone(profile.timezone || DEFAULT_TIME_ZONE)
     ),
     gender: (profile.gender as string) ?? "",
-    weekly_goal: (profile.weekly_goal ?? 4).toString(),
   });
   const timezones = useMemo(() => {
     const zones = getAvailableTimeZones();
@@ -100,7 +96,6 @@ export function SettingsForm({
     setMsg(null);
     const body: Record<string, unknown> = {
       timezone: form.timezone,
-      weekly_goal: Math.min(7, Math.max(1, Number(form.weekly_goal) || 4)),
     };
     if (form.gender) body.gender = form.gender;
     const res = await fetch("/api/profile", {
@@ -125,50 +120,27 @@ export function SettingsForm({
         <Link href={`/u/${profile.username}`} className="underline text-white/65 hover:text-white">
           profile
         </Link>
-        .
+        . Weekly goal and rest days are also on your profile.
       </p>
+
       <SectionHeader title="Schedule" />
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="tz">Timezone</Label>
-          <select
-            id="tz"
-            className="flex h-10 w-full rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm"
-            value={form.timezone}
-            onChange={(e) => set("timezone", e.target.value)}
-          >
-            {timezones.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground">
-            Default is IST ({DEFAULT_TIME_ZONE}).
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label>Weekly gym goal</Label>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => set("weekly_goal", n.toString())}
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition ${
-                  form.weekly_goal === n.toString()
-                    ? "bg-white text-black"
-                    : "border border-white/20 bg-white/8 text-white/60 hover:bg-white/15"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Days per week you aim to check in. Penalties apply when you fall short.
-          </p>
-        </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="tz">Timezone</Label>
+        <select
+          id="tz"
+          className="flex h-10 w-full rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm"
+          value={form.timezone}
+          onChange={(e) => set("timezone", e.target.value)}
+        >
+          {timezones.map((tz) => (
+            <option key={tz} value={tz}>
+              {tz}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Default is IST ({DEFAULT_TIME_ZONE}).
+        </p>
       </div>
 
       <SectionHeader title="Gyms" />
@@ -190,72 +162,50 @@ export function SettingsForm({
         <span className="text-white/35">›</span>
       </Link>
 
-      <details className="group rounded-2xl border border-white/10 bg-white/[0.02]">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-xs font-medium uppercase tracking-[0.18em] text-white/55 transition hover:text-white">
-          <span>Advanced</span>
-          <span className="text-white/45 group-open:hidden">Show</span>
-          <span className="hidden text-white/45 group-open:inline">Hide</span>
-        </summary>
-        <div className="space-y-5 border-t border-white/8 p-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="gender">Gender</Label>
-            <select
-              id="gender"
-              className="flex h-10 w-full rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm"
-              value={form.gender}
-              onChange={(e) => set("gender", e.target.value)}
-            >
-              <option value="" disabled>Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Only used to show the period-day excuse option.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label>Webhook secret</Label>
-            <p className="text-xs text-muted-foreground">
-              Authenticates the iOS Shortcut. Rotate if it ever leaks.
-            </p>
-            <ShortcutSecret userId={profile.id} secret={webhookSecret} />
-          </div>
-          <div className="space-y-3 border-t border-white/8 pt-4">
-            <Label>Notifications</Label>
-            <PushPermissionPrompt />
-            <NotifyToggle
-              field="notify_unverified_checkin"
-              label="Share unverified check-ins"
-              description="Let your challenge members know when you log a check-in outside your gym radius."
-              initial={profile.notify_unverified_checkin ?? true}
-            />
-            <NotifyToggle
-              field="notify_rest_day"
-              label="Share rest days"
-              description="Let your challenge members know when you take a rest day."
-              initial={profile.notify_rest_day ?? true}
-            />
-          </div>
-          {profile.gender === "female" ? (
-            <div className="space-y-2 border-t border-white/8 pt-4">
-              <Label>Period sync</Label>
-              <PeriodSyncCard
-                initialEnabled={Boolean(profile.period_sync_enabled)}
-                initialLastSyncedAt={profile.period_last_synced_at ?? null}
-              />
-            </div>
-          ) : null}
-          <div className="space-y-2 border-t border-white/8 pt-4">
-            <Label>Danger zone</Label>
-            <p className="text-xs text-white/55">
-              Permanently delete your account, profile, check-ins, and any settled obligations. Owned challenges hand off to an admin or the oldest other member.
-            </p>
-            {profile.username ? (
-              <DeleteAccountButton username={profile.username} />
-            ) : null}
-          </div>
-        </div>
-      </details>
+      <SectionHeader title="Notifications" />
+      <div className="space-y-3">
+        <PushPermissionPrompt />
+        <NotifyToggle
+          field="notify_unverified_checkin"
+          label="Share unverified check-ins"
+          description="Let your challenge members know when you log a check-in outside your gym radius."
+          initial={profile.notify_unverified_checkin ?? true}
+        />
+        <NotifyToggle
+          field="notify_rest_day"
+          label="Share rest days"
+          description="Let your challenge members know when you take a rest day."
+          initial={profile.notify_rest_day ?? true}
+        />
+      </div>
+
+      <SectionHeader title="Profile" />
+      <div className="space-y-1.5">
+        <Label htmlFor="gender">Gender</Label>
+        <select
+          id="gender"
+          className="flex h-10 w-full rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm"
+          value={form.gender}
+          onChange={(e) => set("gender", e.target.value)}
+        >
+          <option value="" disabled>Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Used to show the period-day excuse option and Cycle tab.
+        </p>
+      </div>
+
+      {profile.gender === "female" ? (
+        <>
+          <SectionHeader title="Period sync" />
+          <PeriodSyncToggle
+            initialEnabled={Boolean(profile.period_sync_enabled)}
+            initialLastSyncedAt={profile.period_last_synced_at ?? null}
+          />
+        </>
+      ) : null}
 
       {err ? <p className="text-sm text-destructive">{err}</p> : null}
       {msg ? <p className="text-sm text-success">{msg}</p> : null}
@@ -266,6 +216,16 @@ export function SettingsForm({
       >
         {busy ? "Saving…" : "Save changes"}
       </Button>
+
+      {profile.username ? (
+        <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4 space-y-2">
+          <p className="text-sm font-medium text-red-400">Delete account</p>
+          <p className="text-xs text-red-400/70">
+            Permanently removes your profile, check-ins, challenges, and obligations. Owned challenges hand off to the next member.
+          </p>
+          <DeleteAccountButton username={profile.username} />
+        </div>
+      ) : null}
     </form>
   );
 }
@@ -337,66 +297,85 @@ function NotifyToggle({
   );
 }
 
-export function ShortcutSecret({
-  userId,
-  secret,
+function timeAgo(iso: string | null): string {
+  if (!iso) return "never";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60_000) return "just now";
+  const m = Math.floor(diff / 60_000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function PeriodSyncToggle({
+  initialEnabled,
+  initialLastSyncedAt,
 }: {
-  userId: string;
-  secret: string;
+  initialEnabled: boolean;
+  initialLastSyncedAt: string | null;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [enabled, setEnabled] = useState(initialEnabled);
   const [busy, setBusy] = useState(false);
-  const [shown, setShown] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const pendingRef = useRef(false);
 
-  async function rotate() {
-    if (!confirm("Rotate webhook secret? Your existing Shortcut will stop working.")) return;
+  async function toggle(next: boolean) {
+    if (busy) return;
+    pendingRef.current = true;
+    const prev = enabled;
+    setEnabled(next);
     setBusy(true);
-    await fetch("/api/profile", {
+    setErr(null);
+    const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ rotate_secret: true }),
+      body: JSON.stringify({ period_sync_enabled: next }),
     });
     setBusy(false);
+    pendingRef.current = false;
+    if (!res.ok) {
+      setEnabled(prev);
+      const data = await res.json().catch(() => ({}));
+      setErr(data.error ?? "Failed");
+      return;
+    }
     startTransition(() => router.refresh());
   }
 
   return (
-    <div className="space-y-2 text-sm">
-      <div>
-        <span className="text-muted-foreground">User ID:</span>{" "}
-        <span className="font-mono">{userId}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-muted-foreground">Secret:</span>
-        <span className="font-mono break-all">
-          {shown ? secret : "•".repeat(Math.min(secret.length, 16))}
-        </span>
+    <div className="space-y-2">
+      <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.02] p-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-white">Sync from Apple Health</p>
+          <p className="mt-0.5 text-xs text-white/55">
+            {enabled
+              ? `Last synced: ${timeAgo(initialLastSyncedAt)}`
+              : "Period days auto-marked as excused via iOS Shortcut."}
+          </p>
+        </div>
         <button
-          className="text-xs underline"
-          onClick={() => setShown((s) => !s)}
+          type="button"
+          onClick={() => toggle(!enabled)}
+          disabled={busy}
+          aria-pressed={enabled}
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition ${
+            enabled ? "border-white bg-white" : "border-white/25 bg-white/[0.06]"
+          } disabled:opacity-50`}
         >
-          {shown ? "hide" : "show"}
+          <span
+            className={`inline-block h-5 w-5 rounded-full transition ${
+              enabled ? "translate-x-6 bg-black" : "translate-x-1 bg-white/70"
+            }`}
+          />
         </button>
       </div>
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(secret);
-            } catch {
-              /* ignore */
-            }
-          }}
-        >
-          Copy secret
-        </Button>
-        <Button size="sm" variant="destructive" className="rounded-full" onClick={rotate} disabled={busy}>
-          {busy ? "…" : "Rotate"}
-        </Button>
-      </div>
+      <Link href="/shortcut" className="block text-xs text-white/45 underline hover:text-white/70">
+        Set up the iOS Shortcut →
+      </Link>
+      {err ? <p className="text-xs text-white/85">{err}</p> : null}
     </div>
   );
 }

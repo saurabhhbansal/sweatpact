@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Copy, Download, Eye, EyeOff } from "lucide-react";
 
 // ─── CopyField ────────────────────────────────────────────────────────────────
@@ -91,6 +92,37 @@ function Step({
         {children}
       </div>
     </div>
+  );
+}
+
+// ─── RotateSecretButton ───────────────────────────────────────────────────────
+
+export function RotateSecretButton() {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
+
+  async function rotate() {
+    if (!confirm("Rotate webhook secret? Your existing Shortcut will stop working until you update it with the new secret.")) return;
+    setBusy(true);
+    await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rotate_secret: true }),
+    });
+    setBusy(false);
+    startTransition(() => router.refresh());
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={rotate}
+      disabled={busy}
+      className="rounded-full border border-white/20 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50"
+    >
+      {busy ? "Rotating…" : "Rotate secret"}
+    </button>
   );
 }
 
@@ -254,8 +286,10 @@ function GymShortcutSteps({
         <p className="font-semibold text-white/80">Security</p>
         <p>
           The Secret Key is what proves it is you. Anyone with it can check in as
-          you. If it ever leaks, go to <strong>Settings → Advanced → Rotate secret</strong>.
+          you. Rotate it here if it ever leaks — your Shortcut will need to be
+          reinstalled with the new secret.
         </p>
+        <RotateSecretButton />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { areUsersInSameChallenge, computeProfileStats } from "@/lib/stats";
 import { computePeriodStats } from "@/lib/period-stats";
@@ -11,6 +12,7 @@ import { AvatarUpload } from "./avatar-upload";
 import { NameEditor } from "./name-editor";
 import { UsernameEditor } from "./username-editor";
 import { RestDaysPicker } from "./rest-days-picker";
+import { WeeklyGoalPicker } from "./weekly-goal-picker";
 import { VisibilityToggle } from "./visibility-toggle";
 import { Avatar } from "@/components/avatar";
 
@@ -83,6 +85,19 @@ export default async function ProfilePage({
       .gte("local_day", cutoffKey)
       .order("local_day", { ascending: true });
     periodStats = computePeriodStats(periodRecords ?? [], today);
+  }
+
+  // Gym names — visible to anyone who can see stats (owner + challenge partners).
+  // Uses admin client since viewer-scoped RLS only covers the viewer's own gyms.
+  let gymNames: string[] = [];
+  if (canSeeStats) {
+    const admin = createAdminClient();
+    const { data: gyms } = await admin
+      .from("user_gyms")
+      .select("name")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: true });
+    gymNames = (gyms ?? []).map((g) => g.name);
   }
 
   const displayName = profile.name?.trim() || `@${profile.username}`;
@@ -166,8 +181,20 @@ export default async function ProfilePage({
                 </p>
               </div>
               <p className="mt-3 text-xs text-white/50">
-                This week: {stats.thisWeekCheckins} / {stats.weeklyGoal} days
+                This week: {stats.thisWeekCheckins} / {stats.weeklyGoal} days &middot; goal {stats.weeklyGoal}d/week
               </p>
+              {gymNames.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {gymNames.map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-full border border-white/20 bg-white/[0.06] px-2.5 py-1 text-xs text-white/70"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </section>
 
             <div className="grid grid-cols-2 gap-3">
@@ -179,7 +206,17 @@ export default async function ProfilePage({
 
             {isOwner ? (
               <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Weekly rest days</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Weekly goal</p>
+                <p className="mt-1 text-xs text-white/50">
+                  Days per week you aim to check in. Penalties apply when you fall short.
+                </p>
+                <div className="mt-3">
+                  <WeeklyGoalPicker
+                    initialWeeklyGoal={profile.weekly_goal ?? 4}
+                    restDaysCount={Array.isArray(profile.rest_days) ? profile.rest_days.length : 0}
+                  />
+                </div>
+                <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">Rest days</p>
                 <p className="mt-1 text-xs text-white/50">
                   Days marked rest are automatically excused — no check-in needed.
                 </p>

@@ -30,13 +30,6 @@ export default async function SettingsPage() {
     .eq("user_id", profile.id)
     .order("created_at", { ascending: true });
 
-  const { data: secretRow } = await supabase
-    .from("profile_secrets")
-    .select("webhook_secret")
-    .eq("user_id", profile.id)
-    .maybeSingle();
-  const webhookSecret = secretRow?.webhook_secret ?? "";
-
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
@@ -50,7 +43,6 @@ export default async function SettingsPage() {
             <SettingsForm
               profile={profile}
               initialGyms={gyms ?? []}
-              webhookSecret={webhookSecret}
             />
           </CardContent>
         </Card>
