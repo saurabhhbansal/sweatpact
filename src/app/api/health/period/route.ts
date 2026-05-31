@@ -3,6 +3,7 @@ import { z } from "zod";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
 import { listUserMemberships } from "@/lib/groups";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { localDay, normalizeTimeZone } from "@/lib/time";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,11 +78,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Restrict the date window so a misbehaving Shortcut can't dump years of data.
+  // Use the user's local timezone — Shortcut dates are local-day strings, not UTC.
   const now = new Date();
+  const timezone = normalizeTimeZone(typeof profile.timezone === "string" ? profile.timezone : undefined);
   const earliest = new Date(now);
   earliest.setUTCDate(earliest.getUTCDate() - WINDOW_DAYS);
-  const earliestKey = earliest.toISOString().slice(0, 10);
-  const todayKey = now.toISOString().slice(0, 10);
+  const earliestKey = localDay(earliest, timezone);
+  const todayKey = localDay(now, timezone);
 
   // Aggregate by day, keeping the highest flow per day.
   const byDay = new Map<string, Flow>();

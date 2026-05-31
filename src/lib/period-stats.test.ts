@@ -23,12 +23,15 @@ describe("computePeriodStats", () => {
     expect(s.regularity).toBe("unknown");
     expect(s.currentCycleDay).toBeNull();
     expect(s.currentPhase).toBeNull();
+    expect(s.isOverdue).toBe(false);
+    expect(s.daysSinceLastPeriodStart).toBeNull();
   });
 
   it("treats a single logged day as a one-day cycle with no prediction", () => {
     const s = computePeriodStats(block("2026-05-01", 1), "2026-05-01");
     expect(s.cyclesSampled).toBe(1);
     expect(s.cycles[0].durationDays).toBe(1);
+    expect(s.cycles[0].loggedFlowDays).toBe(1);
     expect(s.cycles[0].cycleLengthDays).toBeNull();
     expect(s.averageCycleDays).toBeNull();
     expect(s.nextPredictedStart).toBeNull();
@@ -44,73 +47,164 @@ describe("computePeriodStats", () => {
       start: "2026-05-01",
       end: "2026-05-05",
       durationDays: 5,
+      loggedFlowDays: 5,
     });
     expect(s.averageDurationDays).toBe(5);
   });
 
-  it("starts a new cycle when a day is skipped (gap > 1)", () => {
-    // 05-01, 05-03 — the missing 05-02 splits these into two cycles.
+  it("tolerates a single skipped logging day within one episode", () => {
+    // 05-01, [05-02 missing], 05-03 — gap of 2 stays in one bleeding episode.
     const records: PeriodRecord[] = [
       { local_day: "2026-05-01", flow_level: "medium" },
       { local_day: "2026-05-03", flow_level: "medium" },
     ];
     const s = computePeriodStats(records, "2026-05-03");
-    expect(s.cyclesSampled).toBe(2);
+    expect(s.cyclesSampled).toBe(1);
+    expect(s.cycles[0]).toMatchObject({
+      start: "2026-05-01",
+      end: "2026-05-03",
+      durationDays: 3, // span includes the tolerated gap day
+      loggedFlowDays: 2, // but only 2 days were actually logged
+    });
   });
 
-  it("computes average cycle length and predicts the next start", () => {
+  it("starts a new cycle on a realistic multi-week gap", () => {
     const records = [...block("2026-04-01", 5), ...block("2026-04-29", 5)];
     const s = computePeriodStats(records, "2026-05-10");
     expect(s.cyclesSampled).toBe(2);
-    expect(s.averageCycleDays).toBe(28); // 04-01 → 04-29
-    expect(s.nextPredictedStart).toBe("2026-05-27"); // 04-29 + 28
-    expect(s.daysUntilPredicted).toBe(17); // 05-10 → 05-27
+    expect(s.cycles[0].cycleLengthDays).toBe(28); // 04-01 → 04-29
   });
 
-  it("uses a negative daysUntilPredicted when overdue", () => {
+  it("does NOT predict from a single measured gap (needs 3 starts)", () => {
     const records = [...block("2026-04-01", 1), ...block("2026-04-29", 1)];
-    const s = computePeriodStats(records, "2026-06-01");
-    expect(s.nextPredictedStart).toBe("2026-05-27");
-    expect(s.daysUntilPredicted).toBe(-5); // predicted in the past
-  });
-
-  it("labels tight cycle lengths as regular", () => {
-    // Cycle starts: 01-01, +27 → 01-28, +29 → 02-26. gaps [27, 29], spread 2.
-    const records = [
-      ...block("2026-01-01", 1),
-      ...block("2026-01-28", 1),
-      ...block("2026-02-26", 1),
-    ];
-    const s = computePeriodStats(records, "2026-03-01");
-    expect(s.cyclesSampled).toBe(3);
-    expect(s.cycleLengthSpreadDays).toBe(2);
-    expect(s.regularity).toBe("regular");
-    expect(s.averageCycleDays).toBe(28);
-  });
-
-  it("labels widely varying cycle lengths as irregular", () => {
-    // gaps [24, 35], spread 11.
-    const records = [
-      ...block("2026-01-01", 1),
-      ...block("2026-01-25", 1),
-      ...block("2026-03-01", 1),
-    ];
-    const s = computePeriodStats(records, "2026-03-10");
-    expect(s.cyclesSampled).toBe(3);
-    expect(s.cycleLengthSpreadDays).toBe(11);
-    expect(s.regularity).toBe("irregular");
-  });
-
-  it("keeps regularity unknown with fewer than 3 cycles", () => {
-    const records = [...block("2026-04-01", 1), ...block("2026-04-29", 1)];
-    const s = computePeriodStats(records, "2026-05-01");
+    const s = computePeriodStats(records, "2026-05-10");
     expect(s.cyclesSampled).toBe(2);
-    expect(s.cycleLengthSpreadDays).toBeNull();
+    expect(s.averageCycleDays).toBeNull();
+    expect(s.nextPredictedStart).toBeNull();
+    expect(s.daysUntilPredicted).toBeNull();
     expect(s.regularity).toBe("unknown");
   });
 
+  it("computes average and predicts once there are 3 starts (2 gaps)", () => {
+    const records = [
+      ...block("2026-04-01", 1),
+      ...block("2026-04-29", 1),
+      ...block("2026-05-27", 1),
+    ];
+    const s = computePeriodStats(records, "2026-05-30");
+    expect(s.cyclesSampled).toBe(3);
+    expect(s.averageCycleDays).toBe(28); // gaps [28, 28]
+    expect(s.nextPredictedStart).toBe("2026-06-24"); // 05-27 + 28
+    expect(s.daysUntilPredicted).toBe(25); // 05-30 → 06-24
+    expect(s.isOverdue).toBe(false);
+  });
+
+  it("filters implausible gaps out of the average", () => {
+    // 200-day gap is too long to be a real cycle; the two 28-day gaps remain.
+    const records = [
+      ...block("2026-01-01", 1),
+      ...block("2026-07-20", 1), // ~200 days later → dropped
+      ...block("2026-08-17", 1), // +28
+      ...block("2026-09-14", 1), // +28
+    ];
+    const s = computePeriodStats(records, "2026-09-20");
+    // valid gaps are the two 28s (the long Jan→Jul gap is excluded)
+    expect(s.averageCycleDays).toBe(28);
+    expect(s.nextPredictedStart).toBe("2026-10-12"); // 09-14 + 28
+  });
+
+  it("suppresses phase and cycle-day when overdue, but keeps the prediction", () => {
+    const records = [
+      ...block("2026-01-01", 1),
+      ...block("2026-01-29", 1),
+      ...block("2026-02-26", 1),
+    ];
+    const s = computePeriodStats(records, "2026-06-01");
+    expect(s.averageCycleDays).toBe(28);
+    expect(s.nextPredictedStart).toBe("2026-03-26"); // 02-26 + 28, long past
+    expect(s.isOverdue).toBe(true);
+    expect(s.currentPhase).toBeNull();
+    expect(s.currentCycleDay).toBeNull();
+  });
+
+  it("labels tight cycle lengths as regular (≥3 valid gaps)", () => {
+    // starts: 01-01, +28, +27, +29 → gaps [28, 27, 29]
+    const records = [
+      ...block("2026-01-01", 1),
+      ...block("2026-01-29", 1),
+      ...block("2026-02-25", 1),
+      ...block("2026-03-26", 1),
+    ];
+    const s = computePeriodStats(records, "2026-04-01");
+    expect(s.cyclesSampled).toBe(4);
+    expect(s.regularity).toBe("regular");
+    expect(s.cycleLengthSpreadDays).toBe(2); // 29 − 27
+  });
+
+  it("does not flip to irregular on a single outlier cycle", () => {
+    // gaps [28, 29, 60] — one long outlier; MAD stays small → regular.
+    const records = [
+      ...block("2026-01-01", 1),
+      ...block("2026-01-29", 1), // +28
+      ...block("2026-02-27", 1), // +29
+      ...block("2026-04-28", 1), // +60
+    ];
+    const s = computePeriodStats(records, "2026-05-01");
+    expect(s.cyclesSampled).toBe(4);
+    expect(s.regularity).toBe("regular");
+  });
+
+  it("labels genuinely varying cycle lengths as irregular", () => {
+    // gaps [21, 35, 28] — spread out around the median → MAD large.
+    const records = [
+      ...block("2026-01-01", 1),
+      ...block("2026-01-22", 1), // +21
+      ...block("2026-02-26", 1), // +35
+      ...block("2026-03-26", 1), // +28
+    ];
+    const s = computePeriodStats(records, "2026-04-01");
+    expect(s.cyclesSampled).toBe(4);
+    expect(s.regularity).toBe("irregular");
+  });
+
+  it("keeps regularity unknown with fewer than 3 valid gaps", () => {
+    const records = [
+      ...block("2026-03-04", 1),
+      ...block("2026-04-01", 1),
+      ...block("2026-04-29", 1),
+    ];
+    const s = computePeriodStats(records, "2026-05-01");
+    expect(s.cyclesSampled).toBe(3); // 2 gaps only
+    expect(s.regularity).toBe("unknown");
+  });
+
+  it("reports days since the last period START, not its end", () => {
+    const s = computePeriodStats(block("2026-05-01", 5), "2026-05-10");
+    expect(s.lastPeriodStart).toBe("2026-05-01");
+    expect(s.daysSinceLastPeriodStart).toBe(9); // 05-01 → 05-10
+    expect(s.daysSinceLastPeriod).toBe(5); // end 05-05 → 05-10 (end-based)
+  });
+
+  it("dedupes duplicate local_day rows", () => {
+    const records: PeriodRecord[] = [
+      { local_day: "2026-05-01", flow_level: "medium" },
+      { local_day: "2026-05-01", flow_level: "heavy" },
+      { local_day: "2026-05-02", flow_level: "medium" },
+    ];
+    const s = computePeriodStats(records, "2026-05-10");
+    expect(s.cyclesSampled).toBe(1);
+    expect(s.cycles[0].durationDays).toBe(2);
+    expect(s.cycles[0].loggedFlowDays).toBe(2);
+  });
+
+  it("drops future-dated records", () => {
+    const records = [...block("2026-06-01", 1)];
+    const s = computePeriodStats(records, "2026-05-10");
+    expect(s.cyclesSampled).toBe(0);
+    expect(s.lastPeriodStart).toBeNull();
+  });
+
   it("handles a leap-year month boundary in duration", () => {
-    // 2024 is a leap year: 02-28, 02-29, 03-01 are consecutive.
     const records: PeriodRecord[] = [
       { local_day: "2024-02-28", flow_level: "medium" },
       { local_day: "2024-02-29", flow_level: "medium" },
@@ -146,7 +240,8 @@ describe("estimatePhase", () => {
     expect(estimatePhase(20, 5, 28)).toBe("luteal");
   });
 
-  it("falls back to follicular when average cycle is unknown", () => {
-    expect(estimatePhase(10, 5, null)).toBe("follicular");
+  it("returns menstrual within duration but null past it when avg cycle is unknown", () => {
+    expect(estimatePhase(3, 5, null)).toBe("menstrual");
+    expect(estimatePhase(10, 5, null)).toBeNull();
   });
 });

@@ -254,7 +254,14 @@ function Highlights({ stats }: { stats: PeriodStats }) {
     {
       label: "Avg cycle",
       value: stats.averageCycleDays != null ? `${stats.averageCycleDays}d` : "—",
-      sub: stats.cyclesSampled > 0 ? `${stats.cyclesSampled} cycles` : "log 2+ cycles",
+      sub:
+        stats.averageCycleDays != null
+          ? `${stats.cyclesSampled} cycles`
+          : stats.cyclesSampled >= 2
+            ? "1 more period needed"
+            : stats.cyclesSampled === 1
+              ? "2 more periods needed"
+              : "log 3 periods",
     },
     {
       label: "Avg duration",

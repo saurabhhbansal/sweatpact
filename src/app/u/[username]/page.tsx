@@ -313,7 +313,7 @@ function PeriodStatsCard({
 }: {
   stats: {
     lastPeriodStart: string | null;
-    daysSinceLastPeriod: number | null;
+    daysSinceLastPeriodStart: number | null;
     averageCycleDays: number | null;
     averageDurationDays: number | null;
     cyclesSampled: number;
@@ -368,10 +368,10 @@ function PeriodStatsCard({
             {startLabel}
           </p>
           <p className="mt-0.5 text-xs text-white/45">
-            {stats.daysSinceLastPeriod != null
-              ? stats.daysSinceLastPeriod === 0
+            {stats.daysSinceLastPeriodStart != null
+              ? stats.daysSinceLastPeriodStart === 0
                 ? "today"
-                : `${stats.daysSinceLastPeriod} day${stats.daysSinceLastPeriod === 1 ? "" : "s"} ago`
+                : `${stats.daysSinceLastPeriodStart} day${stats.daysSinceLastPeriodStart === 1 ? "" : "s"} ago`
               : "—"}
           </p>
         </div>
@@ -381,7 +381,7 @@ function PeriodStatsCard({
             {predictedLabel ?? "—"}
           </p>
           <p className="mt-0.5 text-xs text-white/45">
-            {dueText ?? "needs 2+ cycles"}
+            {dueText ?? "needs 3 periods"}
           </p>
         </div>
         <div>
@@ -390,7 +390,7 @@ function PeriodStatsCard({
             {stats.averageCycleDays != null ? `${stats.averageCycleDays} days` : "—"}
           </p>
           <p className="mt-0.5 text-xs text-white/45">
-            {stats.averageCycleDays == null ? "needs 2+ cycles" : `from ${stats.cyclesSampled} cycles`}
+            {stats.averageCycleDays == null ? "needs 3 periods" : `from ${stats.cyclesSampled} cycles`}
           </p>
         </div>
         <div>
