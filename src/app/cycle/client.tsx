@@ -1,46 +1,433 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Droplet } from "lucide-react";
 import { PeriodDayEditor } from "@/components/progress-section";
+import type { PeriodStats, CycleSummary } from "@/lib/period-stats";
 
-/**
- * Quick "log today" action for the Cycle tab. Reuses the same flow editor the
- * calendar uses, so there's a single source of truth for logging period days.
- */
-export function LogTodayButton({
+type FlowLevel = "light" | "medium" | "heavy" | "unspecified";
+type PeriodRecord = { local_day: string; flow_level: FlowLevel };
+
+const PHASE_LABEL: Record<NonNullable<PeriodStats["currentPhase"]>, string> = {
+  menstrual: "Menstrual",
+  follicular: "Follicular",
+  ovulation: "Ovulation",
+  luteal: "Luteal",
+};
+
+const FLOW_LABEL: Record<FlowLevel, string> = {
+  light: "Light flow",
+  medium: "Medium flow",
+  heavy: "Heavy flow",
+  unspecified: "Had flow",
+};
+
+const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+function addDays(day: string, n: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + n);
+  return date.toISOString().slice(0, 10);
+}
+
+function fmtShort(day: string): string {
+  return new Date(day).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function fmtFull(day: string): string {
+  return new Date(day).toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+// ─── Date strip ───────────────────────────────────────────────────────────────
+
+function DateStrip({
   today,
-  currentFlow,
+  selectedDay,
+  onSelect,
+  flowByDay,
+  predictedStart,
+  predictedEnd,
 }: {
   today: string;
-  currentFlow: "light" | "medium" | "heavy" | "unspecified" | null;
+  selectedDay: string;
+  onSelect: (day: string) => void;
+  flowByDay: Map<string, FlowLevel>;
+  predictedStart: string | null;
+  predictedEnd: string | null;
 }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [, startTransition] = useTransition();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Build a 6-week window: 21 days back through 21 days forward
+  const days = Array.from({ length: 43 }, (_, i) => addDays(today, i - 21));
+
+  // Scroll selected day into centre on mount and whenever it changes
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const target = el.querySelector<HTMLElement>(`[data-day="${selectedDay}"]`);
+    if (target) {
+      el.scrollLeft =
+        target.offsetLeft - el.clientWidth / 2 + target.clientWidth / 2;
+    }
+  }, [selectedDay]);
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
-      >
-        <Droplet className="h-4 w-4" />
-        {currentFlow ? "Edit today's period day" : "Log today as a period day"}
-      </button>
-      {open ? (
+    <div
+      ref={scrollRef}
+      className="flex gap-2 overflow-x-auto pb-1"
+      style={{ scrollbarWidth: "none" }}
+    >
+      {days.map((day) => {
+        const isSelected = day === selectedDay;
+        const isToday = day === today;
+        const isPeriod = flowByDay.has(day);
+        const isPredicted =
+          !isPeriod &&
+          predictedStart != null &&
+          predictedEnd != null &&
+          day >= predictedStart &&
+          day <= predictedEnd;
+        const date = new Date(day);
+        const d = date.getUTCDate();
+        const dow = DOW[date.getUTCDay()];
+
+        return (
+          <button
+            key={day}
+            data-day={day}
+            type="button"
+            onClick={() => onSelect(day)}
+            className="flex shrink-0 flex-col items-center gap-0.5"
+          >
+            <span className="text-[10px] text-white/40">{dow}</span>
+            <div
+              className={`relative flex h-[2.6rem] w-9 items-center justify-center rounded-full transition-all ${
+                isSelected
+                  ? "bg-white text-black"
+                  : isPeriod
+                    ? "bg-rose-500/25 text-white ring-1 ring-rose-400/40"
+                    : isPredicted
+                      ? "border border-dashed border-white/30 text-white/60"
+                      : isToday
+                        ? "border border-white/40 text-white"
+                        : "text-white/55"
+              }`}
+            >
+              <span className="text-sm font-medium leading-none">{d}</span>
+              {/* Dot below number for period / predicted */}
+              {isPeriod && !isSelected ? (
+                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-rose-400" />
+              ) : isPredicted ? (
+                <span className="absolute bottom-1 h-1 w-1 rounded-full border border-white/35" />
+              ) : null}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Log section ──────────────────────────────────────────────────────────────
+
+function LogSection({
+  selectedDay,
+  today,
+  flowByDay,
+  predictedStart,
+  predictedEnd,
+  onEdit,
+}: {
+  selectedDay: string;
+  today: string;
+  flowByDay: Map<string, FlowLevel>;
+  predictedStart: string | null;
+  predictedEnd: string | null;
+  onEdit: (day: string) => void;
+}) {
+  const isFuture = selectedDay > today;
+  const flow = flowByDay.get(selectedDay) ?? null;
+  const isPeriod = flow != null;
+  const isPredicted =
+    !isPeriod &&
+    predictedStart != null &&
+    predictedEnd != null &&
+    selectedDay >= predictedStart &&
+    selectedDay <= predictedEnd;
+
+  return (
+    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Log</p>
+        {isPeriod && !isFuture ? (
+          <button
+            type="button"
+            onClick={() => onEdit(selectedDay)}
+            className="text-xs text-white/45 hover:text-white"
+          >
+            Edit
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {/* Bleeding / period row */}
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-rose-400" />
+          <span className="text-xs font-medium text-rose-300">Bleeding</span>
+        </div>
+        <button
+          type="button"
+          disabled={isFuture}
+          onClick={() => !isFuture && onEdit(selectedDay)}
+          className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+            isPeriod
+              ? "border-rose-500/30 bg-rose-500/10"
+              : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+          } disabled:cursor-default`}
+        >
+          <span className={`text-sm font-medium ${isPeriod ? "text-white" : "text-white/40"}`}>
+            Period
+          </span>
+          <span className={`text-sm ${isPeriod ? "text-rose-300 font-medium" : "text-white/25"}`}>
+            {isPeriod
+              ? FLOW_LABEL[flow]
+              : isFuture
+                ? isPredicted
+                  ? "Predicted"
+                  : "—"
+                : "No data — tap to log"}
+          </span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ─── Highlights ───────────────────────────────────────────────────────────────
+
+function Highlights({ stats }: { stats: PeriodStats }) {
+  const phase = stats.currentPhase ? PHASE_LABEL[stats.currentPhase] : null;
+
+  const items = [
+    stats.nextPredictedStart != null && stats.daysUntilPredicted != null
+      ? {
+          label: "Next period",
+          value: fmtShort(stats.nextPredictedStart),
+          sub:
+            stats.daysUntilPredicted < 0
+              ? `${Math.abs(stats.daysUntilPredicted)}d late`
+              : stats.daysUntilPredicted === 0
+                ? "Today"
+                : `In ${stats.daysUntilPredicted}d`,
+        }
+      : null,
+    stats.currentCycleDay != null
+      ? {
+          label: "Cycle day",
+          value: `Day ${stats.currentCycleDay}`,
+          sub: phase ?? "—",
+        }
+      : null,
+    {
+      label: "Avg cycle",
+      value: stats.averageCycleDays != null ? `${stats.averageCycleDays}d` : "—",
+      sub: stats.cyclesSampled > 0 ? `${stats.cyclesSampled} cycles` : "log 2+ cycles",
+    },
+    {
+      label: "Avg duration",
+      value: stats.averageDurationDays != null ? `${stats.averageDurationDays}d` : "—",
+      sub:
+        stats.regularity === "regular"
+          ? "Regular"
+          : stats.regularity === "irregular"
+            ? "Variable"
+            : "—",
+    },
+  ].filter(Boolean) as Array<{ label: string; value: string; sub: string }>;
+
+  if (items.length === 0) return null;
+
+  return (
+    <section>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+        Highlights
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+          >
+            <p className="text-xs uppercase tracking-[0.14em] text-white/50">{item.label}</p>
+            <p className="mt-1 truncate text-xl font-bold text-white">{item.value}</p>
+            <p className="mt-0.5 text-xs text-white/40">{item.sub}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Trends ───────────────────────────────────────────────────────────────────
+
+function Trends({
+  cycles,
+  averageCycleDays,
+}: {
+  cycles: CycleSummary[];
+  averageCycleDays: number | null;
+}) {
+  const recent = cycles.slice(-8);
+  const lengthBars = recent
+    .filter((c) => c.cycleLengthDays != null)
+    .map((c) => ({ label: fmtShort(c.start), value: c.cycleLengthDays as number }));
+  const durationBars = recent.map((c) => ({ label: fmtShort(c.start), value: c.durationDays }));
+
+  if (durationBars.length < 1) return null;
+
+  return (
+    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Trends</p>
+      <div className="space-y-5">
+        {lengthBars.length >= 2 ? (
+          <BarChart title="Cycle length (days)" bars={lengthBars} referenceValue={averageCycleDays} />
+        ) : (
+          <p className="text-xs text-white/35">Cycle-length trend needs 2+ cycles.</p>
+        )}
+        <BarChart title="Period duration (days)" bars={durationBars} referenceValue={null} />
+      </div>
+    </section>
+  );
+}
+
+function BarChart({
+  title,
+  bars,
+  referenceValue,
+}: {
+  title: string;
+  bars: Array<{ label: string; value: number }>;
+  referenceValue: number | null;
+}) {
+  const max = Math.max(...bars.map((b) => b.value), referenceValue ?? 0, 1);
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-white/40">{title}</p>
+        {referenceValue != null ? (
+          <p className="text-[10px] text-white/35">avg {referenceValue}d</p>
+        ) : null}
+      </div>
+      <div className="relative flex h-16 items-end gap-1.5">
+        {referenceValue != null ? (
+          <div
+            className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-white/20"
+            style={{ bottom: `${(referenceValue / max) * 100}%` }}
+            aria-hidden
+          />
+        ) : null}
+        {bars.map((b, i) => (
+          <div key={i} className="flex min-w-0 flex-1 flex-col items-center justify-end">
+            <span className="mb-0.5 text-[9px] text-white/40">{b.value}</span>
+            <div
+              className="w-full rounded-t bg-rose-400/60"
+              style={{ height: `${Math.max((b.value / max) * 100, 4)}%` }}
+              title={`${b.label}: ${b.value}d`}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex gap-1.5">
+        {bars.map((b, i) => (
+          <span key={i} className="min-w-0 flex-1 truncate text-center text-[8px] text-white/30">
+            {b.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main CycleView export ────────────────────────────────────────────────────
+
+export function CycleView({
+  today,
+  stats,
+  records,
+}: {
+  today: string;
+  stats: PeriodStats;
+  records: PeriodRecord[];
+}) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [selectedDay, setSelectedDay] = useState(today);
+  const [editingDay, setEditingDay] = useState<string | null>(null);
+
+  const flowByDay = new Map(records.map((r) => [r.local_day, r.flow_level]));
+
+  // Predicted period window: from nextPredictedStart through +avgDuration days
+  const predictedStart = stats.nextPredictedStart;
+  const predictedEnd =
+    predictedStart && stats.averageDurationDays
+      ? addDays(predictedStart, stats.averageDurationDays - 1)
+      : predictedStart;
+
+  return (
+    <div className="space-y-5">
+      {/* Selected date heading */}
+      <div>
+        <p className="text-2xl font-semibold text-white">{fmtFull(selectedDay)}</p>
+      </div>
+
+      {/* Date strip */}
+      <DateStrip
+        today={today}
+        selectedDay={selectedDay}
+        onSelect={setSelectedDay}
+        flowByDay={flowByDay}
+        predictedStart={predictedStart}
+        predictedEnd={predictedEnd ?? null}
+      />
+
+      {/* Log section */}
+      <LogSection
+        selectedDay={selectedDay}
+        today={today}
+        flowByDay={flowByDay}
+        predictedStart={predictedStart}
+        predictedEnd={predictedEnd ?? null}
+        onEdit={(day) => setEditingDay(day)}
+      />
+
+      {/* Highlights grid */}
+      <Highlights stats={stats} />
+
+      {/* Trends */}
+      <Trends cycles={stats.cycles} averageCycleDays={stats.averageCycleDays} />
+
+      <p className="text-center text-xs text-white/30">
+        Predictions are estimates — not medical advice.
+      </p>
+
+      {/* Period day editor modal */}
+      {editingDay ? (
         <PeriodDayEditor
-          day={today}
-          currentFlow={currentFlow}
-          onClose={() => setOpen(false)}
+          day={editingDay}
+          currentFlow={flowByDay.get(editingDay) ?? null}
+          onClose={() => setEditingDay(null)}
           onSaved={() => {
-            setOpen(false);
+            setEditingDay(null);
             startTransition(() => router.refresh());
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }

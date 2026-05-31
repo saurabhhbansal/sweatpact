@@ -199,7 +199,7 @@ type WizardStep = {
 const GYM_SHORTCUT_URL =
   "https://www.icloud.com/shortcuts/e8ad937c480b4a4ea5f34dd4d8475b71";
 const PERIOD_SHORTCUT_URL =
-  "https://www.icloud.com/shortcuts/41571ae1c985413fbd09facd41786706";
+  "https://www.icloud.com/shortcuts/17a2f0e5651c4c6287dc5e1def0acbf6";
 
 function gymSteps(userId: string, webhookSecret: string): WizardStep[] {
   return [
