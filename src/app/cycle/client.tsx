@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PeriodDayEditor } from "@/components/progress-section";
 import type { PeriodStats, CycleSummary } from "@/lib/period-stats";
+import { PeriodSharingManager } from "./sharing";
 
 type FlowLevel = "light" | "medium" | "heavy" | "unspecified";
 type PeriodRecord = { local_day: string; flow_level: FlowLevel };
@@ -152,6 +153,7 @@ function LogSection({
   predictedStart,
   predictedEnd,
   onEdit,
+  readonly = false,
 }: {
   selectedDay: string;
   today: string;
@@ -159,6 +161,7 @@ function LogSection({
   predictedStart: string | null;
   predictedEnd: string | null;
   onEdit: (day: string) => void;
+  readonly?: boolean;
 }) {
   const isFuture = selectedDay > today;
   const flow = flowByDay.get(selectedDay) ?? null;
@@ -169,12 +172,14 @@ function LogSection({
     predictedEnd != null &&
     selectedDay >= predictedStart &&
     selectedDay <= predictedEnd;
+  // In readonly mode (viewing someone else's data) the period row is not tappable.
+  const canEdit = !readonly && !isFuture;
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Log</p>
-        {isPeriod && !isFuture ? (
+        {isPeriod && canEdit ? (
           <button
             type="button"
             onClick={() => onEdit(selectedDay)}
@@ -193,13 +198,13 @@ function LogSection({
         </div>
         <button
           type="button"
-          disabled={isFuture}
-          onClick={() => !isFuture && onEdit(selectedDay)}
+          disabled={!canEdit}
+          onClick={() => canEdit && onEdit(selectedDay)}
           className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
             isPeriod
               ? "border-rose-500/30 bg-rose-500/10"
-              : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
-          } disabled:cursor-default`}
+              : "border-white/10 bg-white/[0.03]"
+          } ${canEdit ? "hover:bg-white/[0.06]" : "cursor-default"}`}
         >
           <span className={`text-sm font-medium ${isPeriod ? "text-white" : "text-white/40"}`}>
             Period
@@ -207,11 +212,13 @@ function LogSection({
           <span className={`text-sm ${isPeriod ? "text-rose-300 font-medium" : "text-white/25"}`}>
             {isPeriod
               ? FLOW_LABEL[flow]
-              : isFuture
-                ? isPredicted
-                  ? "Predicted"
-                  : "—"
-                : "No data — tap to log"}
+              : isPredicted
+                ? "Predicted"
+                : isFuture
+                  ? "—"
+                  : readonly
+                    ? "No data"
+                    : "No data — tap to log"}
           </span>
         </button>
       </div>
@@ -370,10 +377,14 @@ export function CycleView({
   today,
   stats,
   records,
+  readonly = false,
 }: {
   today: string;
   stats: PeriodStats;
   records: PeriodRecord[];
+  // Read-only view (e.g. a grantee viewing someone else's cycle data):
+  // hides editing affordances and the sharing manager.
+  readonly?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -414,6 +425,7 @@ export function CycleView({
         predictedStart={predictedStart}
         predictedEnd={predictedEnd ?? null}
         onEdit={(day) => setEditingDay(day)}
+        readonly={readonly}
       />
 
       {/* Highlights grid */}
@@ -422,12 +434,15 @@ export function CycleView({
       {/* Trends */}
       <Trends cycles={stats.cycles} averageCycleDays={stats.averageCycleDays} />
 
+      {/* Sharing manager — owner only (hidden in readonly grantee view) */}
+      {!readonly ? <PeriodSharingManager /> : null}
+
       <p className="text-center text-xs text-white/30">
         Predictions are estimates — not medical advice.
       </p>
 
-      {/* Period day editor modal */}
-      {editingDay ? (
+      {/* Period day editor modal — disabled in readonly mode */}
+      {!readonly && editingDay ? (
         <PeriodDayEditor
           day={editingDay}
           currentFlow={flowByDay.get(editingDay) ?? null}

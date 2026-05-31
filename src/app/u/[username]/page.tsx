@@ -15,6 +15,7 @@ import { RestDaysPicker } from "./rest-days-picker";
 import { WeeklyGoalPicker } from "./weekly-goal-picker";
 import { GenderPicker } from "./gender-picker";
 import { VisibilityToggle } from "./visibility-toggle";
+import { CycleDataPopup } from "./cycle-popup";
 import { Avatar } from "@/components/avatar";
 
 export const dynamic = "force-dynamic";
@@ -88,6 +89,39 @@ export default async function ProfilePage({
     periodStats = computePeriodStats(periodRecords ?? [], today);
   }
 
+  // Cycle-data sharing: a non-owner can view this profile's cycle data if the
+  // owner has granted them access via period_sharing. The grantee_read RLS
+  // policy lets the viewer read their own grant row.
+  let canSeePeriod = isOwner;
+  if (!canSeePeriod && profile.gender === "female") {
+    const { data: share } = await supabase
+      .from("period_sharing")
+      .select("owner_id")
+      .eq("owner_id", profile.id)
+      .eq("shared_with_id", viewerProfile.id)
+      .maybeSingle();
+    canSeePeriod = share != null;
+  }
+
+  // Build the read-only cycle popup data for an authorised non-owner viewer.
+  // Uses the admin client because viewer RLS doesn't cover another user's rows.
+  let popupStats: ReturnType<typeof computePeriodStats> | null = null;
+  let popupRecords: Array<{ local_day: string; flow_level: "light" | "medium" | "heavy" | "unspecified" }> = [];
+  if (canSeePeriod && !isOwner && profile.gender === "female") {
+    const admin = createAdminClient();
+    const cutoff = new Date();
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - 12);
+    const cutoffKey = cutoff.toISOString().slice(0, 10);
+    const { data } = await admin
+      .from("period_records")
+      .select("local_day, flow_level")
+      .eq("user_id", profile.id)
+      .gte("local_day", cutoffKey)
+      .order("local_day", { ascending: true });
+    popupRecords = data ?? [];
+    popupStats = computePeriodStats(popupRecords, today);
+  }
+
   // Gym names — visible to anyone who can see stats (owner + challenge partners).
   // Uses admin client since viewer-scoped RLS only covers the viewer's own gyms.
   let gymNames: string[] = [];
@@ -154,6 +188,15 @@ export default async function ProfilePage({
             </div>
           ) : null}
         </section>
+
+        {popupStats ? (
+          <CycleDataPopup
+            stats={popupStats}
+            records={popupRecords}
+            today={today}
+            targetName={displayName}
+          />
+        ) : null}
 
         {!canSeeStats ? (
           <Card>
