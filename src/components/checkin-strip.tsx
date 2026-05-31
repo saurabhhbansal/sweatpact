@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 type HistoryEntry = { local_day: string; status: string };
 
@@ -49,6 +49,10 @@ export function CheckinStrip({
   restDays: number[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Start hidden so the SSR-rendered HTML (scrollLeft=0 = account start) is
+  // never visible. useLayoutEffect sets the scroll and then reveals the strip
+  // in the same render batch, so the first painted frame shows today centred.
+  const [ready, setReady] = useState(false);
 
   const statusByDay = new Map<string, string>();
   for (const row of history) statusByDay.set(row.local_day, row.status);
@@ -64,8 +68,8 @@ export function CheckinStrip({
     if (days.length > 800) break; // safety cap (~2 years)
   }
 
-  // Scroll today to the horizontal centre before the first paint (useLayoutEffect
-  // fires synchronously, preventing the flash-from-account-start issue).
+  // Set scroll position and reveal the strip in the same layout pass so the
+  // first painted frame already shows today centred (no flash of account start).
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -74,12 +78,13 @@ export function CheckinStrip({
       el.scrollLeft =
         target.offsetLeft - el.clientWidth / 2 + target.clientWidth / 2;
     }
+    setReady(true);
   }, [today]);
 
   return (
     <div
       ref={scrollRef}
-      className="flex gap-2 overflow-x-auto pb-1"
+      className={`flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
       style={{ scrollbarWidth: "none" }}
     >
       {days.map((day, i) => {
