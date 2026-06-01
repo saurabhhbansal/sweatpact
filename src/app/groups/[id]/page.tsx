@@ -10,6 +10,7 @@ import { betterStatus } from "@/lib/challenge-view";
 import { GroupManagerMenu, LeaveGroupButton } from "./client";
 import { MemberStatusAvatar, type MemberCheckin } from "./member-status";
 import { LedgerButtons } from "./ledger";
+import { GroupCheckinStrip, type CalendarMember } from "./group-checkin-strip";
 
 export const dynamic = "force-dynamic";
 
@@ -69,10 +70,11 @@ export default async function GroupPage({
     { data: obligations },
     { data: disputes },
     { data: historyRows },
+    { data: calendarEvents },
   ] = await Promise.all([
     supabase
       .from("group_members")
-      .select("user_id, role, penalty_cents, profiles:user_id(id, name, email, username, avatar_url)")
+      .select("user_id, role, penalty_cents, profiles:user_id(id, name, email, username, avatar_url, rest_days)")
       .eq("group_id", group.id)
       .order("joined_at", { ascending: true }),
     supabase
@@ -99,6 +101,13 @@ export default async function GroupPage({
       .eq("group_id", group.id)
       .order("occurred_at", { ascending: false })
       .limit(40),
+    supabase
+      .from("checkin_events")
+      .select("user_id, local_day, status")
+      .eq("group_id", group.id)
+      .gte("local_day", group.created_at.slice(0, 10))
+      .lte("local_day", today)
+      .order("local_day", { ascending: true }),
   ]);
 
   const obligationIds = (obligations ?? []).map((obligation) => obligation.id);
@@ -120,8 +129,9 @@ export default async function GroupPage({
         }> };
 
   const memberMap = new Map<string, MemberProfile>();
+  const memberRestDays = new Map<string, number[]>();
   const memberSummaries = (members ?? []).map((member: any) => {
-    const profileRow = normalizeRelation<MemberProfile>(member.profiles);
+    const profileRow = normalizeRelation<MemberProfile & { rest_days?: number[] }>(member.profiles);
     const name =
       profileRow?.name?.trim() ||
       (profileRow?.username ? `@${profileRow.username}` : null) ||
@@ -129,7 +139,10 @@ export default async function GroupPage({
       "Unknown member";
     const username = profileRow?.username ?? null;
     const avatar_url = profileRow?.avatar_url ?? null;
-    if (profileRow) memberMap.set(profileRow.id, profileRow);
+    if (profileRow) {
+      memberMap.set(profileRow.id, profileRow);
+      memberRestDays.set(profileRow.id, Array.isArray(profileRow.rest_days) ? profileRow.rest_days : []);
+    }
     return {
       user_id: member.user_id,
       name,
@@ -139,6 +152,24 @@ export default async function GroupPage({
       penalty_cents: member.penalty_cents,
     };
   });
+
+  // Build calendar data: local_day → userId → best status
+  const calendarByDay: Record<string, Record<string, string>> = {};
+  for (const ev of (calendarEvents ?? []) as { user_id: string; local_day: string; status: string }[]) {
+    const dayMap = calendarByDay[ev.local_day] ?? {};
+    dayMap[ev.user_id] = betterStatus(ev.status, dayMap[ev.user_id]);
+    calendarByDay[ev.local_day] = dayMap;
+  }
+
+  // Calendar members: current user first, then others in join order.
+  const calendarMembers: CalendarMember[] = [
+    ...memberSummaries.filter((m) => m.user_id === profile.id),
+    ...memberSummaries.filter((m) => m.user_id !== profile.id),
+  ].map((m) => ({
+    userId: m.user_id,
+    name: m.name,
+    restDays: memberRestDays.get(m.user_id) ?? [],
+  }));
 
   const todayStatusByUser = new Map<string, string>();
   for (const checkin of (todayCheckins ?? []) as GroupCheckinRow[]) {
@@ -350,7 +381,16 @@ export default async function GroupPage({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4">
+          <div className="mt-5">
+            <GroupCheckinStrip
+              today={today}
+              startDay={group.created_at.slice(0, 10)}
+              members={calendarMembers}
+              calendarData={calendarByDay}
+            />
+          </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-4">
             <div>
               <p className="text-xs text-white/45">Stake</p>
               <p className="text-sm font-semibold text-white">
