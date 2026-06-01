@@ -306,14 +306,14 @@ export async function reconcileUserDay(
       {
         user_id: userId,
         local_day: day,
-        status: "gym_closed",
+        status: "rest_day",
         checkin_id: null,
         enforced_at: now.toISOString(),
       },
       { onConflict: "user_id,local_day" }
     );
     if (excuseUpsertError) throw excuseUpsertError;
-    return { status: "gym_closed" as const, closed, submissionId: null };
+    return { status: "rest_day" as const, closed, submissionId: null };
   }
 
   // Day is closed with no check-in → mark missed (for history/streak tracking only).

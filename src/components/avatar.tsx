@@ -35,7 +35,7 @@ export function Avatar({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={url}
-          alt={username ? `@${username}` : name ?? ""}
+          alt={username ? `@${username}` : name || "User avatar"}
           className="h-full w-full object-cover"
         />
       ) : (

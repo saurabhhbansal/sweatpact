@@ -169,7 +169,7 @@ export default async function Dashboard() {
       const isFuture = key > today;
       const isRestSlot = restDays.includes(slotDow[i]);
       const recorded = statusByDay.get(key);
-      const status = recorded ?? (isRestSlot && isFuture ? "gym_closed" : "pending");
+      const status = recorded ?? (isRestSlot && isFuture ? "rest_day" : "pending");
       return { key, label, current: key === today, status };
     });
 

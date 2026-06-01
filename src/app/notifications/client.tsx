@@ -114,6 +114,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
   const [, startTransition] = useTransition();
   const [items, setItems] = useState(initial);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     setItems(initial);
@@ -130,6 +131,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
   }, [initial]);
 
   async function dismiss(id: string) {
+    setErr(null);
     setItems((current) => current.filter((n) => n.id !== id));
     const res = await fetch("/api/notifications", {
       method: "DELETE",
@@ -137,11 +139,13 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
       body: JSON.stringify({ ids: [id] }),
     });
     if (!res.ok) {
+      setErr("Couldn't dismiss that notification. It's been restored.");
       startTransition(() => router.refresh());
     }
   }
 
   async function clearAll() {
+    setErr(null);
     setItems([]);
     const res = await fetch("/api/notifications", {
       method: "DELETE",
@@ -149,10 +153,9 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
       body: JSON.stringify({ all: true }),
     });
     if (!res.ok) {
-      startTransition(() => router.refresh());
-    } else {
-      startTransition(() => router.refresh());
+      setErr("Couldn't clear notifications. They've been restored.");
     }
+    startTransition(() => router.refresh());
   }
 
   async function respond(item: Notification, action: "accept" | "decline") {
@@ -190,6 +193,11 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
 
   return (
     <div className="space-y-3">
+      {err ? (
+        <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+          {err}
+        </p>
+      ) : null}
       <div className="flex justify-end">
         <button
           type="button"
@@ -257,7 +265,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                 </p>
                 {message ? (
                   <p className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs italic text-white/70">
-                    "{message}"
+                    &ldquo;{message}&rdquo;
                   </p>
                 ) : null}
                 <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>

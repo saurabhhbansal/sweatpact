@@ -160,25 +160,6 @@ export async function POST(req: Request) {
   const timezone = normalizeTimeZone(profile.timezone);
   const today = localDay(new Date(), timezone);
 
-  if (status === "rest_day") {
-    const sevenDaysAgoDate = new Date();
-    sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7);
-    const sevenDaysAgo = localDay(sevenDaysAgoDate, timezone);
-
-    const { data: recentRests } = await admin
-      .from("checkin_events")
-      .select("local_day, submission_id")
-      .eq("user_id", profile.id)
-      .eq("status", "rest_day")
-      .gte("local_day", sevenDaysAgo)
-      .lte("local_day", today);
-
-    const uniqueRestDays = new Set((recentRests ?? []).map((row) => row.local_day));
-    if (uniqueRestDays.size >= 2) {
-      return NextResponse.json({ error: "max_rest_days_reached" }, { status: 400 });
-    }
-  }
-
   const { data: existingRows } = await admin
     .from("checkin_events")
     .select("status")

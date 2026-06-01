@@ -36,11 +36,7 @@ export function ExcuseButton({
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) {
-      setError(
-        data.error === "max_rest_days_reached"
-          ? "You've already used 2 rest days this week."
-          : data.error || "Failed to log status"
-      );
+      setError(data.error || "Failed to log status");
       return;
     }
     setMsg("Status logged.");

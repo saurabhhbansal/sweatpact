@@ -58,10 +58,16 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-  await supabase
+  const { error: updateErr } = await supabase
     .from("obligations")
     .update({ status: "settled" })
     .eq("id", obligation_id);
+  if (updateErr) {
+    return NextResponse.json(
+      { error: "db_error", detail: updateErr.message },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

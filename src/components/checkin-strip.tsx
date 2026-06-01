@@ -14,6 +14,31 @@ function addDays(day: string, n: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Human-readable status for screen readers (status is otherwise colour-only).
+function humanStatus(status: string): string {
+  switch (status) {
+    case "verified":
+      return "checked in";
+    case "unverified":
+      return "checked in (unverified)";
+    case "missed":
+      return "missed";
+    case "rejected":
+      return "rejected";
+    case "rest_day":
+    case "gym_closed":
+      return "rest day";
+    case "sick_day":
+      return "sick day";
+    case "period_day":
+      return "period day";
+    case "future":
+      return "upcoming";
+    default:
+      return "no check-in";
+  }
+}
+
 // Resolve the colour treatment for a day's status.
 function tone(status: string): string {
   switch (status) {
@@ -84,8 +109,7 @@ export function CheckinStrip({
   return (
     <div
       ref={scrollRef}
-      className={`relative flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
-      style={{ scrollbarWidth: "none" }}
+      className={`no-scrollbar relative flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
     >
       {days.map((day, i) => {
         const date = new Date(day);
@@ -108,6 +132,8 @@ export function CheckinStrip({
             </span>
             <span className="text-[10px] text-white/40">{DOW[dow]}</span>
             <div
+              role="img"
+              aria-label={`${monthFmt.format(date)} ${d}${isToday ? " (today)" : ""}: ${humanStatus(status)}`}
               className={`flex h-[2.4rem] w-9 items-center justify-center rounded-full text-sm font-medium transition-all ${tone(
                 status
               )} ${isToday ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""}`}

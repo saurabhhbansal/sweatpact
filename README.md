@@ -29,8 +29,10 @@ weekly goal and you owe the flat stake to your challenge partners.
   Tap any day to see the full per-member breakdown.
 - **Balances & activity overlays** — obligations and recent check-in activity
   open in bottom-sheet overlays from the challenge detail; no separate pages.
-- **Excused days** — sick day, gym closed, rest day, period day. All exempt from
-  the weekly goal count.
+- **Excused days** — sick day, rest day, period day. All exempt from the weekly
+  goal count. Scheduled rest days (set in profile settings) are automatically
+  marked as rest days everywhere. (Older "gym closed" records are treated as rest
+  days; the two are now a single concept.)
 - **Check-in strip** — scrollable horizontal day strip from account creation to
   today (+ 7 future placeholders). Green (verified), dashed-green (unverified),
   red (missed/rejected), grey (excused), dim (rest day or pending). Appears on
@@ -108,7 +110,7 @@ src/
     group/                # Legacy redirect
     api/
       checkin/            # POST — GPS/manual check-in (webhook secret or session)
-      status/             # POST — log excused day (rest/sick/gym_closed/period_day)
+      status/             # POST — log excused day (rest/sick/period_day)
       period-records/     # POST/DELETE — manual period-day logging
       health/period/      # POST — Apple Health period sync (webhook secret)
       notifications/      # GET/PATCH/DELETE — list, mark-read, clear
@@ -148,7 +150,7 @@ src/
     today-action-card.tsx # Check-in / excuse-day action card
     push-permission.tsx   # Web-push opt-in prompt
     status-badge.tsx      # Pill badge for check-in statuses
-    excuse-button.tsx     # Rest/sick/gym_closed/period_day logging
+    excuse-button.tsx     # Rest/sick/period_day logging
     check-in-button.tsx   # GPS check-in trigger
   lib/
     supabase/{server,browser,admin}.ts
@@ -194,7 +196,7 @@ All user-facing tables have RLS enabled and cascade-delete on `profiles.id`.
 | `settlements` | `obligation_id`, `marked_by`, `amount_cents` |
 | `disputes` | `group_id`, `raised_by`, `target_type`, `status` |
 | `audit_log` | `user_id`, `kind`, `payload`, `ip`, `user_agent` |
-| `cycle_shares` | `(owner_id, grantee_id)` PK — cycle data access grants |
+| `period_sharing` | `(owner_id, shared_with_id)` PK — cycle data access grants |
 
 ---
 
@@ -320,7 +322,7 @@ Male users visiting `/cycle` directly are redirected to `/dashboard`.
 
 **Sections:**
 - **Next period prediction** — date + days until/overdue + confidence note.
-  Requires ≥ 2 logged cycles.
+  Requires ≥ 3 logged periods (i.e. 2 complete cycles).
 - **Current cycle** — day number + estimated phase (menstrual / follicular /
   ovulation / luteal). Labelled as an estimate.
 - **Stats** — avg cycle length, avg period duration, regularity
@@ -350,7 +352,7 @@ is unit-tested in `src/lib/period-stats.test.ts`.
 - `/api/cron/enforce` requires `Authorization: Bearer CRON_SECRET`.
 - Every check-in attempt is logged to `audit_log` with IP and User-Agent.
 - `profile_secrets` has self-only RLS (users can only read their own secret).
-- Cycle data is private by default; `cycle_shares` grants are explicit
+- Cycle data is private by default; `period_sharing` grants are explicit
   per-username and revocable.
 
 ---

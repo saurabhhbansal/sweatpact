@@ -88,8 +88,7 @@ function DateStrip({
   return (
     <div
       ref={scrollRef}
-      className="flex gap-2 overflow-x-auto pb-1"
-      style={{ scrollbarWidth: "none" }}
+      className="no-scrollbar flex gap-2 overflow-x-auto pb-1"
     >
       {days.map((day) => {
         const isSelected = day === selectedDay;
@@ -322,7 +321,7 @@ function Trends({
         {lengthBars.length >= 2 ? (
           <BarChart title="Cycle length (days)" bars={lengthBars} referenceValue={averageCycleDays} />
         ) : (
-          <p className="text-xs text-white/35">Cycle-length trend needs 2+ cycles.</p>
+          <p className="text-xs text-white/35">Cycle-length trend needs 3 logged periods.</p>
         )}
         <BarChart title="Period duration (days)" bars={durationBars} referenceValue={null} />
       </div>

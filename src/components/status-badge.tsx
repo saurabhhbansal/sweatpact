@@ -32,7 +32,7 @@ const map: Record<
   resolved: { variant: "success", label: "Resolved" },
   rejected: { variant: "muted", label: "Rejected" },
   sick_day: { variant: "secondary", label: "Sick day" },
-  gym_closed: { variant: "secondary", label: "Gym closed" },
+  gym_closed: { variant: "secondary", label: "Rest day" }, // legacy alias of rest_day
   rest_day: { variant: "secondary", label: "Rest day" },
   period_day: { variant: "secondary", label: "Period day" },
 };

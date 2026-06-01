@@ -92,8 +92,8 @@ function statusLabel(status: string): { text: string; cls: string } {
       return { text: "Rest day", cls: "text-white/45" };
     case "sick_day":
       return { text: "Sick day", cls: "text-white/45" };
-    case "gym_closed":
-      return { text: "Gym closed", cls: "text-white/45" };
+    case "gym_closed": // legacy alias of rest_day
+      return { text: "Rest day", cls: "text-white/45" };
     case "period_day":
       return { text: "Rest day", cls: "text-white/45" };
     case "future":
@@ -197,8 +197,7 @@ export function GroupCheckinStrip({
       {/* Scrollable day strip */}
       <div
         ref={scrollRef}
-        className={`flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
-        style={{ scrollbarWidth: "none" }}
+        className={`no-scrollbar flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
       >
         {days.map((day, i) => {
           const date = new Date(day);

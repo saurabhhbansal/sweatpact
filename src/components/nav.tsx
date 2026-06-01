@@ -90,6 +90,7 @@ export function MobileNav() {
             <Link
               key={link.href}
               href={link.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex min-h-[4.3rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200",
                 active
@@ -100,7 +101,7 @@ export function MobileNav() {
               {active && (
                 <span className="absolute top-2 left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white" />
               )}
-              <Icon className="h-[18px] w-[18px]" />
+              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
               <span className={cn("font-medium", active && "font-semibold")}>{link.label}</span>
             </Link>
           );
