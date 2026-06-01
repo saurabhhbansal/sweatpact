@@ -11,26 +11,53 @@ weekly goal and you owe the flat stake to your challenge partners.
 ## Features
 
 - **GPS check-in** — browser geolocation verified server-side via Haversine.
-  Falls back to unverified if outside radius.
+  Falls back to unverified if outside radius. Check-ins are allowed on period
+  days too, with a custom congratulations message.
 - **iOS Shortcut check-in** — background automation via per-user webhook secret.
-- **Challenges** — invite friends to a group with a weekly money stake. Flat
-  penalty per missed week (not per missed day). Obligations tracked in-app;
-  no real money movement.
+  Setup is a step-by-step phone wizard with real screenshots and SVG highlight
+  overlays at `/shortcut`.
+- **Challenges (versus cards)** — invite friends to a challenge with a weekly
+  money stake. The challenge list shows each active challenge as a head-to-head
+  versus card: your avatar vs. theirs, today's check-in status rings, and the
+  current standing (who owes whom). Flat penalty per missed week; obligations
+  tracked in-app with no real money movement.
+- **Challenge detail hero** — split view of you vs. your partner(s) with coloured
+  status rings (solid green / dotted green / red / grey). Tap any avatar to
+  manage that member (reverse check-in, change role, remove) via an overlay.
+  A split-pie SVG calendar runs from the challenge start date, with each day's
+  circle divided into N segments — one per member — colour-coded by their status.
+  Tap any day to see the full per-member breakdown.
+- **Balances & activity overlays** — obligations and recent check-in activity
+  open in bottom-sheet overlays from the challenge detail; no separate pages.
 - **Excused days** — sick day, gym closed, rest day, period day. All exempt from
   the weekly goal count.
-- **Weekly goal + streak** — configurable days-per-week goal. Streak counts
-  consecutive weeks that hit the goal.
-- **Cycle tab** (female users) — dedicated `/cycle` page with period
+- **Check-in strip** — scrollable horizontal day strip from account creation to
+  today (+ 7 future placeholders). Green (verified), dashed-green (unverified),
+  red (missed/rejected), grey (excused), dim (rest day or pending). Appears on
+  the dashboard and on public profiles.
+- **Weekly goal + streak** — configurable days-per-week goal (lives on the
+  profile page). Streak counts consecutive weeks that hit the goal.
+- **Cycle tab** (female users) — Apple Health–style `/cycle` page with period
   predictions, current phase estimate, avg cycle/duration stats, CSS bar-chart
   trends, and a period-day logging calendar.
-- **Period sync** — iOS Shortcut pulls menstrual flow from Apple Health daily
-  and marks those days as excused automatically.
+- **Period sync** — iOS Shortcut pulls menstrual flow from Apple Health daily and
+  marks those days as excused automatically. Always on once the Shortcut is
+  installed; no separate toggle.
+- **Period data sharing** — grant specific usernames read access to your cycle
+  data from the cycle page or your public profile. Grantees receive an in-app
+  notification (and push if enabled). Revoke access at any time.
 - **Push notifications** — web-push (VAPID) for challenge invites, check-in
-  activity, and rest-day broadcasts. Per-group and per-user toggles.
+  activity, rest-day broadcasts, and cycle-share grants. Per-group and per-user
+  toggles.
 - **Onboarding wizard** — username → gym setup → schedule → iOS Shortcut.
+- **Settings** — flat single-page layout: profile fields (name, gender, weekly
+  goal, avatar), gym management, push notification preferences, change password,
+  and account deletion. Weekly goal and gender live on the profile/settings page;
+  timezone is inferred automatically.
 - **Avatar upload** with in-browser cropping (`react-easy-crop`).
 - **Public / private profiles** — private profiles visible only to challenge
-  partners.
+  partners. Public profiles show the check-in strip and, for permitted users,
+  a cycle data link.
 - **Account deletion** — full cascade, avatar storage cleanup.
 
 ---
@@ -48,11 +75,11 @@ weekly goal and you owe the flat stake to your challenge partners.
 | Deployment | Vercel (git-integrated, auto-deploy on push to `main`) |
 | Cron | Vercel Cron — `/api/cron/enforce` daily at 19:00 UTC |
 | Testing | Vitest (pure logic; `npm run test`) |
-| Timezone | `@vvo/tzdb` + `Intl.DateTimeFormat` |
+| Timezone | `@vvo/tzdb` + `Intl.DateTimeFormat` (auto-detected; no user setting) |
 | Icons | `lucide-react` |
 
 Theme: **Monochrome Glass** — pure black background, white ink, no colour
-accents.
+accents except semantic status colours (emerald / red).
 
 ---
 
@@ -64,14 +91,18 @@ src/
     layout.tsx  page.tsx  globals.css
     login/  signup/  auth/callback/
     onboarding/username/  onboarding/gym/  onboarding/schedule/  onboarding/shortcut/
-    dashboard/            # Today view — week dots, streak, obligations
+    dashboard/            # Today view — check-in strip, streak, obligations
     cycle/                # Period predictions + trends (female only)
-    groups/               # Challenge list
-    groups/[id]/          # Group detail — members, check-ins, obligations
+      sharing.tsx         # Cycle-share disclosure: grant/revoke usernames
+    groups/               # Challenge list — versus cards
+    groups/[id]/          # Challenge detail
+      member-status.tsx   # MemberStatusAvatar (ringed avatar + manage overlay)
+      ledger.tsx          # LedgerButtons (balances + activity overlays)
+      group-checkin-strip.tsx  # Split-pie SVG calendar for the challenge hero
     notifications/        # In-app notification centre
-    settings/             # Profile, schedule, gym, period sync, notifications, account
-    shortcut/             # iOS Shortcut setup (pre-filled user_id + secret)
-    u/[username]/         # Public profile
+    settings/             # Profile, schedule, gym, notifications, password, account
+    shortcut/             # iOS Shortcut wizard (step-by-step with screenshots)
+    u/[username]/         # Public profile — check-in strip, cycle link
     u/me/                 # Redirects → /u/<own-username>
     join/                 # Join group via invite code
     group/                # Legacy redirect
@@ -90,6 +121,7 @@ src/
       gyms/[id]/          # PATCH/DELETE — update/remove a saved gym
       places/search/      # GET — Google Places gym search
       places/details/     # GET — Google Places gym detail
+      cycle/sharing/      # GET/POST/DELETE — manage cycle-data share grants
       groups/create/      # POST
       groups/join/        # POST — join by invite code
       groups/leave/       # POST
@@ -110,14 +142,17 @@ src/
   components/
     ui/                   # button, card, badge, input, label, textarea, dialog, dropdown-menu
     nav.tsx               # MobileNav (conditional Cycle tab) + TopNav
-    progress-section.tsx  # Week dots + month calendar + period-day editor
+    checkin-strip.tsx     # Scrollable horizontal day strip (dashboard + public profile)
+    challenge-versus-card.tsx  # Head-to-head challenge card for the list view
+    avatar.tsx            # Avatar + AvatarStack (overlapping cluster + "+N")
     today-action-card.tsx # Check-in / excuse-day action card
     push-permission.tsx   # Web-push opt-in prompt
     status-badge.tsx      # Pill badge for check-in statuses
-    avatar.tsx            # Avatar display
     excuse-button.tsx     # Rest/sick/gym_closed/period_day logging
+    check-in-button.tsx   # GPS check-in trigger
   lib/
     supabase/{server,browser,admin}.ts
+    challenge-view.ts     # betterStatus(), statusToken(), statusRing() — shared helpers
     period-stats.ts       # computePeriodStats(), estimatePhase() — fully tested
     checkin-notify.ts     # notifyGroupCheckin() helper
     checkin-reconciliation.ts  # reconcileUserDay(), reconcileUserWeek()
@@ -127,25 +162,23 @@ src/
     geo.ts  time.ts  money.ts  utils.ts  types.ts
   middleware.ts           # Supabase session refresh on every request
 supabase/
-  migrations/0001_init.sql … 0020_notification_prefs.sql
-.devcontainer/
-  devcontainer.json       # Node 20 Codespaces image
-  post-create.sh          # npm install + write .env.local from Codespaces secrets
+  migrations/0001_init.sql … 0023_notifications_delete_policy.sql
 public/
   sw.js                   # Service worker for web-push
+  screenshots/            # iOS Shortcut wizard step screenshots
 vercel.json               # Cron schedule (19:00 UTC daily)
 vitest.config.ts
 ```
 
 ---
 
-## Database schema (Supabase, migrations 0001–0020)
+## Database schema (Supabase, migrations 0001–0023)
 
 All user-facing tables have RLS enabled and cascade-delete on `profiles.id`.
 
 | Table | Key columns |
 |---|---|
-| `profiles` | `id` (= `auth.users.id`), `username`, `gender`, `weekly_goal`, `rest_days[]`, `timezone`, `avatar_url`, `period_sync_enabled`, `notify_unverified_checkin`, `notify_rest_day` |
+| `profiles` | `id` (= `auth.users.id`), `username`, `gender`, `weekly_goal`, `rest_days[]`, `timezone`, `avatar_url`, `period_sync_enabled`, `notify_unverified_checkin`, `notify_rest_day`, `notify_cycle_share` |
 | `groups` | `id`, `owner_id`, `default_penalty_cents`, `invite_code`, `checkin_notifications` |
 | `group_members` | `(group_id, user_id)` PK, `role` (owner/admin/member), `penalty_cents` |
 | `checkin_events` | `user_id`, `group_id`, `local_day`, `status`, `source`, `lat/lng/distance_m` |
@@ -161,6 +194,7 @@ All user-facing tables have RLS enabled and cascade-delete on `profiles.id`.
 | `settlements` | `obligation_id`, `marked_by`, `amount_cents` |
 | `disputes` | `group_id`, `raised_by`, `target_type`, `status` |
 | `audit_log` | `user_id`, `kind`, `payload`, `ip`, `user_agent` |
+| `cycle_shares` | `(owner_id, grantee_id)` PK — cycle data access grants |
 
 ---
 
@@ -170,7 +204,7 @@ All user-facing tables have RLS enabled and cascade-delete on `profiles.id`.
 
 1. Create a project at https://supabase.com.
 2. In **SQL Editor**, run the migrations in order:
-   `supabase/migrations/0001_init.sql` through `0020_notification_prefs.sql`.
+   `supabase/migrations/0001_init.sql` through `0023_notifications_delete_policy.sql`.
 3. In **Auth → Providers**, ensure email auth is enabled.
 4. From **Settings → API**, note:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
@@ -244,8 +278,9 @@ For a new project setup:
 
 ## iOS Shortcuts
 
-Two Shortcuts are available from the `/shortcut` page (pre-filled with the
-user's `user_id` and `webhook_secret`):
+Two Shortcuts are available from the `/shortcut` page, presented as a
+step-by-step phone wizard with real screenshots and SVG cutout overlays
+(pre-filled with the user's `user_id` and `webhook_secret`):
 
 | Shortcut | What it does |
 |---|---|
@@ -261,11 +296,11 @@ a **daily silent automation** in iOS Shortcuts → Automations → Time of Day.
 
 Notifications are stored in the `notifications` table and surfaced in the
 in-app notification centre (`/notifications`). Web-push is also sent where
-supported.
+supported. Dismiss (single) and clear-all both permanently delete records.
 
 **Types:** `challenge_invite_received`, `challenge_accepted`,
 `challenge_declined`, `challenge_cancelled`, `settlement_marked`,
-`penalty_added`, `group_checkin`, `group_rest_day`.
+`penalty_added`, `group_checkin`, `group_rest_day`, `cycle_share_granted`.
 
 **Gating logic:**
 
@@ -274,6 +309,7 @@ supported.
 | Verified check-in | `groups.checkin_notifications` | — |
 | Unverified check-in | `groups.checkin_notifications` | `notify_unverified_checkin` |
 | Rest day | — | `notify_rest_day` |
+| Cycle share granted | — | `notify_cycle_share` |
 
 ---
 
@@ -294,9 +330,11 @@ Male users visiting `/cycle` directly are redirected to `/dashboard`.
 - **Calendar** — full month view with flow-level dots. Tap any past non-gym day
   to log or edit a period day.
 - **Log today** — quick button to mark today as a period day.
+- **Share cycle data** — disclosure section to grant/revoke per-username access.
+  Grantee can view the cycle tab at `/u/<username>` once access is granted.
 
 Predictions use `computePeriodStats()` from `src/lib/period-stats.ts`, which
-is unit-tested in `src/lib/period-stats.test.ts` (16 cases).
+is unit-tested in `src/lib/period-stats.test.ts`.
 
 ---
 
@@ -304,13 +342,16 @@ is unit-tested in `src/lib/period-stats.test.ts` (16 cases).
 
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only. `src/lib/supabase/admin.ts` is
   the only import point; never used in client components.
-- RLS is enabled on every user-facing table.
+- RLS is enabled on every user-facing table, including DELETE policies where
+  users need to remove their own records (e.g. notifications).
 - `/api/checkin` accepts either a per-user `webhook_secret` (Shortcut) or a
   session cookie (browser). Distance is computed server-side; the client cannot
   forge a verified status.
 - `/api/cron/enforce` requires `Authorization: Bearer CRON_SECRET`.
 - Every check-in attempt is logged to `audit_log` with IP and User-Agent.
 - `profile_secrets` has self-only RLS (users can only read their own secret).
+- Cycle data is private by default; `cycle_shares` grants are explicit
+  per-username and revocable.
 
 ---
 
