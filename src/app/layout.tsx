@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "SweatPact",
   description: "Commit to the gym. Pay your crew when you skip.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+    ],
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
+  },
   appleWebApp: {
     capable: true,
     title: "SweatPact",

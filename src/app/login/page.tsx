@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SweatPactSeal } from "@/components/sweatpact-seal";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,7 +42,9 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/45">SweatPact</p>
+          <div className="flex justify-center text-white">
+            <SweatPactSeal size="md" />
+          </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Welcome back</h1>
           <p className="mt-2 text-sm text-white/55">Back in the ring. Time to earn your streak.</p>
         </div>

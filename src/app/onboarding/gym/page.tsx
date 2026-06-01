@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StepIndicator } from "../step-indicator";
 import { GymOnboarding } from "./client";
+import { SweatPactSeal } from "@/components/sweatpact-seal";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,9 @@ export default async function GymOnboardingPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/45">SweatPact</p>
+          <div className="flex justify-center text-white">
+            <SweatPactSeal size="md" />
+          </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">Where do you train?</h1>
           <p className="mt-2 text-sm text-white/55">
             Add your gym so check-ins are auto-verified. You can add more later.

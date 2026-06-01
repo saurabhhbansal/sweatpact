@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { JoinByCode } from "./client";
+import { SweatPactSeal } from "@/components/sweatpact-seal";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,9 @@ export default async function JoinPage({
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/45">SweatPact</p>
+          <div className="flex justify-center text-white">
+            <SweatPactSeal size="md" />
+          </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Join group</h1>
         </div>
         <Card>

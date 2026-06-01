@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CopyField } from "@/app/shortcut/client";
 import { StepIndicator } from "../step-indicator";
 import { FinishOnboardingButtons } from "./client";
+import { SweatPactSeal } from "@/components/sweatpact-seal";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,9 @@ export default async function ShortcutOnboarding() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/45">SweatPact</p>
+          <div className="flex justify-center text-white">
+            <SweatPactSeal size="md" />
+          </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">iOS Shortcut</h1>
           <p className="mt-2 text-sm text-white/55">
             Optional. Auto-check-in when you arrive at the gym. iPhone only.
