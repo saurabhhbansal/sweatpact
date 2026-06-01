@@ -157,7 +157,7 @@ export function TopNav({
   return (
     <header className="sticky top-0 z-40 px-3 pt-3">
       <div className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] border border-white/18 bg-white/[0.08] px-4 backdrop-blur-2xl">
-        <Link href="/dashboard" aria-label="SweatPact — go to dashboard" className="text-white">
+        <Link href="/dashboard" aria-label="SweatPact — go to dashboard" className="flex items-center text-white">
           <SweatPactSeal size="xs" fontSize={13} />
         </Link>
         <div className="flex items-center gap-2">
