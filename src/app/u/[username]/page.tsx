@@ -70,10 +70,9 @@ export default async function ProfilePage({
   // same-group membership, so viewing another user's profile with the
   // viewer's session returns empty rows. Use the admin client for non-owners,
   // matching the same pattern used for gym names below.
-  const statsClient = isOwner ? supabase : createAdminClient();
   const stats = canSeeStats
     ? await computeProfileStats(
-        statsClient,
+        isOwner ? supabase : createAdminClient(),
         profile.id,
         today,
         profile.weekly_goal ?? 4,
