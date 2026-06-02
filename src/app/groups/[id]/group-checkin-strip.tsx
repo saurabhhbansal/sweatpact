@@ -128,6 +128,35 @@ function StatusDot({ status }: { status: string }) {
   return <span className={cls} />;
 }
 
+// ── Legend ─────────────────────────────────────────────────────────────────
+
+// Static key explaining the calendar's colour treatments. Reuses StatusDot so
+// the swatches always match the live pie segments.
+export function CalendarLegend() {
+  const items: Array<{ status: string; label: string }> = [
+    { status: "verified", label: "Checked in" },
+    { status: "unverified", label: "Unverified" },
+    { status: "missed", label: "Missed" },
+    { status: "rest_day", label: "Rest / excused" },
+  ];
+
+  return (
+    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+        Reading the calendar
+      </p>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        {items.map((item) => (
+          <div key={item.status} className="flex items-center gap-2">
+            <StatusDot status={item.status} />
+            <span className="text-sm text-white/70">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 export function GroupCheckinStrip({

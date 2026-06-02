@@ -225,13 +225,68 @@ function LogSection({
   );
 }
 
+// ─── Next period hero ───────────────────────────────────────────────────────
+
+// Prominent prediction card shown at the top once enough cycles are logged.
+// Returns null when no prediction is available (< 3 logged periods).
+function NextPeriodHero({ stats }: { stats: PeriodStats }) {
+  if (stats.nextPredictedStart == null || stats.daysUntilPredicted == null) {
+    return null;
+  }
+
+  const days = stats.daysUntilPredicted;
+  const headline =
+    days < 0
+      ? `${Math.abs(days)} days late`
+      : days === 0
+        ? "Today"
+        : `in ${days} day${days === 1 ? "" : "s"}`;
+
+  const phase = stats.currentPhase ? PHASE_LABEL[stats.currentPhase] : null;
+  const sub = [
+    `Predicted ${fmtShort(stats.nextPredictedStart)}`,
+    stats.currentCycleDay != null ? `cycle day ${stats.currentCycleDay}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <section className="rounded-[2rem] border border-rose-500/20 bg-rose-500/[0.07] px-5 py-5 backdrop-blur-xl">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-200/70">
+            Next period
+          </p>
+          <p className="mt-1.5 text-3xl font-bold text-white">{headline}</p>
+          <p className="mt-1 text-sm text-white/55">{sub}</p>
+        </div>
+        {phase ? (
+          <span className="shrink-0 rounded-full border border-rose-400/30 bg-rose-400/10 px-3 py-1 text-xs font-medium text-rose-200">
+            {phase}
+          </span>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 // ─── Highlights ───────────────────────────────────────────────────────────────
 
-function Highlights({ stats }: { stats: PeriodStats }) {
+// `excludePrediction` drops the Next-period and Cycle-day tiles when the
+// NextPeriodHero is rendered above, so they aren't shown twice.
+function Highlights({
+  stats,
+  excludePrediction = false,
+}: {
+  stats: PeriodStats;
+  excludePrediction?: boolean;
+}) {
   const phase = stats.currentPhase ? PHASE_LABEL[stats.currentPhase] : null;
 
   const items = [
-    stats.nextPredictedStart != null && stats.daysUntilPredicted != null
+    !excludePrediction &&
+    stats.nextPredictedStart != null &&
+    stats.daysUntilPredicted != null
       ? {
           label: "Next period",
           value: fmtShort(stats.nextPredictedStart),
@@ -243,7 +298,7 @@ function Highlights({ stats }: { stats: PeriodStats }) {
                 : `In ${stats.daysUntilPredicted}d`,
         }
       : null,
-    stats.currentCycleDay != null
+    !excludePrediction && stats.currentCycleDay != null
       ? {
           label: "Cycle day",
           value: `Day ${stats.currentCycleDay}`,
@@ -406,12 +461,18 @@ export function CycleView({
       ? addDays(predictedStart, stats.averageDurationDays - 1)
       : predictedStart;
 
+  const hasPrediction =
+    stats.nextPredictedStart != null && stats.daysUntilPredicted != null;
+
   return (
     <div className="space-y-5">
       {/* Selected date heading */}
       <div>
         <p className="text-2xl font-semibold text-white">{fmtFull(selectedDay)}</p>
       </div>
+
+      {/* Next period prediction hero */}
+      <NextPeriodHero stats={stats} />
 
       {/* Date strip */}
       <DateStrip
@@ -435,7 +496,7 @@ export function CycleView({
       />
 
       {/* Highlights grid */}
-      <Highlights stats={stats} />
+      <Highlights stats={stats} excludePrediction={hasPrediction} />
 
       {/* Trends */}
       <Trends cycles={stats.cycles} averageCycleDays={stats.averageCycleDays} />

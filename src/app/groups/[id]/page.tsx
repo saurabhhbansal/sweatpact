@@ -10,7 +10,11 @@ import { betterStatus } from "@/lib/challenge-view";
 import { GroupManagerMenu, LeaveGroupButton } from "./client";
 import { MemberStatusAvatar, type MemberCheckin } from "./member-status";
 import { LedgerButtons } from "./ledger";
-import { GroupCheckinStrip, type CalendarMember } from "./group-checkin-strip";
+import {
+  GroupCheckinStrip,
+  CalendarLegend,
+  type CalendarMember,
+} from "./group-checkin-strip";
 
 export const dynamic = "force-dynamic";
 
@@ -411,6 +415,9 @@ export default async function GroupPage({
           settlements={settlementRows}
           activity={activityRows}
         />
+
+        {/* Calendar colour key */}
+        <CalendarLegend />
 
         {/* Members — only for 3+ challenges (1-on-1 status lives in the hero) */}
         {memberSummaries.length > 2 ? (
