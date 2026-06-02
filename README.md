@@ -22,7 +22,7 @@ Miss your weekly gym goal and you owe your challenge partners a flat stake. No r
 
 ## Features
 
-| | |
+| Feature | Details |
 |---|---|
 | **GPS Check-in** | Browser geolocation verified server-side via Haversine distance |
 | **iOS Shortcut** | Background automation via per-user webhook secret — set up once, runs forever |
@@ -75,15 +75,15 @@ cp .env.example .env.local
 ```
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-CRON_SECRET=                        # any long random string
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+CRON_SECRET=replace-me-with-a-long-random-string
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=
-VAPID_PRIVATE_KEY=
-VAPID_SUBJECT=                      # mailto:you@example.com
-GOOGLE_MAPS_API_KEY=                # optional — gym search only
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:you@example.com
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 ```
 
 ### 4 — Run
