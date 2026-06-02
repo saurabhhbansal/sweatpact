@@ -136,7 +136,7 @@ export function CalendarLegend() {
   const items: Array<{ status: string; label: string }> = [
     { status: "verified", label: "Checked in" },
     { status: "unverified", label: "Unverified" },
-    { status: "missed", label: "Missed" },
+    { status: "missed", label: "Missed / rejected" },
     { status: "rest_day", label: "Rest / excused" },
   ];
 

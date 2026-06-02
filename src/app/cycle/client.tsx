@@ -237,7 +237,7 @@ function NextPeriodHero({ stats }: { stats: PeriodStats }) {
   const days = stats.daysUntilPredicted;
   const headline =
     days < 0
-      ? `${Math.abs(days)} days late`
+      ? `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} late`
       : days === 0
         ? "Today"
         : `in ${days} day${days === 1 ? "" : "s"}`;
