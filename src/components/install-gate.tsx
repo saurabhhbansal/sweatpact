@@ -79,7 +79,7 @@ export function InstallGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black px-6">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black px-6">
       <div className="w-full max-w-sm space-y-8 text-center">
         {/* Wordmark */}
         <div>
