@@ -66,10 +66,23 @@ export function InstallGate({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Auth routes must stay accessible — email confirmation links open in browser.
   const isAuthRoute = pathname?.startsWith("/auth/");
+  const gateVisible = !standalone && !isAuthRoute;
 
-  if (standalone || isAuthRoute) return <>{children}</>;
+  // Prevent body scroll while the gate is visible. The body's min-h-screen +
+  // pb-20 exceeds the viewport height when there is no in-flow content,
+  // which would otherwise show a scrollbar behind the fixed overlay.
+useEffect(() => {
+  if (!gateVisible) return;
+  const previous = document.documentElement.style.overflowY;
+  document.documentElement.style.overflowY = "hidden";
+  return () => {
+    document.documentElement.style.overflowY = previous;
+  };
+}, [gateVisible]);
+
+  if (!gateVisible) return <>{children}</>;
+
 
   async function handleInstall() {
     if (!promptRef.current?.prompt) return;
