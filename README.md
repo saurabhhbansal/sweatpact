@@ -1,66 +1,40 @@
+<div align="center">
+
 # SweatPact
 
-A mobile-first gym accountability PWA. Commit to a weekly gym goal, challenge
-friends with a money stake, and check in via GPS or iOS Shortcut. Miss your
-weekly goal and you owe the flat stake to your challenge partners.
+**Gym accountability with real stakes.**
+Commit to a weekly gym goal, challenge friends with a money pact, and track every check-in — together.
 
-**Live:** https://sweatpact.vercel.app
+[![Live](https://img.shields.io/badge/Live-sweatpact.vercel.app-black?style=flat-square&logo=vercel)](https://sweatpact.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
+
+</div>
+
+---
+
+## What it does
+
+Miss your weekly gym goal and you owe your challenge partners a flat stake. No real money moves — obligations are tracked in-app on the honour system. Check in via GPS from the browser or automate it silently with an iOS Shortcut.
 
 ---
 
 ## Features
 
-- **GPS check-in** — browser geolocation verified server-side via Haversine.
-  Falls back to unverified if outside radius. Check-ins are allowed on period
-  days too, with a custom congratulations message.
-- **iOS Shortcut check-in** — background automation via per-user webhook secret.
-  Setup is a step-by-step phone wizard with real screenshots and SVG highlight
-  overlays at `/shortcut`.
-- **Challenges (versus cards)** — invite friends to a challenge with a weekly
-  money stake. The challenge list shows each active challenge as a head-to-head
-  versus card: your avatar vs. theirs, today's check-in status rings, and the
-  current standing (who owes whom). Flat penalty per missed week; obligations
-  tracked in-app with no real money movement.
-- **Challenge detail hero** — split view of you vs. your partner(s) with coloured
-  status rings (solid green / dotted green / red / grey). Tap any avatar to
-  manage that member (reverse check-in, change role, remove) via an overlay.
-  A split-pie SVG calendar runs from the challenge start date, with each day's
-  circle divided into N segments — one per member — colour-coded by their status.
-  Tap any day to see the full per-member breakdown.
-- **Balances & activity overlays** — obligations and recent check-in activity
-  open in bottom-sheet overlays from the challenge detail; no separate pages.
-- **Excused days** — sick day, rest day, period day. All exempt from the weekly
-  goal count. Scheduled rest days (set in profile settings) are automatically
-  marked as rest days everywhere. (Older "gym closed" records are treated as rest
-  days; the two are now a single concept.)
-- **Check-in strip** — scrollable horizontal day strip from account creation to
-  today (+ 7 future placeholders). Green (verified), dashed-green (unverified),
-  red (missed/rejected), grey (excused), dim (rest day or pending). Appears on
-  the dashboard and on public profiles.
-- **Weekly goal + streak** — configurable days-per-week goal (lives on the
-  profile page). Streak counts consecutive weeks that hit the goal.
-- **Cycle tab** (female users) — Apple Health–style `/cycle` page with period
-  predictions, current phase estimate, avg cycle/duration stats, CSS bar-chart
-  trends, and a period-day logging calendar.
-- **Period sync** — iOS Shortcut pulls menstrual flow from Apple Health daily and
-  marks those days as excused automatically. Always on once the Shortcut is
-  installed; no separate toggle.
-- **Period data sharing** — grant specific usernames read access to your cycle
-  data from the cycle page or your public profile. Grantees receive an in-app
-  notification (and push if enabled). Revoke access at any time.
-- **Push notifications** — web-push (VAPID) for challenge invites, check-in
-  activity, rest-day broadcasts, and cycle-share grants. Per-group and per-user
-  toggles.
-- **Onboarding wizard** — username → gym setup → schedule → iOS Shortcut.
-- **Settings** — flat single-page layout: profile fields (name, gender, weekly
-  goal, avatar), gym management, push notification preferences, change password,
-  and account deletion. Weekly goal and gender live on the profile/settings page;
-  timezone is inferred automatically.
-- **Avatar upload** with in-browser cropping (`react-easy-crop`).
-- **Public / private profiles** — private profiles visible only to challenge
-  partners. Public profiles show the check-in strip and, for permitted users,
-  a cycle data link.
-- **Account deletion** — full cascade, avatar storage cleanup.
+| | |
+|---|---|
+| **GPS Check-in** | Browser geolocation verified server-side via Haversine distance |
+| **iOS Shortcut** | Background automation via per-user webhook secret — set up once, runs forever |
+| **Challenges** | Head-to-head versus cards with live standings and split-pie SVG calendar |
+| **Obligations** | Flat weekly stake, tracked in-app with settle / dispute flows |
+| **Excused Days** | Sick, rest, and period days don't count against your weekly goal |
+| **Check-in Strip** | Scrollable day history from signup to today — green / red / grey at a glance |
+| **Cycle Tab** | Period predictions, phase estimates, trends, and Apple Health sync (female users) |
+| **Cycle Sharing** | Grant specific users read access to your cycle data; revoke anytime |
+| **Push Notifications** | VAPID web-push for invites, check-ins, rest days, and cycle-share grants |
+| **Onboarding Wizard** | Username → gym → schedule → iOS Shortcut, step by step |
+| **Public Profiles** | Shareable check-in history; cycle data shown only to permitted users |
 
 ---
 
@@ -68,302 +42,101 @@ weekly goal and you owe the flat stake to your challenge partners.
 
 | Layer | Tech |
 |---|---|
-| Framework | Next.js 14 (App Router, TypeScript) |
-| Styling | Tailwind CSS, shadcn/ui primitives |
-| Backend | Supabase — Postgres + Auth + Storage + RLS |
-| Auth | `@supabase/ssr` with refreshing middleware |
-| Push | `web-push` (VAPID), service worker at `public/sw.js` |
+| Framework | Next.js 14 — App Router, TypeScript |
+| Styling | Tailwind CSS + shadcn/ui · Monochrome glass theme |
+| Backend | Supabase — Postgres, Auth, Storage, RLS |
+| Push | `web-push` (VAPID) + service worker |
 | Validation | Zod on all API routes |
-| Deployment | Vercel (git-integrated, auto-deploy on push to `main`) |
-| Cron | Vercel Cron — `/api/cron/enforce` daily at 19:00 UTC |
-| Testing | Vitest (pure logic; `npm run test`) |
-| Timezone | `@vvo/tzdb` + `Intl.DateTimeFormat` (auto-detected; no user setting) |
-| Icons | `lucide-react` |
-
-Theme: **Monochrome Glass** — pure black background, white ink, no colour
-accents except semantic status colours (emerald / red).
-
----
-
-## Project layout
-
-```
-src/
-  app/
-    layout.tsx  page.tsx  globals.css
-    login/  signup/  auth/callback/
-    onboarding/username/  onboarding/gym/  onboarding/schedule/  onboarding/shortcut/
-    dashboard/            # Today view — check-in strip, streak, obligations
-    cycle/                # Period predictions + trends (female only)
-      sharing.tsx         # Cycle-share disclosure: grant/revoke usernames
-    groups/               # Challenge list — versus cards
-    groups/[id]/          # Challenge detail
-      member-status.tsx   # MemberStatusAvatar (ringed avatar + manage overlay)
-      ledger.tsx          # LedgerButtons (balances + activity overlays)
-      group-checkin-strip.tsx  # Split-pie SVG calendar for the challenge hero
-    notifications/        # In-app notification centre
-    settings/             # Profile, schedule, gym, notifications, password, account
-    shortcut/             # iOS Shortcut wizard (step-by-step with screenshots)
-    u/[username]/         # Public profile — check-in strip, cycle link
-    u/me/                 # Redirects → /u/<own-username>
-    join/                 # Join group via invite code
-    group/                # Legacy redirect
-    api/
-      checkin/            # POST — GPS/manual check-in (webhook secret or session)
-      status/             # POST — log excused day (rest/sick/period_day)
-      period-records/     # POST/DELETE — manual period-day logging
-      health/period/      # POST — Apple Health period sync (webhook secret)
-      notifications/      # GET/PATCH/DELETE — list, mark-read, clear
-      profile/            # PATCH — update profile fields
-      account/delete/     # DELETE — full account deletion
-      username/check/     # GET — username availability
-      users/search/       # GET — user search for challenge invites
-      push/subscribe/     # POST — register web-push subscription
-      gyms/               # GET/POST — list/create saved gyms
-      gyms/[id]/          # PATCH/DELETE — update/remove a saved gym
-      places/search/      # GET — Google Places gym search
-      places/details/     # GET — Google Places gym detail
-      cycle/sharing/      # GET/POST/DELETE — manage cycle-data share grants
-      groups/create/      # POST
-      groups/join/        # POST — join by invite code
-      groups/leave/       # POST
-      groups/invite/      # POST — return invite code + URL
-      groups/settings/    # PATCH — group name, penalty, notifications toggle
-      groups/member-penalty/   # PATCH — per-member penalty override
-      groups/members/role/     # PATCH — promote/demote member
-      groups/remove-member/    # POST — remove a member
-      groups/checkins/reverse/ # POST — manager reverses an unverified check-in
-      challenges/invite/       # POST — send challenge invite to a user
-      challenges/invite-to-group/ # POST — invite to an existing group
-      challenges/respond/      # POST — accept/decline a challenge invite
-      challenges/cancel/       # POST — cancel a sent invite
-      settlements/        # POST — mark obligation settled
-      dispute/            # POST — open a dispute
-      cron/enforce/       # GET/POST — daily obligation enforcement (CRON_SECRET)
-      auth/signout/       # POST
-  components/
-    ui/                   # button, card, badge, input, label, textarea, dialog, dropdown-menu
-    nav.tsx               # MobileNav (conditional Cycle tab) + TopNav
-    checkin-strip.tsx     # Scrollable horizontal day strip (dashboard + public profile)
-    challenge-versus-card.tsx  # Head-to-head challenge card for the list view
-    avatar.tsx            # Avatar + AvatarStack (overlapping cluster + "+N")
-    today-action-card.tsx # Check-in / excuse-day action card
-    push-permission.tsx   # Web-push opt-in prompt
-    status-badge.tsx      # Pill badge for check-in statuses
-    excuse-button.tsx     # Rest/sick/period_day logging
-    check-in-button.tsx   # GPS check-in trigger
-  lib/
-    supabase/{server,browser,admin}.ts
-    challenge-view.ts     # betterStatus(), statusToken(), statusRing() — shared helpers
-    period-stats.ts       # computePeriodStats(), estimatePhase() — fully tested
-    checkin-notify.ts     # notifyGroupCheckin() helper
-    checkin-reconciliation.ts  # reconcileUserDay(), reconcileUserWeek()
-    push.ts               # sendPushToUser()
-    groups.ts             # listUserMemberships(), getMembership()
-    stats.ts              # computeProfileStats(), areUsersInSameChallenge()
-    geo.ts  time.ts  money.ts  utils.ts  types.ts
-  middleware.ts           # Supabase session refresh on every request
-supabase/
-  migrations/0001_init.sql … 0023_notifications_delete_policy.sql
-public/
-  sw.js                   # Service worker for web-push
-  screenshots/            # iOS Shortcut wizard step screenshots
-vercel.json               # Cron schedule (19:00 UTC daily)
-vitest.config.ts
-```
-
----
-
-## Database schema (Supabase, migrations 0001–0023)
-
-All user-facing tables have RLS enabled and cascade-delete on `profiles.id`.
-
-| Table | Key columns |
-|---|---|
-| `profiles` | `id` (= `auth.users.id`), `username`, `gender`, `weekly_goal`, `rest_days[]`, `timezone`, `avatar_url`, `period_sync_enabled`, `notify_unverified_checkin`, `notify_rest_day`, `notify_cycle_share` |
-| `groups` | `id`, `owner_id`, `default_penalty_cents`, `invite_code`, `checkin_notifications` |
-| `group_members` | `(group_id, user_id)` PK, `role` (owner/admin/member), `penalty_cents` |
-| `checkin_events` | `user_id`, `group_id`, `local_day`, `status`, `source`, `lat/lng/distance_m` |
-| `daily_status` | `(user_id, local_day)` PK, `status` — derived by `reconcileUserDay()` |
-| `penalty_events` | created by `reconcileUserWeek()` on Sundays when goal missed |
-| `obligations` | `from_user`, `to_user`, `amount_cents` (flat weekly stake), `status` |
-| `notifications` | `user_id`, `type`, `payload` (jsonb), `read_at` |
-| `push_subscriptions` | `endpoint`, `p256dh`, `auth`, `user_id` |
-| `profile_secrets` | `user_id`, `webhook_secret` (self-only RLS) |
-| `period_records` | `(user_id, local_day)` PK, `flow_level`, `source` (health/manual) |
-| `user_gyms` | `user_id`, `name`, `lat`, `lng`, `radius_m` |
-| `challenge_invitations` | `from_user`, `to_user`, `group_id`, `status` |
-| `settlements` | `obligation_id`, `marked_by`, `amount_cents` |
-| `disputes` | `group_id`, `raised_by`, `target_type`, `status` |
-| `audit_log` | `user_id`, `kind`, `payload`, `ip`, `user_agent` |
-| `period_sharing` | `(owner_id, shared_with_id)` PK — cycle data access grants |
+| Testing | Vitest |
+| Deployment | Vercel — auto-deploy on push to `main` |
+| Cron | Vercel Cron — daily obligation enforcement at 19:00 UTC |
 
 ---
 
 ## Local setup
 
-### 1. Supabase
+### 1 — Supabase
 
-1. Create a project at https://supabase.com.
-2. In **SQL Editor**, run the migrations in order:
-   `supabase/migrations/0001_init.sql` through `0023_notifications_delete_policy.sql`.
-3. In **Auth → Providers**, ensure email auth is enabled.
-4. From **Settings → API**, note:
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run the migrations in order from `supabase/migrations/` in the SQL Editor.
+3. Enable **Email** auth under **Auth → Providers**.
+4. Copy your keys from **Settings → API**.
 
-### 2. Web Push (VAPID)
+### 2 — VAPID keys (web push)
 
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-Set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and
-`VAPID_SUBJECT=mailto:you@example.com`.
+### 3 — Environment
 
-### 3. Google Maps (optional)
-
-`GOOGLE_MAPS_API_KEY` is needed for the gym search feature (Places API, billing
-required). The rest of the app works without it.
-
-### 4. Environment
-
-Copy `.env.example` to `.env.local` and fill in all values:
+```bash
+cp .env.example .env.local
+```
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-CRON_SECRET=<long random string>
+CRON_SECRET=                        # any long random string
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
-VAPID_SUBJECT=
-GOOGLE_MAPS_API_KEY=
+VAPID_SUBJECT=                      # mailto:you@example.com
+GOOGLE_MAPS_API_KEY=                # optional — gym search only
 ```
 
-### 5. Run
+### 4 — Run
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
-npm run test       # Vitest unit tests (period-stats logic)
-npm run typecheck  # tsc --noEmit
-npm run build      # production build check
+npm run dev          # http://localhost:3000
+npm run test         # Vitest unit tests
+npm run typecheck    # tsc --noEmit
 ```
 
 ---
 
 ## GitHub Codespaces
 
-Add all 9 env vars as **Codespaces secrets** and allow access to this repo.
-When a Codespace is created, `.devcontainer/post-create.sh` installs deps and
-writes `.env.local` from the injected secrets automatically. Open the terminal
-and run `npm run dev`.
+Add all 9 env vars as **Codespaces Secrets** for this repo. The `post-create.sh` script writes `.env.local` automatically — just run `npm run dev`.
 
 ---
 
-## Deployment (Vercel)
+## Deployment
 
-The Vercel project is git-integrated with this repo. Every push to `main`
-triggers a production deploy automatically.
+The Vercel project is git-integrated. Push to `main` → production deploy.
 
-For a new project setup:
-1. Import the repo on Vercel.
-2. Set all 9 env vars in **Project → Settings → Environment Variables**.
-3. Connect the repo under **Project → Settings → Git**.
-4. `vercel.json` schedules `/api/cron/enforce` daily at 19:00 UTC. Vercel
-   injects `CRON_SECRET` automatically for authenticated cron requests.
+For a fresh setup: import the repo on Vercel, add the 9 env vars under **Settings → Environment Variables**, and you're done. `vercel.json` handles the cron schedule.
 
 ---
 
 ## iOS Shortcuts
 
-Two Shortcuts are available from the `/shortcut` page, presented as a
-step-by-step phone wizard with real screenshots and SVG cutout overlays
-(pre-filled with the user's `user_id` and `webhook_secret`):
+Available from the `/shortcut` page (pre-filled with your `user_id` and `webhook_secret`):
 
-| Shortcut | What it does |
+| Shortcut | Action |
 |---|---|
-| **Gym check-in** | Sends GPS coordinates to `/api/checkin`. Verified if within gym radius. |
-| **Period Sync** | Pulls last 60 days of menstrual flow from Apple Health, sends to `/api/health/period`. Run as a daily automation. |
+| **Gym Check-in** | Sends GPS coordinates to `/api/checkin` |
+| **Period Sync** | Pulls last 60 days of menstrual flow from Apple Health daily |
 
-Both use the same per-user `webhook_secret`. Set up the Period Sync Shortcut as
-a **daily silent automation** in iOS Shortcuts → Automations → Time of Day.
-
----
-
-## Notification system
-
-Notifications are stored in the `notifications` table and surfaced in the
-in-app notification centre (`/notifications`). Web-push is also sent where
-supported. Dismiss (single) and clear-all both permanently delete records.
-
-**Types:** `challenge_invite_received`, `challenge_accepted`,
-`challenge_declined`, `challenge_cancelled`, `settlement_marked`,
-`penalty_added`, `group_checkin`, `group_rest_day`, `cycle_share_granted`.
-
-**Gating logic:**
-
-| Event | Group toggle | User toggle |
-|---|---|---|
-| Verified check-in | `groups.checkin_notifications` | — |
-| Unverified check-in | `groups.checkin_notifications` | `notify_unverified_checkin` |
-| Rest day | — | `notify_rest_day` |
-| Cycle share granted | — | `notify_cycle_share` |
+Set Period Sync as a **silent daily automation** in iOS Shortcuts → Automations → Time of Day.
 
 ---
 
-## Cycle tab
+## Security
 
-Visible only to female users. Accessible from the nav (4th tab, Droplet icon).
-Male users visiting `/cycle` directly are redirected to `/dashboard`.
-
-**Sections:**
-- **Next period prediction** — date + days until/overdue + confidence note.
-  Requires ≥ 3 logged periods (i.e. 2 complete cycles).
-- **Current cycle** — day number + estimated phase (menstrual / follicular /
-  ovulation / luteal). Labelled as an estimate.
-- **Stats** — avg cycle length, avg period duration, regularity
-  (regular/irregular/unknown), last start date.
-- **Trends** — CSS/SVG bar charts (no chart library) for cycle length and
-  period duration over the last 8 cycles.
-- **Calendar** — full month view with flow-level dots. Tap any past non-gym day
-  to log or edit a period day.
-- **Log today** — quick button to mark today as a period day.
-- **Share cycle data** — disclosure section to grant/revoke per-username access.
-  Grantee can view the cycle tab at `/u/<username>` once access is granted.
-
-Predictions use `computePeriodStats()` from `src/lib/period-stats.ts`, which
-is unit-tested in `src/lib/period-stats.test.ts`.
-
----
-
-## Security notes
-
-- `SUPABASE_SERVICE_ROLE_KEY` is server-only. `src/lib/supabase/admin.ts` is
-  the only import point; never used in client components.
-- RLS is enabled on every user-facing table, including DELETE policies where
-  users need to remove their own records (e.g. notifications).
-- `/api/checkin` accepts either a per-user `webhook_secret` (Shortcut) or a
-  session cookie (browser). Distance is computed server-side; the client cannot
-  forge a verified status.
-- `/api/cron/enforce` requires `Authorization: Bearer CRON_SECRET`.
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only — never reaches the client.
+- RLS is enabled on every user-facing table.
+- Check-in distance is computed server-side; clients cannot forge a verified status.
 - Every check-in attempt is logged to `audit_log` with IP and User-Agent.
-- `profile_secrets` has self-only RLS (users can only read their own secret).
-- Cycle data is private by default; `period_sharing` grants are explicit
-  per-username and revocable.
+- Cycle data is private by default; sharing is explicit and per-username.
 
 ---
 
 ## Known limitations
 
-- No real money movement. Settlements are honour-system flags.
-- No email-based invites — invite codes only.
-- Obligations created before the flat-stake change (May 2026) used per-day
-  math; only new Sunday reconciliations use the flat weekly stake.
-- Google Maps gym search requires a billing-enabled GCP project.
-- Phase estimates on the Cycle tab are approximations, not medical guidance.
-- Disputes have lightweight votes but no auto-resolution; owners resolve
-  manually.
+- No real money movement — settlements are honour-system flags.
+- Invite by code only; no email invites.
+- Gym search requires a billing-enabled Google Cloud project.
+- Cycle phase estimates are approximations, not medical guidance.
