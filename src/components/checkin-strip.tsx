@@ -55,10 +55,9 @@ function tone(status: string): string {
     case "period_day":
       return "border border-white/15 bg-white/[0.06] text-white/55";
     case "future":
-      // No box, very dim — clearly distinct from rest days (which have a border + bg).
-      return "text-white/20";
+      return "border border-white/[0.06] text-white/20";
     default: // pending (past/today with no record yet)
-      return "text-white/30";
+      return "border border-white/10 text-white/30";
   }
 }
 
