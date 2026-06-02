@@ -55,10 +55,9 @@ function tone(status: string): string {
     case "period_day":
       return "border border-white/15 bg-white/[0.06] text-white/55";
     case "future":
-      // No box, very dim — clearly distinct from rest days (which have a border + bg).
-      return "text-white/20";
-    default: // pending (past/today with no record yet)
-      return "text-white/30";
+      return "border border-white/[0.06] text-white/20";
+    default: // pending — today only, still time to check in
+      return "border border-white/10 text-white/30";
   }
 }
 
@@ -119,8 +118,9 @@ export function CheckinStrip({
         const isFuture = day > today;
 
         const recorded = statusByDay.get(day);
+        const isPast = day < today;
         const status =
-          recorded ?? (isFuture ? "future" : restDays.includes(dow) ? "rest_day" : "pending");
+          recorded ?? (isFuture ? "future" : restDays.includes(dow) ? "rest_day" : isPast ? "missed" : "pending");
 
         // Month label above the first cell of each new month.
         const showMonth = i === 0 || day.slice(5, 7) !== days[i - 1].slice(5, 7);
