@@ -66,9 +66,13 @@ export default async function ProfilePage({
   const today = localDay(new Date(), timezone);
   const joinedDay = localDay(new Date(profile.created_at), timezone);
 
+  // daily_status has a self-only RLS policy and checkin_events requires
+  // same-group membership, so viewing another user's profile with the
+  // viewer's session returns empty rows. Use the admin client for non-owners,
+  // matching the same pattern used for gym names below.
   const stats = canSeeStats
     ? await computeProfileStats(
-        supabase,
+        isOwner ? supabase : createAdminClient(),
         profile.id,
         today,
         profile.weekly_goal ?? 4,
