@@ -22,7 +22,7 @@ function getPlatform(): Platform {
 // iOS share icon — matches the actual Safari share button glyph.
 function IOSShareIcon() {
   return (
-    <svg
+    <svg aria-hidden="true" focusable="false"
       width="18"
       height="18"
       viewBox="0 0 24 24"
