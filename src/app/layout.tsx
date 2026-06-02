@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { InstallGate } from "@/components/install-gate";
 
 export const metadata: Metadata = {
   title: "SweatPact",
@@ -36,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen pb-20">
-        {children}
+        <InstallGate>{children}</InstallGate>
       </body>
     </html>
   );
