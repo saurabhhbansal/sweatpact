@@ -21,12 +21,21 @@ type Gym = {
   radius_m: number;
 };
 
+type PeriodShare = {
+  ownerId: string;
+  ownerUsername: string | null;
+  ownerName: string | null;
+  notifyApproaching: boolean;
+};
+
 export function SettingsForm({
   profile,
   initialGyms,
+  sharesWithMe = [],
 }: {
   profile: Profile;
   initialGyms: Gym[];
+  sharesWithMe?: PeriodShare[];
 }) {
   return (
     <div className="space-y-6">
@@ -79,6 +88,27 @@ export function SettingsForm({
           initial={profile.notify_cycle_share ?? true}
         />
       </div>
+
+      {sharesWithMe.length > 0 ? (
+        <>
+          <SectionHeader title="Period reminders" />
+          <div className="space-y-3">
+            {sharesWithMe.map((share) => {
+              const display =
+                share.ownerName?.trim() ||
+                (share.ownerUsername ? `@${share.ownerUsername}` : "Someone");
+              return (
+                <PeriodReminderToggle
+                  key={share.ownerId}
+                  ownerId={share.ownerId}
+                  label={display}
+                  initial={share.notifyApproaching}
+                />
+              );
+            })}
+          </div>
+        </>
+      ) : null}
 
       <SectionHeader title="Security" />
       <ChangePasswordButton />
@@ -248,7 +278,7 @@ function NotifyToggle({
   description,
   initial,
 }: {
-  field: "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share";
+  field: "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share" | "notify_partner_period";
   label: string;
   description: string;
   initial: boolean;
@@ -281,6 +311,65 @@ function NotifyToggle({
       <div className="min-w-0">
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="mt-0.5 text-xs text-white/55">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => toggle(!enabled)}
+        disabled={busy}
+        aria-pressed={enabled}
+        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition ${
+          enabled ? "border-white bg-white" : "border-white/25 bg-white/[0.06]"
+        } disabled:opacity-50`}
+      >
+        <span
+          className={`inline-block h-5 w-5 rounded-full transition ${
+            enabled ? "translate-x-6 bg-black" : "translate-x-1 bg-white/70"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function PeriodReminderToggle({
+  ownerId,
+  label,
+  initial,
+}: {
+  ownerId: string;
+  label: string;
+  initial: boolean;
+}) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [enabled, setEnabled] = useState(initial);
+  const [busy, setBusy] = useState(false);
+
+  async function toggle(next: boolean) {
+    if (busy) return;
+    const prev = enabled;
+    setEnabled(next);
+    setBusy(true);
+    const res = await fetch("/api/cycle/sharing", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ owner_id: ownerId, notify_approaching: next }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setEnabled(prev);
+      return;
+    }
+    startTransition(() => router.refresh());
+  }
+
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.02] p-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="mt-0.5 text-xs text-white/55">
+          Remind me 2 days before {label}&apos;s predicted period.
+        </p>
       </div>
       <button
         type="button"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runEnforcement } from "@/lib/enforcement";
+import { sendPeriodReminders } from "@/lib/period-notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +23,9 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const admin = createAdminClient();
-  const result = await runEnforcement(admin, new Date());
+  const now = new Date();
+  const result = await runEnforcement(admin, now);
+  await sendPeriodReminders(admin, now);
   return NextResponse.json({ ok: true, ...result });
 }
 
