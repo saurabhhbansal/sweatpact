@@ -55,12 +55,14 @@ export async function GET() {
         .from("obligations")
         .select("id, amount_cents, to_user, status")
         .eq("from_user", profile.id)
-        .eq("status", "pending"),
+        .eq("status", "pending")
+        .limit(200),
       supabase
         .from("obligations")
         .select("id, amount_cents, from_user, status")
         .eq("to_user", profile.id)
-        .eq("status", "pending"),
+        .eq("status", "pending")
+        .limit(200),
     ]);
 
   const todayStatus =
@@ -83,7 +85,8 @@ export async function GET() {
       .from("group_members")
       .select("user_id, role, penalty_cents, group_id, profiles:user_id(id, name, email)")
       .in("group_id", groupIds)
-      .order("joined_at", { ascending: true });
+      .order("joined_at", { ascending: true })
+      .limit(1_000);
 
     groups = memberships
       .map((membership) => {

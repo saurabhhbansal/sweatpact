@@ -160,27 +160,14 @@ async function ensurePenaltyForGroup(
 ) {
   const { userId, groupId, localDay: day, amountCents, reason = "missed_checkin" } = params;
 
-  const { data: existing, error: existingError } = await admin
-    .from("penalty_events")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("group_id", groupId)
-    .eq("local_day", day)
-    .eq("reason", reason)
-    .maybeSingle();
-
-  if (existingError) throw existingError;
-  if (existing) return existing.id;
-
+  // Upsert on the DB unique key (user_id, local_day, reason) so concurrent
+  // enforcement runs cannot create duplicate penalties for the same day.
   const { data: penalty, error: penaltyError } = await admin
     .from("penalty_events")
-    .insert({
-      user_id: userId,
-      group_id: groupId,
-      local_day: day,
-      amount_cents: amountCents,
-      reason,
-    })
+    .upsert(
+      { user_id: userId, group_id: groupId, local_day: day, amount_cents: amountCents, reason },
+      { onConflict: "user_id,local_day,reason" }
+    )
     .select("id")
     .single();
 

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const Body = z.object({
   group_id: z.string().uuid(),
-  default_penalty_cents: z.number().int().nonnegative().optional(),
+  default_penalty_cents: z.number().int().nonnegative().max(1_000_000).optional(),
   name: z.string().trim().min(1).max(80).optional(),
 });
 

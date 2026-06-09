@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const Body = z.object({
   name: z.string().min(1).max(80),
   description: z.string().max(500).optional(),
-  default_penalty_cents: z.number().int().nonnegative().optional(),
+  default_penalty_cents: z.number().int().nonnegative().max(1_000_000).optional(),
 });
 
 export async function POST(req: NextRequest) {

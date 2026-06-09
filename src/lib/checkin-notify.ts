@@ -60,7 +60,8 @@ export async function notifyGroupCheckin(
       .from("group_members")
       .select("group_id, user_id")
       .in("group_id", groupIds)
-      .neq("user_id", actorId);
+      .neq("user_id", actorId)
+      .limit(10_000);
 
     if (!members || members.length === 0) return;
 

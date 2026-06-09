@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     .from("profiles")
     .select("username, name")
     .eq("id", auth.user.id)
-    .single();
+    .maybeSingle();
 
   const { data: invitation, error: invError } = await admin
     .from("challenge_invitations")
