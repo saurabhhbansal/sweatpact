@@ -53,11 +53,6 @@ export async function notifyGroupCheckin(
 
     if (enabledGroups.length === 0) return;
 
-    const groupNameById = new Map<string, string>();
-    for (const membership of enabledGroups) {
-      const group = normalizeRelation(membership.group);
-      if (group) groupNameById.set(membership.group_id, group.name);
-    }
     const groupIds = enabledGroups.map((m) => m.group_id);
 
     // All recipients (every member of those groups except the actor).
@@ -83,7 +78,6 @@ export async function notifyGroupCheckin(
       type,
       payload: {
         group_id: member.group_id,
-        group_name: groupNameById.get(member.group_id) ?? null,
         actor_id: actorId,
         actor_name: actor?.name ?? null,
         actor_username: actor?.username ?? null,
@@ -96,15 +90,14 @@ export async function notifyGroupCheckin(
     }
 
     await Promise.all(
-      members.map((member) => {
-        const groupName = groupNameById.get(member.group_id);
-        return sendPushToUser(admin, member.user_id, {
+      members.map((member) =>
+        sendPushToUser(admin, member.user_id, {
           title: "SweatPact",
-          body: `${actorName} ${verb}${groupName ? ` — ${groupName}` : ""}`,
+          body: `${actorName} ${verb}`,
           url: `/groups/${member.group_id}`,
           tag: `group-checkin-${member.group_id}-${localDay}`,
-        });
-      })
+        })
+      )
     );
   } catch {
     // Swallow — notifications are best-effort.
