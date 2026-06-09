@@ -22,6 +22,7 @@ type Gym = {
 };
 
 type PeriodShare = {
+  ownerId: string;
   ownerUsername: string | null;
   ownerName: string | null;
   notifyApproaching: boolean;
@@ -98,8 +99,8 @@ export function SettingsForm({
                 (share.ownerUsername ? `@${share.ownerUsername}` : "Someone");
               return (
                 <PeriodReminderToggle
-                  key={share.ownerUsername ?? share.ownerName}
-                  ownerUsername={share.ownerUsername}
+                  key={share.ownerId}
+                  ownerId={share.ownerId}
                   label={display}
                   initial={share.notifyApproaching}
                 />
@@ -331,11 +332,11 @@ function NotifyToggle({
 }
 
 function PeriodReminderToggle({
-  ownerUsername,
+  ownerId,
   label,
   initial,
 }: {
-  ownerUsername: string | null;
+  ownerId: string;
   label: string;
   initial: boolean;
 }) {
@@ -345,14 +346,14 @@ function PeriodReminderToggle({
   const [busy, setBusy] = useState(false);
 
   async function toggle(next: boolean) {
-    if (busy || !ownerUsername) return;
+    if (busy) return;
     const prev = enabled;
     setEnabled(next);
     setBusy(true);
     const res = await fetch("/api/cycle/sharing", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ owner_username: ownerUsername, notify_approaching: next }),
+      body: JSON.stringify({ owner_id: ownerId, notify_approaching: next }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -373,7 +374,7 @@ function PeriodReminderToggle({
       <button
         type="button"
         onClick={() => toggle(!enabled)}
-        disabled={busy || !ownerUsername}
+        disabled={busy}
         aria-pressed={enabled}
         className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition ${
           enabled ? "border-white bg-white" : "border-white/25 bg-white/[0.06]"

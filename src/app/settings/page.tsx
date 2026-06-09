@@ -31,10 +31,9 @@ export default async function SettingsPage() {
     .order("created_at", { ascending: true });
 
   // People who have shared their cycle data with the current user, plus their
-  // reminder preference. Uses admin client — RLS only allows reading own rows.
-  const { createAdminClient } = await import("@/lib/supabase/admin");
-  const admin = createAdminClient();
-  const { data: periodShares } = await admin
+  // reminder preference. RLS grantee_read policy allows the authenticated user
+  // to read rows where shared_with_id = auth.uid(), so no admin client needed.
+  const { data: periodShares } = await supabase
     .from("period_sharing")
     .select("owner_id, notify_approaching, profiles:owner_id(username, name)")
     .eq("shared_with_id", profile.id);
@@ -42,6 +41,7 @@ export default async function SettingsPage() {
   const sharesWithMe = (periodShares ?? []).map((row) => {
     const p = (Array.isArray(row.profiles) ? row.profiles[0] : row.profiles) as { username: string | null; name: string | null } | null;
     return {
+      ownerId: row.owner_id as string,
       ownerUsername: p?.username ?? null,
       ownerName: p?.name ?? null,
       notifyApproaching: row.notify_approaching as boolean,

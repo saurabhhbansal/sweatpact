@@ -12,7 +12,7 @@ const Body = z.object({
 });
 
 const PatchBody = z.object({
-  owner_username: z.string().min(3).max(20),
+  owner_id: z.string().uuid(),
   notify_approaching: z.boolean(),
 });
 
@@ -132,27 +132,21 @@ export async function PATCH(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
-  const { owner_username, notify_approaching } = parsed.data;
+  const { owner_id, notify_approaching } = parsed.data;
 
   const admin = createAdminClient();
-  const { data: owner } = await admin
-    .from("profiles")
-    .select("id")
-    .ilike("username", owner_username)
-    .maybeSingle();
-
-  if (!owner) {
-    return NextResponse.json({ error: "user_not_found" }, { status: 404 });
-  }
-
-  const { error } = await admin
+  const { data: updated, error } = await admin
     .from("period_sharing")
     .update({ notify_approaching })
-    .eq("owner_id", owner.id)
-    .eq("shared_with_id", auth.user.id);
+    .eq("owner_id", owner_id)
+    .eq("shared_with_id", auth.user.id)
+    .select("owner_id");
 
   if (error) {
     return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
+  }
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });
