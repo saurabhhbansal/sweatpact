@@ -21,7 +21,7 @@ function isWithinWindow(day: string, today: string): boolean {
   const [yb, mb, db] = today.split("-").map(Number);
   const diffMs =
     Date.UTC(yb, mb - 1, db) - Date.UTC(ya, ma - 1, da);
-  const diffDays = Math.round(diffMs / 86_400_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
   return diffDays >= 0 && diffDays <= WINDOW_DAYS;
 }
 
