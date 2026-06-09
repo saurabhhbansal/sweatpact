@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       status: "open",
     })
     .select("id, status, created_at")
-    .maybeSingle();
+    .single();
 
   if (error) {
     return NextResponse.json(
