@@ -11,6 +11,11 @@ const Body = z.object({
   username: z.string().min(3).max(20),
 });
 
+const PatchBody = z.object({
+  owner_id: z.string().uuid(),
+  notify_approaching: z.boolean(),
+});
+
 // GET — list usernames the caller currently shares their cycle data with.
 export async function GET() {
   const supabase = createClient();
@@ -113,6 +118,38 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, username: target.username });
+}
+
+// PATCH { owner_username, notify_approaching } — grantee toggles reminder preference.
+export async function PATCH(req: NextRequest) {
+  const supabase = createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const parsed = PatchBody.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "validation_failed" }, { status: 400 });
+  }
+  const { owner_id, notify_approaching } = parsed.data;
+
+  const admin = createAdminClient();
+  const { data: updated, error } = await admin
+    .from("period_sharing")
+    .update({ notify_approaching })
+    .eq("owner_id", owner_id)
+    .eq("shared_with_id", auth.user.id)
+    .select("owner_id");
+
+  if (error) {
+    return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
+  }
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
 }
 
 // DELETE { username } — revoke a user's access.

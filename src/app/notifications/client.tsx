@@ -229,7 +229,6 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
           ((item.payload as any)?.actor_name as string | undefined) ||
           ((item.payload as any)?.actor_username as string | undefined) ||
           "Someone";
-        const groupName = (item.payload as any)?.group_name as string | undefined;
         const groupId = (item.payload as any)?.group_id as string | undefined;
         const checkinStatus = (item.payload as any)?.status as string | undefined;
 
@@ -346,12 +345,6 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                     : checkinStatus === "unverified"
                       ? "logged an unverified check-in"
                       : "checked in"}
-                  {groupName ? (
-                    <>
-                      {" "}in{" "}
-                      <span className="font-medium">{groupName}</span>
-                    </>
-                  ) : null}
                   .
                 </p>
                 <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>
@@ -364,6 +357,40 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                   </Link>
                 ) : null}
               </div>
+            ) : item.type === "partner_period_reminder" ? (
+              (() => {
+                const ownerUsername = (item.payload as any)?.owner_username as string | undefined;
+                const ownerName = (item.payload as any)?.owner_name as string | undefined;
+                const ownerDisplay = ownerName?.trim() || (ownerUsername ? `@${ownerUsername}` : "Someone");
+                const predictedStart = (item.payload as any)?.predicted_start as string | undefined;
+                return (
+                  <div className="space-y-1 pr-6">
+                    <p className="text-sm text-white">
+                      <span className="font-semibold">
+                        {ownerUsername ? (
+                          <Link className="hover:underline" href={`/u/${ownerUsername}`}>
+                            {ownerDisplay}
+                          </Link>
+                        ) : (
+                          ownerDisplay
+                        )}
+                      </span>
+                      {predictedStart
+                        ? `'s period is predicted to start on ${new Date(predictedStart + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })}.`
+                        : "'s period may be starting soon."}
+                    </p>
+                    <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>
+                    {ownerUsername ? (
+                      <Link
+                        href={`/u/${ownerUsername}`}
+                        className="text-xs text-white underline hover:no-underline"
+                      >
+                        View cycle data →
+                      </Link>
+                    ) : null}
+                  </div>
+                );
+              })()
             ) : (
               <div className="space-y-1 pr-6">
                 <p className="text-sm text-white">{item.type.replace(/_/g, " ")}</p>

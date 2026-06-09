@@ -66,11 +66,15 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "missing_endpoint" }, { status: 400 });
   }
 
-  await supabase
+  const { error } = await supabase
     .from("push_subscriptions")
     .delete()
     .eq("user_id", auth.user.id)
     .eq("endpoint", endpoint);
+
+  if (error) {
+    return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
