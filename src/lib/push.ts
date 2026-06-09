@@ -44,7 +44,8 @@ export async function sendPushToUser(
   const { data: subs } = await admin
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .limit(100);
 
   if (!subs || subs.length === 0) return;
 

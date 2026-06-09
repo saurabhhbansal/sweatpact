@@ -42,18 +42,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "already_responded" }, { status: 409 });
   }
 
-  await admin
+  const { error: cancelError } = await admin
     .from("challenge_invitations")
     .update({ status: "cancelled", responded_at: new Date().toISOString() })
     .eq("id", parsed.data.invitation_id);
+  if (cancelError) {
+    return NextResponse.json({ error: "db_error", detail: cancelError.message }, { status: 500 });
+  }
 
   // If this was the initial 2-person invite and the group only has the inviter,
   // tear down the placeholder group too.
-  const { count } = await admin
+  const { count, error: countError } = await admin
     .from("group_members")
     .select("user_id", { count: "exact", head: true })
     .eq("group_id", invitation.group_id);
-  if ((count ?? 0) <= 1) {
+  if (!countError && (count ?? 0) <= 1) {
     await admin.from("groups").delete().eq("id", invitation.group_id);
   }
 

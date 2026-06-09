@@ -111,7 +111,8 @@ export default async function GroupPage({
       .eq("group_id", group.id)
       .gte("local_day", group.created_at.slice(0, 10))
       .lte("local_day", today)
-      .order("local_day", { ascending: true }),
+      .order("local_day", { ascending: true })
+      .limit(5_000),
   ]);
 
   const obligationIds = (obligations ?? []).map((obligation) => obligation.id);

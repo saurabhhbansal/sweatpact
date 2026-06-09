@@ -16,28 +16,40 @@ export async function sendPeriodReminders(
 ): Promise<void> {
   try {
     // All opted-in sharing relationships.
-    const { data: rows } = await admin
+    const { data: rows, error: rowsError } = await admin
       .from("period_sharing")
       .select("owner_id, shared_with_id")
-      .eq("notify_approaching", true);
+      .eq("notify_approaching", true)
+      .limit(10_000);
 
+    if (rowsError) throw rowsError;
     if (!rows || rows.length === 0) return;
 
     // Deduplicate owners so we only compute stats once per owner.
     const ownerIds = [...new Set(rows.map((r) => r.owner_id))];
+
+    // Only fetch recent records — period stats only need ~2 years of history.
+    const twoYearsAgo = new Date(now);
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    const cutoff = twoYearsAgo.toISOString().slice(0, 10);
 
     // Load owner profiles (timezone) and period records in parallel.
     const [profilesRes, recordsRes] = await Promise.all([
       admin
         .from("profiles")
         .select("id, timezone, name, username")
-        .in("id", ownerIds),
+        .in("id", ownerIds)
+        .limit(10_000),
       admin
         .from("period_records")
         .select("user_id, local_day, flow_level")
         .in("user_id", ownerIds)
+        .gte("local_day", cutoff)
         .order("local_day", { ascending: true }),
     ]);
+
+    if (profilesRes.error) throw profilesRes.error;
+    if (recordsRes.error) throw recordsRes.error;
 
     const profiles = profilesRes.data ?? [];
     const allRecords = recordsRes.data ?? [];

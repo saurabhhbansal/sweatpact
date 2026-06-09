@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!Array.isArray(ids) || ids.length === 0) {
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 100) {
     return NextResponse.json({ error: "no_ids" }, { status: 400 });
   }
   await supabase
@@ -79,7 +79,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!Array.isArray(ids) || ids.length === 0) {
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 100) {
     return NextResponse.json({ error: "no_ids" }, { status: 400 });
   }
   await supabase

@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     .from("profiles")
     .select("username, name")
     .eq("id", auth.user.id)
-    .single();
+    .maybeSingle();
 
   const groupName = `${fromProfile?.name?.trim() || fromProfile?.username || "Challenger"} vs ${target.name?.trim() || target.username}`;
 
@@ -97,11 +97,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Add inviter as owner of the group immediately.
-  await admin.from("group_members").insert({
+  const { error: ownerError } = await admin.from("group_members").insert({
     group_id: group.id,
     user_id: auth.user.id,
     role: "owner",
   });
+  if (ownerError) {
+    await admin.from("groups").delete().eq("id", group.id);
+    return NextResponse.json({ error: "db_error", detail: ownerError.message }, { status: 500 });
+  }
 
   const { data: invitation, error: invError } = await admin
     .from("challenge_invitations")
@@ -115,6 +119,7 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
   if (invError || !invitation) {
+    await admin.from("groups").delete().eq("id", group.id);
     return NextResponse.json(
       { error: "db_error", detail: invError?.message },
       { status: 500 }
