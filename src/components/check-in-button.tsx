@@ -140,8 +140,8 @@ export function CheckInButton({
       <Button size="lg" className="w-full text-base" onClick={onPrimary} disabled={busy}>
         {busy ? "Checking in..." : periodDayMode ? "Hit the gym anyway" : "Check in now"}
       </Button>
-      {message ? <p className="text-sm text-success">{message}</p> : null}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {message ? <p role="status" aria-live="polite" className="text-sm text-success">{message}</p> : null}
+      {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

@@ -239,7 +239,7 @@ export function ProgressSection({
                         type="button"
                         key={cell.key}
                         onClick={() => setEditingDay(cell.key)}
-                        className="relative mx-auto h-9 w-9 rounded-full transition hover:opacity-80"
+                        className="relative mx-auto h-9 w-9 rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                         aria-label={`Mark ${cell.key} as period day`}
                       >
                         {inner}
@@ -259,8 +259,10 @@ export function ProgressSection({
 
       {calendarOnly ? null : (
         <button
+          type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="mt-3 w-full text-xs text-white/42 transition-colors hover:text-white/70"
+          aria-expanded={expanded}
+          className="mt-3 w-full rounded-full py-1 text-xs text-white/42 transition-colors hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {expanded ? "Show less" : "View calendar"}
         </button>
@@ -351,9 +353,15 @@ export function PeriodDayEditor({
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="period-editor-title"
       className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-xl sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget && !busy) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && !busy) onClose();
       }}
     >
       <div
@@ -361,12 +369,12 @@ export function PeriodDayEditor({
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.25rem)" }}
       >
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-sm font-semibold text-white">{niceDate}</p>
+          <p id="period-editor-title" className="text-sm font-semibold text-white">{niceDate}</p>
           <button
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="text-xs text-white/55 hover:text-white"
+            className="rounded px-2 py-1 text-xs text-white/55 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             Close
           </button>
@@ -414,7 +422,7 @@ export function PeriodDayEditor({
             Remove period day
           </Button>
         ) : null}
-        {err ? <p className="mt-3 text-center text-xs text-white/85">{err}</p> : null}
+        {err ? <p role="alert" className="mt-3 text-center text-xs text-destructive">{err}</p> : null}
       </div>
     </div>,
     document.body

@@ -109,6 +109,8 @@ export function CheckinStrip({
   return (
     <div
       ref={scrollRef}
+      role="region"
+      aria-label="Check-in history"
       className={`no-scrollbar relative flex gap-2 overflow-x-auto pb-1 ${ready ? "" : "opacity-0"}`}
     >
       {days.map((day, i) => {

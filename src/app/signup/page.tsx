@@ -56,7 +56,7 @@ export default function SignupPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-fade-up">
         <div className="mb-8 text-center">
           <div className="flex justify-center text-white">
             <SweatPactSeal size="md" />
@@ -103,7 +103,7 @@ export default function SignupPage() {
               <select
                 id="gender"
                 required
-                className="flex h-10 w-full rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/80 focus-visible:ring-offset-2"
+                className="flex h-11 w-full rounded-[1rem] border border-white/25 bg-white/10 px-3 py-2 text-sm text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/80 focus-visible:ring-offset-2"
                 value={gender}
                 onChange={(event) => setGender(event.target.value)}
               >
@@ -112,8 +112,8 @@ export default function SignupPage() {
                 <option value="female" className="text-slate-950">Female</option>
               </select>
             </div>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            {message ? <p className="text-sm text-white/58">{message}</p> : null}
+            {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
+            {message ? <p role="status" aria-live="polite" className="text-sm text-white/58">{message}</p> : null}
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create account"}
             </Button>

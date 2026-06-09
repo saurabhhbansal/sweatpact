@@ -88,7 +88,7 @@ export function ExcuseButton({
         >
           Back
         </Button>
-        {error && <p className="mt-1 text-center text-xs text-destructive">{error}</p>}
+        {error && <p role="alert" aria-live="assertive" className="mt-1 text-center text-xs text-destructive">{error}</p>}
       </div>
     );
   }
@@ -117,8 +117,8 @@ export function ExcuseButton({
       >
         Cancel
       </Button>
-      {error && <p className="mt-1 text-center text-xs text-destructive">{error}</p>}
-      {msg && <p className="mt-1 text-center text-xs text-success">{msg}</p>}
+      {error && <p role="alert" aria-live="assertive" className="mt-1 text-center text-xs text-destructive">{error}</p>}
+      {msg && <p role="status" aria-live="polite" className="mt-1 text-center text-xs text-success">{msg}</p>}
     </div>
   );
 }
