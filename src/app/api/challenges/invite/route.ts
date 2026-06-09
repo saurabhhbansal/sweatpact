@@ -119,6 +119,7 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
   if (invError || !invitation) {
+    await admin.from("groups").delete().eq("id", group.id);
     return NextResponse.json(
       { error: "db_error", detail: invError?.message },
       { status: 500 }

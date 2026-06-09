@@ -38,7 +38,8 @@ export async function sendPeriodReminders(
       admin
         .from("profiles")
         .select("id, timezone, name, username")
-        .in("id", ownerIds),
+        .in("id", ownerIds)
+        .limit(10_000),
       admin
         .from("period_records")
         .select("user_id, local_day, flow_level")
