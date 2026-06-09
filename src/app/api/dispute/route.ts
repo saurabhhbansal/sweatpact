@@ -36,21 +36,21 @@ export async function POST(req: NextRequest) {
       .from("checkin_events")
       .select("group_id")
       .eq("id", target_id)
-      .single();
+      .maybeSingle();
     groupId = data?.group_id ?? null;
   } else if (!groupId && target_type === "obligation") {
     const { data } = await supabase
       .from("obligations")
       .select("group_id")
       .eq("id", target_id)
-      .single();
+      .maybeSingle();
     groupId = data?.group_id ?? null;
   } else if (!groupId && target_type === "penalty_event") {
     const { data } = await supabase
       .from("penalty_events")
       .select("group_id")
       .eq("id", target_id)
-      .single();
+      .maybeSingle();
     groupId = data?.group_id ?? null;
   }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       status: "open",
     })
     .select("id, status, created_at")
-    .single();
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json(
