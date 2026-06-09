@@ -23,7 +23,8 @@ export async function runEnforcement(
 
   const { data: profiles, error } = await admin
     .from("profiles")
-    .select("id, timezone");
+    .select("id, timezone")
+    .limit(10_000);
 
   if (error) throw error;
   if (!profiles) return result;
@@ -31,36 +32,40 @@ export async function runEnforcement(
   for (const profile of profiles as Array<{ id: string; timezone: string | null }>) {
     result.scanned += 1;
 
-    const timezone = normalizeTimeZone(profile.timezone);
-    const day = previousLocalDay(now, timezone);
+    try {
+      const timezone = normalizeTimeZone(profile.timezone);
+      const day = previousLocalDay(now, timezone);
 
-    const { data: existing } = await admin
-      .from("daily_status")
-      .select("status")
-      .eq("user_id", profile.id)
-      .eq("local_day", day)
-      .maybeSingle();
+      const { data: existing } = await admin
+        .from("daily_status")
+        .select("status")
+        .eq("user_id", profile.id)
+        .eq("local_day", day)
+        .maybeSingle();
 
-    const reconciled = await reconcileUserDay(admin, {
-      userId: profile.id,
-      localDay: day,
-      now,
-    });
-
-    if (reconciled.status === "missed" && existing?.status !== "missed") {
-      result.penalized += 1;
-    } else {
-      result.skipped += 1;
-    }
-
-    // If yesterday was a Sunday (day 0), the ISO week just ended — run weekly check.
-    if (dayOfWeekFor(day) === 0) {
-      result.weeklyChecked += 1;
-      await reconcileUserWeek(admin, {
+      const reconciled = await reconcileUserDay(admin, {
         userId: profile.id,
-        weekEndDay: day,
+        localDay: day,
         now,
       });
+
+      if (reconciled.status === "missed" && existing?.status !== "missed") {
+        result.penalized += 1;
+      } else {
+        result.skipped += 1;
+      }
+
+      // If yesterday was a Sunday (day 0), the ISO week just ended — run weekly check.
+      if (dayOfWeekFor(day) === 0) {
+        result.weeklyChecked += 1;
+        await reconcileUserWeek(admin, {
+          userId: profile.id,
+          weekEndDay: day,
+          now,
+        });
+      }
+    } catch {
+      result.skipped += 1;
     }
   }
 

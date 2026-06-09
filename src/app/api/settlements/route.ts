@@ -44,14 +44,16 @@ export async function POST(req: NextRequest) {
   }
 
   const amt = amount_cents ?? oblig.amount_cents;
-  const { error: settleErr } = await supabase
+  const { data: settleRow, error: settleErr } = await supabase
     .from("settlements")
     .insert({
       obligation_id,
       marked_by: auth.user.id,
       amount_cents: amt,
       note: note ?? null,
-    });
+    })
+    .select("id")
+    .single();
   if (settleErr) {
     return NextResponse.json(
       { error: "db_error", detail: settleErr.message },
@@ -63,6 +65,8 @@ export async function POST(req: NextRequest) {
     .update({ status: "settled" })
     .eq("id", obligation_id);
   if (updateErr) {
+    // Best-effort rollback: remove the orphaned settlement row.
+    await supabase.from("settlements").delete().eq("id", settleRow.id);
     return NextResponse.json(
       { error: "db_error", detail: updateErr.message },
       { status: 500 }
