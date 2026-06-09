@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CalendarCheck2, Flame, MapPin, Users2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -222,29 +223,57 @@ export default async function ProfilePage({
           </Card>
         ) : stats ? (
           <>
-            <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-              <p className="text-xs uppercase tracking-[0.18em] text-white/45">Week streak</p>
-              <div className="mt-2 flex items-baseline gap-2">
-                <p className="text-5xl font-bold text-white">{stats.weekStreak}</p>
-                <p className="text-sm text-white/55">
-                  consecutive week{stats.weekStreak === 1 ? "" : "s"} hitting goal
+            <section aria-label="Stats" className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <Flame className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">Week streak</p>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <p className="text-5xl font-bold text-white">{stats.weekStreak}</p>
+                  <p className="text-sm text-white/55">
+                    consecutive week{stats.weekStreak === 1 ? "" : "s"} hitting goal
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-[10px] uppercase tracking-[0.16em]">This week</p>
+                </div>
+                <p className="mt-2 text-2xl font-bold text-white">
+                  {stats.thisWeekCheckins}
+                  <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
+                </p>
+                <div
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={stats.weeklyGoal}
+                  aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
+                  aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
+                  className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                >
+                  <div
+                    className="h-full rounded-full bg-white"
+                    style={{
+                      width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1.5 text-[11px] text-white/45">
+                  {stats.thisWeekCheckins >= stats.weeklyGoal ? "goal met" : "days done"}
                 </p>
               </div>
-              <p className="mt-3 text-xs text-white/50">
-                This week: {stats.thisWeekCheckins} / {stats.weeklyGoal} days &middot; goal {stats.weeklyGoal}d/week
-              </p>
-              {gymNames.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {gymNames.map((name) => (
-                    <span
-                      key={name}
-                      className="rounded-full border border-white/20 bg-white/[0.06] px-2.5 py-1 text-xs text-white/70"
-                    >
-                      {name}
-                    </span>
-                  ))}
+
+              <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <Users2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-[10px] uppercase tracking-[0.16em]">Challenges</p>
                 </div>
-              ) : null}
+                <p className="mt-2 text-2xl font-bold text-white">{stats.challengesActive}</p>
+                <p className="mt-1.5 text-[11px] text-white/45">active right now</p>
+              </div>
             </section>
 
             <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
@@ -255,7 +284,40 @@ export default async function ProfilePage({
                 history={stats.history}
                 restDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
               />
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/[0.08] pt-3 text-xs text-white/55">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500/90" aria-hidden="true" />
+                  {stats.totalGymDays} gym
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-white/30" aria-hidden="true" />
+                  {stats.totalRestDays + stats.totalExcusedDays} rest &amp; excused
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-red-500/70" aria-hidden="true" />
+                  {stats.totalMissedDays} missed
+                </span>
+              </div>
             </section>
+
+            {gymNames.length > 0 ? (
+              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">Gyms</p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {gymNames.map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-full border border-white/20 bg-white/[0.06] px-2.5 py-1 text-xs text-white/70"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             {isOwner ? (
               <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
@@ -287,15 +349,6 @@ export default async function ProfilePage({
                 </div>
               </section>
             ) : null}
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Active challenges</CardTitle>
-                <CardDescription>
-                  In {stats.challengesActive} challenge{stats.challengesActive === 1 ? "" : "s"} right now.
-                </CardDescription>
-              </CardHeader>
-            </Card>
 
             {periodStats ? <PeriodStatsCard stats={periodStats} /> : null}
 
