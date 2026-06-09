@@ -65,7 +65,9 @@ export function PushPermissionPrompt({
         const sub = await reg.pushManager.getSubscription();
         if (!cancelled) setState(sub ? "granted-subscribed" : "granted-unsubscribed");
       } catch {
-        if (!cancelled) setState("granted-unsubscribed");
+        // Service worker registration failed — treat as unsupported so the
+        // "Enable" button is not shown for a flow that cannot succeed.
+        if (!cancelled) setState("unsupported");
       }
     })();
     return () => {

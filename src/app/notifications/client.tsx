@@ -229,7 +229,6 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
           ((item.payload as any)?.actor_name as string | undefined) ||
           ((item.payload as any)?.actor_username as string | undefined) ||
           "Someone";
-        const groupName = (item.payload as any)?.group_name as string | undefined;
         const groupId = (item.payload as any)?.group_id as string | undefined;
         const checkinStatus = (item.payload as any)?.status as string | undefined;
 
@@ -346,12 +345,6 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                     : checkinStatus === "unverified"
                       ? "logged an unverified check-in"
                       : "checked in"}
-                  {groupName ? (
-                    <>
-                      {" "}in{" "}
-                      <span className="font-medium">{groupName}</span>
-                    </>
-                  ) : null}
                   .
                 </p>
                 <p className="text-[11px] text-white/40">{timeAgo(item.created_at)}</p>
