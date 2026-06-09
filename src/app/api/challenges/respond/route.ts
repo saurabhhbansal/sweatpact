@@ -47,10 +47,16 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "decline") {
-    await admin
+    const { error: declineErr } = await admin
       .from("challenge_invitations")
       .update({ status: "declined", responded_at: new Date().toISOString() })
       .eq("id", invitation_id);
+    if (declineErr) {
+      return NextResponse.json(
+        { error: "db_error", detail: declineErr.message },
+        { status: 500 }
+      );
+    }
 
     // Only clean up the group if this was the initial 2-person invite
     // (i.e. the group has just the inviter and no other members).
@@ -146,10 +152,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await admin
+  const { error: acceptErr } = await admin
     .from("challenge_invitations")
     .update({ status: "accepted", responded_at: new Date().toISOString() })
     .eq("id", invitation_id);
+  if (acceptErr) {
+    return NextResponse.json(
+      { error: "db_error", detail: acceptErr.message },
+      { status: 500 }
+    );
+  }
 
   await admin.from("notifications").insert({
     user_id: invitation.from_user,

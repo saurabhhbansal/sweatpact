@@ -57,14 +57,16 @@ export async function computeProfileStats(
       .from("daily_status")
       .select("local_day, status")
       .eq("user_id", userId)
-      .order("local_day", { ascending: false }),
+      .order("local_day", { ascending: false })
+      .limit(5000),
     // Pre-onboarding check-ins may exist in checkin_events without a daily_status
     // row, so union both sources before computing totals.
     supabase
       .from("checkin_events")
       .select("local_day, status")
       .eq("user_id", userId)
-      .neq("status", "rejected"),
+      .neq("status", "rejected")
+      .limit(5000),
     supabase
       .from("group_members")
       .select("group_id", { count: "exact", head: true })

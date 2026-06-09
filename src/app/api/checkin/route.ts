@@ -68,12 +68,15 @@ export async function POST(req: NextRequest) {
 
   let userId: string | null = null;
   if (body.user_id && body.secret) {
-    const { data: secretRow } = await admin
+    const { data: secretRow, error: secretError } = await admin
       .from("profile_secrets")
       .select("user_id, webhook_secret")
       .eq("user_id", body.user_id)
       .maybeSingle();
 
+    if (secretError) {
+      return NextResponse.json({ error: "db_error", detail: secretError.message }, { status: 500 });
+    }
     if (!secretRow || secretRow.webhook_secret !== body.secret) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
@@ -100,7 +103,20 @@ export async function POST(req: NextRequest) {
 
   const memberships = await listUserMemberships(admin, profile.id);
   const occurredAt = body.occurred_at ? new Date(body.occurred_at) : new Date();
-  const day = localDay(occurredAt, normalizeTimeZone(profile.timezone));
+  const tz = normalizeTimeZone(profile.timezone);
+  const day = localDay(occurredAt, tz);
+  const today = localDay(new Date(), tz);
+
+  // Reject check-ins for dates other than today or yesterday in the user's
+  // local timezone. This prevents retroactively clearing missed-day penalties
+  // by passing a stale occurred_at.
+  const yesterday = localDay(new Date(Date.now() - 86_400_000), tz);
+  if (day !== today && day !== yesterday) {
+    return NextResponse.json(
+      { error: "occurred_at_out_of_window", local_day: day },
+      { status: 422 }
+    );
+  }
 
   let distance: number | null = null;
   let verified = false;
