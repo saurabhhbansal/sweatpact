@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-fade-up">
         <div className="mb-8 text-center">
           <div className="flex justify-center text-white">
             <SweatPactSeal size="md" />
@@ -77,7 +77,7 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </div>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
             <Button className="w-full" disabled={loading} type="submit">
               {loading ? "Signing in..." : "Sign in"}
             </Button>

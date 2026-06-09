@@ -16,11 +16,11 @@
   --muted-foreground: 0 0% 60%;
   --accent: 0 0% 100%;
   --accent-foreground: 0 0% 0%;
-  --destructive: 0 0% 100%;
-  --destructive-foreground: 0 0% 0%;
-  --success: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 71% 45%;
   --success-foreground: 0 0% 0%;
-  --warning: 0 0% 100%;
+  --warning: 38 92% 50%;
   --warning-foreground: 0 0% 0%;
   --border: 0 0% 18%;
   --input: 0 0% 10%;
@@ -36,6 +36,17 @@ html,
 body {
   @apply bg-background text-foreground;
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-skeleton {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 html {

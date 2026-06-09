@@ -93,7 +93,7 @@ export function MobileNav() {
               href={link.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex min-h-[4.3rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200",
+                "relative flex min-h-[4.3rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                 active
                   ? "text-white"
                   : "text-white/45 hover:bg-white/[0.06] hover:text-white/80"
@@ -163,12 +163,12 @@ export function TopNav({
         <div className="flex items-center gap-2">
           <Link
             href="/notifications"
-            aria-label="Notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+            aria-label={unread > 0 ? `Notifications — ${unread} unread` : "Notifications"}
+            className="relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <Bell className="h-[18px] w-[18px]" />
             {unread > 0 && (
-              <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-black">
+              <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-black">
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
