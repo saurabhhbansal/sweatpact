@@ -32,25 +32,28 @@ export async function POST(req: NextRequest) {
   let groupId: string | null = parsed.data.group_id ?? null;
 
   if (!groupId && target_type === "checkin") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("checkin_events")
       .select("group_id")
       .eq("id", target_id)
       .maybeSingle();
+    if (error) return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
     groupId = data?.group_id ?? null;
   } else if (!groupId && target_type === "obligation") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("obligations")
       .select("group_id")
       .eq("id", target_id)
       .maybeSingle();
+    if (error) return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
     groupId = data?.group_id ?? null;
   } else if (!groupId && target_type === "penalty_event") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("penalty_events")
       .select("group_id")
       .eq("id", target_id)
       .maybeSingle();
+    if (error) return NextResponse.json({ error: "db_error", detail: error.message }, { status: 500 });
     groupId = data?.group_id ?? null;
   }
 
