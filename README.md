@@ -32,7 +32,8 @@ Miss your weekly gym goal and you owe your challenge partners a flat stake. No r
 | **Check-in Strip** | Scrollable day history from signup to today — green / red / grey at a glance |
 | **Cycle Tab** | Period predictions, phase estimates, trends, and Apple Health sync (female users) |
 | **Cycle Sharing** | Grant specific users read access to your cycle data; revoke anytime |
-| **Push Notifications** | VAPID web-push for invites, check-ins, rest days, and cycle-share grants |
+| **Period Reminders** | Opt-in push notification sent 2 days before a shared partner's predicted period start |
+| **Push Notifications** | VAPID web-push for invites, check-ins, rest days, cycle-share grants, and period reminders |
 | **Onboarding Wizard** | Username → gym → schedule → iOS Shortcut, step by step |
 | **Public Profiles** | Shareable check-in history; cycle data shown only to permitted users |
 
@@ -49,7 +50,7 @@ Miss your weekly gym goal and you owe your challenge partners a flat stake. No r
 | Validation | Zod on all API routes |
 | Testing | Vitest |
 | Deployment | Vercel — auto-deploy on push to `main` |
-| Cron | Vercel Cron — daily obligation enforcement at 19:00 UTC |
+| Cron | Vercel Cron — daily obligation enforcement + period-approaching reminders at 19:00 UTC |
 
 ---
 
@@ -129,8 +130,10 @@ Set Period Sync as a **silent daily automation** in iOS Shortcuts → Automation
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only — never reaches the client.
 - RLS is enabled on every user-facing table.
 - Check-in distance is computed server-side; clients cannot forge a verified status.
+- Check-in `occurred_at` is validated server-side to only accept today or yesterday in the user's local timezone, preventing retroactive clearance of missed-day penalties.
 - Every check-in attempt is logged to `audit_log` with IP and User-Agent.
-- Cycle data is private by default; sharing is explicit and per-username.
+- The Google Maps proxy (`/api/places/*`) requires an authenticated session — the API key is never exposed to unauthenticated callers.
+- Cycle data is private by default; sharing is explicit and revocable per-user.
 
 ---
 
