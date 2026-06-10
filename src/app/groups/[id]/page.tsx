@@ -395,7 +395,7 @@ export default async function GroupPage({
             />
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-4">
+          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
             <div>
               <p className="text-xs text-white/45">Stake</p>
               <p className="text-sm font-semibold text-white">

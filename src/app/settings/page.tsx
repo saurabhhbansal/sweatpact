@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MobileNav, TopNav } from "@/components/nav";
 import { SettingsForm } from "./client";
 
@@ -52,19 +51,17 @@ export default async function SettingsPage() {
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
       <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Settings</CardTitle>
-            <CardDescription>Tune your accountability rules.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SettingsForm
-              profile={profile}
-              initialGyms={gyms ?? []}
-              sharesWithMe={sharesWithMe}
-            />
-          </CardContent>
-        </Card>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <div className="mb-5">
+            <h1 className="text-base font-semibold text-white">Settings</h1>
+            <p className="mt-1 text-sm text-white/55">Tune your accountability rules.</p>
+          </div>
+          <SettingsForm
+            profile={profile}
+            initialGyms={gyms ?? []}
+            sharesWithMe={sharesWithMe}
+          />
+        </section>
       </main>
       <MobileNav />
     </>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SweatPactSeal } from "@/components/sweatpact-seal";
@@ -64,12 +63,7 @@ export default function SignupPage() {
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Create account</h1>
           <p className="mt-2 text-sm text-white/55">Set up your profile, then start wiring up your groups.</p>
         </div>
-        <Card>
-        <CardHeader>
-          <CardTitle>Sign up</CardTitle>
-          <CardDescription>Fill in your details to get started.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
@@ -113,17 +107,16 @@ export default function SignupPage() {
               </select>
             </div>
             {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
-            {message ? <p role="status" aria-live="polite" className="text-sm text-white/58">{message}</p> : null}
+            {message ? <p role="status" aria-live="polite" className="text-sm text-white/55">{message}</p> : null}
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create account"}
             </Button>
             <p className="text-center text-sm text-white/55">
               Already have one?{" "}
-              <Link className="underline text-white/74" href="/login">Sign in</Link>
+              <Link className="underline text-white/70" href="/login">Sign in</Link>
             </p>
           </form>
-        </CardContent>
-        </Card>
+        </section>
       </div>
     </main>
   );

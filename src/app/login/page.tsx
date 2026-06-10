@@ -83,7 +83,7 @@ export default function LoginPage() {
             </Button>
             <p className="text-center text-sm text-white/55">
               No account?{" "}
-              <Link className="underline text-white/74" href="/signup">
+              <Link className="underline text-white/70" href="/signup">
                 Create one
               </Link>
             </p>

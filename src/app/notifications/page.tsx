@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MobileNav, TopNav } from "@/components/nav";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NotificationsList, SentInvitations } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -66,43 +65,37 @@ export default async function NotificationsPage() {
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
       <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>
-                  {(notifications ?? []).length === 0
-                    ? "Nothing here yet."
-                    : "Tap accept or decline to respond to challenges."}
-                </CardDescription>
-              </div>
-              <Link
-                href="/dashboard"
-                aria-label="Close notifications"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-transparent text-white/70 transition hover:bg-white/[0.06] hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Link>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-base font-semibold text-white">Notifications</h1>
+              <p className="mt-1 text-sm text-white/55">
+                {(notifications ?? []).length === 0
+                  ? "Nothing here yet."
+                  : "Tap accept or decline to respond to challenges."}
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <NotificationsList initial={notifications ?? []} />
-          </CardContent>
-        </Card>
+            <Link
+              href="/dashboard"
+              aria-label="Close notifications"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-transparent text-white/70 transition hover:bg-white/[0.06] hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </Link>
+          </div>
+          <NotificationsList initial={notifications ?? []} />
+        </section>
 
         {sentWithTarget.length > 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Sent challenges</CardTitle>
-              <CardDescription>
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-white">Sent challenges</h2>
+              <p className="mt-1 text-sm text-white/55">
                 Pending invitations you sent. Cancel to withdraw.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SentInvitations initial={sentWithTarget} />
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            <SentInvitations initial={sentWithTarget} />
+          </section>
         ) : null}
       </main>
       <MobileNav />

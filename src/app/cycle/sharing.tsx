@@ -156,7 +156,7 @@ export function PeriodSharingManager() {
             />
 
             {query.trim().length >= 2 ? (
-              <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-2xl border border-white/15 bg-[#0a0a0a] p-1 shadow-xl">
+              <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-[1.4rem] border border-white/15 bg-[#0a0a0a] p-1 shadow-xl">
                 {searching && results.length === 0 ? (
                   <p className="px-3 py-2 text-xs text-white/40">Searching…</p>
                 ) : results.length === 0 ? (
