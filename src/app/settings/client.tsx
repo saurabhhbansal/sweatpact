@@ -53,7 +53,7 @@ export function SettingsForm({
       <SectionHeader title="iOS Shortcuts" />
       <Link
         href="/shortcut"
-        className="flex items-center justify-between rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3.5 text-sm transition hover:bg-white/[0.05]"
+        className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm transition hover:bg-white/[0.06]"
       >
         <div>
           <p className="font-medium text-white">Shortcut setup guide</p>
@@ -114,7 +114,7 @@ export function SettingsForm({
       <ChangePasswordButton />
 
       {profile.username ? (
-        <div className="rounded-2xl border border-red-900/40 bg-red-950/20 p-4 space-y-2">
+        <div className="rounded-[1.4rem] border border-red-900/40 bg-red-950/20 p-4 space-y-2">
           <p className="text-sm font-medium text-red-400">Delete account</p>
           <p className="text-xs text-red-400/70">
             Permanently removes your profile, check-ins, challenges, and obligations. Owned challenges hand off to the next member.
@@ -128,7 +128,7 @@ export function SettingsForm({
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="border-t border-white/8 pt-4 first:border-t-0 first:pt-0">
+    <div className="border-t border-white/10 pt-4 first:border-t-0 first:pt-0">
       <p className="text-xs uppercase tracking-[0.18em] text-white/45">{title}</p>
     </div>
   );
@@ -190,7 +190,7 @@ function ChangePasswordButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3.5 text-sm transition hover:bg-white/[0.05]"
+        className="flex w-full items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm transition hover:bg-white/[0.06]"
       >
         <div>
           <p className="font-medium text-white">Change password</p>
@@ -307,7 +307,7 @@ function NotifyToggle({
   }
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.02] p-3">
+    <div className="flex items-start justify-between gap-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
       <div className="min-w-0">
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="mt-0.5 text-xs text-white/55">{description}</p>
@@ -364,7 +364,7 @@ function PeriodReminderToggle({
   }
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.02] p-3">
+    <div className="flex items-start justify-between gap-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
       <div className="min-w-0">
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="mt-0.5 text-xs text-white/55">

@@ -88,8 +88,8 @@ export function ChallengeVersusCard({
       </div>
 
       {/* Footer: stake pill + open affordance */}
-      <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-3">
-        <span className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1 text-xs text-white/70">
+      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
+        <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
           {formatCents(stakeCents)} stake
         </span>
         <span className="flex items-center gap-0.5 text-xs font-medium uppercase tracking-[0.14em] text-white/45">

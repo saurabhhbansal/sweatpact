@@ -20,14 +20,13 @@ const DOW_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 function dotTone(status: string) {
   if (status === "verified") {
-    return "border-white bg-white text-black";
+    return "bg-emerald-500/90 text-black";
   }
   if (status === "unverified") {
-    // Dashed border circle — visually distinct from solid verified.
-    return "border-dashed border-white bg-transparent text-white";
+    return "border-dashed border-emerald-400 bg-transparent text-emerald-300";
   }
   if (status === "missed" || status === "rejected") {
-    return "border-solid border-white/35 bg-transparent text-white/85";
+    return "border-solid border-red-500/70 bg-red-500/15 text-red-300";
   }
   if (["sick_day", "gym_closed", "rest_day", "period_day"].includes(status)) {
     return "border-solid border-white/20 bg-white/[0.06] text-white/55";
@@ -182,7 +181,7 @@ export function ProgressSection({
         }
 
         return (
-          <div className="mt-4 space-y-5 border-t border-white/8 pt-4">
+          <div className="mt-4 space-y-5 border-t border-white/10 pt-4">
             {months.map((month) => (
               <div key={`${month.year}-${month.monthIdx}`}>
                 <p className="mb-2 text-xs uppercase tracking-[0.18em] text-white/55">
@@ -262,7 +261,7 @@ export function ProgressSection({
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={expanded}
-          className="mt-3 w-full rounded-full py-1 text-xs text-white/42 transition-colors hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="mt-3 flex w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-4 py-1.5 text-xs text-white/55 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
           {expanded ? "Show less" : "View calendar"}
         </button>
@@ -374,7 +373,7 @@ export function PeriodDayEditor({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="rounded px-2 py-1 text-xs text-white/55 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="rounded-full px-3 py-1.5 text-xs text-white/55 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           >
             Close
           </button>

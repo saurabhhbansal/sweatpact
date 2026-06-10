@@ -126,7 +126,7 @@ export function GymOnboarding({ initialGymCount }: { initialGymCount: number }) 
   return (
     <div className="space-y-4">
       {count > 0 ? (
-        <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-3 text-center">
+        <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3 text-center">
           <p className="text-sm font-medium text-white">
             {count} gym{count === 1 ? "" : "s"} added.
           </p>

@@ -48,7 +48,7 @@ export function SentInvitations({ initial }: { initial: SentInvitation[] }) {
         return (
           <li
             key={inv.id}
-            className="rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3"
+            className="rounded-[2rem] border border-white/15 bg-white/[0.04] px-4 py-3"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -66,7 +66,7 @@ export function SentInvitations({ initial }: { initial: SentInvitation[] }) {
                   {formatCents(inv.penalty_cents)}/week · {timeAgo(inv.created_at)}
                 </p>
                 {inv.message ? (
-                  <p className="mt-1.5 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs italic text-white/70">
+                  <p className="mt-1.5 rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs italic text-white/70">
                     &ldquo;{inv.message}&rdquo;
                   </p>
                 ) : null}
@@ -208,7 +208,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
         </button>
       </div>
       <ul className="space-y-3">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const responded = (item.payload as any)?._responded as
           | "accept"
           | "decline"
@@ -235,10 +235,14 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
         return (
           <li
             key={item.id}
-            className={`relative rounded-2xl border px-4 py-3 ${
-              item.read_at ? "border-white/10 bg-white/5" : "border-white/20 bg-white/10"
+            className={`animate-fade-up-item relative rounded-[2rem] border px-4 py-3 ${
+              item.read_at ? "border-white/10 bg-white/[0.04]" : "border-white/20 bg-white/[0.08]"
             }`}
+            style={{ "--stagger": `${index * 50}ms` } as React.CSSProperties}
           >
+            {!item.read_at ? (
+              <span className="absolute right-10 top-3.5 h-1.5 w-1.5 rounded-full bg-white/80" aria-hidden="true" />
+            ) : null}
             <button
               type="button"
               aria-label="Dismiss notification"
@@ -263,7 +267,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                   {amountCents != null ? ` for ${formatCents(amountCents)}/week` : ""}.
                 </p>
                 {message ? (
-                  <p className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs italic text-white/70">
+                  <p className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs italic text-white/70">
                     &ldquo;{message}&rdquo;
                   </p>
                 ) : null}

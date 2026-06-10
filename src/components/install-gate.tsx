@@ -126,7 +126,7 @@ useEffect(() => {
               <p className="text-sm text-white/55">Add it to your home screen for the full experience.</p>
               <button
                 onClick={handleInstall}
-                className="w-full rounded-2xl bg-white py-3 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-95"
+                className="w-full rounded-full bg-white py-3 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-95"
               >
                 Install App
               </button>

@@ -225,7 +225,7 @@ export function InviteSection({
 
   if (selected) {
     return (
-      <div className="space-y-3 rounded-2xl border border-white/15 bg-white/5 p-4">
+      <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-white">{selected.name || `@${selected.username}`}</p>
@@ -273,13 +273,13 @@ export function InviteSection({
       {searching ? (
         <p className="text-xs text-white/45">Searching…</p>
       ) : results.length > 0 ? (
-        <ul className="divide-y divide-white/8 overflow-hidden rounded-2xl border border-white/15 bg-card/55">
+        <ul className="divide-y divide-white/10 overflow-hidden rounded-[1.4rem] border border-white/10 bg-card/55">
           {results.map((user) => (
             <li key={user.id}>
               <button
                 type="button"
                 onClick={() => setSelected(user)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/8"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.08]"
               >
                 <div>
                   <p className="text-sm font-medium text-white">{user.name || `@${user.username}`}</p>
@@ -506,7 +506,7 @@ export function GroupManagerMenu({
               When on, members get a notification whenever someone in this group checks in.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-5 flex items-start justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.02] p-4">
+          <div className="mt-5 flex items-start justify-between gap-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
             <div className="min-w-0">
               <p className="text-sm font-medium text-white">Notify on check-ins</p>
               <p className="mt-0.5 text-xs text-white/55">Applies to everyone in this challenge.</p>
@@ -547,7 +547,7 @@ export function GroupManagerMenu({
                 return (
                   <div
                     key={member.user_id}
-                    className="flex items-center justify-between rounded-[1.4rem] border border-white/15 bg-white/8 px-4 py-3"
+                    className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.06] px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar

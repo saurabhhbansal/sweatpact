@@ -10,12 +10,12 @@ const buttonVariants = cva(
         default:
           "bg-white text-black hover:bg-white/90 active:scale-[0.98]",
         destructive:
-          "border-[1.5px] border-white bg-transparent text-white hover:bg-white/[0.06]",
+          "border-[1.5px] border-white bg-transparent text-white hover:bg-white/[0.06] active:scale-[0.98]",
         outline:
-          "border border-white/25 bg-transparent text-white hover:bg-white/[0.06]",
+          "border border-white/25 bg-transparent text-white hover:bg-white/[0.06] active:scale-[0.98]",
         secondary:
-          "border border-white/18 bg-white/[0.08] text-white hover:bg-white/[0.14]",
-        ghost: "text-white/70 hover:bg-white/[0.06] hover:text-white",
+          "border border-white/18 bg-white/[0.08] text-white hover:bg-white/[0.14] active:scale-[0.98]",
+        ghost: "text-white/70 hover:bg-white/[0.06] hover:text-white active:scale-[0.98]",
         link: "text-white underline-offset-4 hover:underline",
       },
       size: {

@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
@@ -131,7 +132,7 @@ export default async function ChallengesPage() {
               </p>
             </div>
           ) : (
-            memberships.map((membership) => {
+            memberships.map((membership, index) => {
               if (!membership.group) return null;
               const memberMap = membersByGroup.get(membership.group_id) ?? new Map();
               const statusMap = statusByGroupUser.get(membership.group_id) ?? new Map();
@@ -154,14 +155,19 @@ export default async function ChallengesPage() {
               const totalMembers = memberMap.size || others.length + 1;
 
               return (
-                <ChallengeVersusCard
+                <div
                   key={membership.group_id}
-                  challengeId={membership.group_id}
-                  stakeCents={membership.group.default_penalty_cents}
-                  me={me}
-                  others={others}
-                  isOneOnOne={totalMembers === 2}
-                />
+                  className="animate-fade-up-item"
+                  style={{ "--stagger": `${index * 60}ms` } as React.CSSProperties}
+                >
+                  <ChallengeVersusCard
+                    challengeId={membership.group_id}
+                    stakeCents={membership.group.default_penalty_cents}
+                    me={me}
+                    others={others}
+                    isOneOnOne={totalMembers === 2}
+                  />
+                </div>
               );
             })
           )}

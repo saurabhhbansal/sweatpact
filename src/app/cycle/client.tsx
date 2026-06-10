@@ -199,7 +199,7 @@ function LogSection({
           type="button"
           disabled={!canEdit}
           onClick={() => canEdit && onEdit(selectedDay)}
-          className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+          className={`flex w-full items-center justify-between rounded-[1.4rem] border px-4 py-3 text-left transition ${
             isPeriod
               ? "border-rose-500/30 bg-rose-500/10"
               : "border-white/10 bg-white/[0.03]"

@@ -93,7 +93,7 @@ export function LedgerButtons({
               balances.map((b, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-white/12 bg-white/[0.05] px-4 py-3"
+                  className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
                 >
                   <div className="text-sm text-white">
                     <span className="font-medium">{b.fromName}</span>
@@ -118,7 +118,7 @@ export function LedgerButtons({
                 {disputes.map((d, i) => (
                   <div
                     key={i}
-                    className="rounded-xl border border-white/12 bg-white/[0.05] px-4 py-3"
+                    className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
                   >
                     <p className="text-sm text-white">
                       {d.raisedByName} · {d.targetType}
@@ -163,7 +163,7 @@ export function LedgerButtons({
               activity.map((row) => (
                 <div
                   key={row.id}
-                  className="flex items-start justify-between gap-3 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-3"
+                  className="flex items-start justify-between gap-3 rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white">
@@ -172,9 +172,9 @@ export function LedgerButtons({
                         {row.source}
                       </span>
                     </p>
-                    <p className="mt-1 text-xs text-white/46">{row.timeLabel}</p>
+                    <p className="mt-1 text-xs text-white/45">{row.timeLabel}</p>
                     {row.distanceM != null ? (
-                      <p className="mt-1 text-xs text-white/42">
+                      <p className="mt-1 text-xs text-white/45">
                         {Math.round(row.distanceM)} m from gym
                       </p>
                     ) : null}
