@@ -56,7 +56,8 @@ export function GenderPicker({
             type="button"
             onClick={() => pick(opt.value)}
             disabled={busy}
-            className={`flex h-9 flex-1 items-center justify-center rounded-full text-sm font-medium transition disabled:opacity-50 ${
+            aria-pressed={gender === opt.value}
+            className={`flex h-9 flex-1 items-center justify-center rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50 ${
               gender === opt.value
                 ? "bg-white text-black"
                 : "border border-white/20 bg-white/[0.06] text-white/60 hover:bg-white/15"
@@ -67,7 +68,7 @@ export function GenderPicker({
         ))}
       </div>
       {err ? (
-        <p className="text-xs text-white/85">{err}</p>
+        <p role="alert" className="text-xs text-white/85">{err}</p>
       ) : (
         <p className="text-xs text-white/45">
           Used to show the period-day excuse option and Cycle tab.

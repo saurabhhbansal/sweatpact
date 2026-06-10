@@ -75,7 +75,7 @@ export function ChallengeButton({
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="rounded-full px-6 py-2 text-sm font-medium"
+        className="rounded-full px-6 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
       >
         Challenge @{targetUsername}
       </Button>
