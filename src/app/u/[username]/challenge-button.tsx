@@ -35,6 +35,11 @@ export function ChallengeButton({
   const [sent, setSent] = useState(false);
 
   async function submit() {
+    const numericAmount = parseFloat(amount);
+    if (!numericAmount || numericAmount <= 0) {
+      setErr("Enter a stake amount greater than 0.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     const res = await fetch("/api/challenges/invite", {
@@ -75,7 +80,7 @@ export function ChallengeButton({
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="rounded-full px-6 py-2 text-sm font-medium"
+        className="rounded-full px-6 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
       >
         Challenge @{targetUsername}
       </Button>
@@ -120,8 +125,11 @@ export function ChallengeButton({
                     placeholder="Let's see who actually shows up."
                     maxLength={200}
                   />
+                  <p className="text-right text-[11px] text-white/35" aria-live="polite">
+                    {message.length}/200
+                  </p>
                 </div>
-                {err ? <p className="text-sm text-destructive">{err}</p> : null}
+                {err ? <p role="alert" className="text-sm text-destructive">{err}</p> : null}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={close} disabled={busy}>

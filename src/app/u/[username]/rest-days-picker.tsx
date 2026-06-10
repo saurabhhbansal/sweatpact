@@ -78,9 +78,10 @@ export function RestDaysPicker({
               type="button"
               onClick={() => toggle(n)}
               disabled={busy}
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition disabled:opacity-50 ${
+              aria-pressed={active}
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-50 ${
                 active
-                  ? "bg-white/25 text-white ring-1 ring-white/40"
+                  ? "bg-white/25 text-white"
                   : "border border-white/20 bg-white/[0.06] text-white/45 hover:bg-white/[0.12]"
               }`}
             >
@@ -90,7 +91,7 @@ export function RestDaysPicker({
         })}
       </div>
       {err ? (
-        <p className="text-xs text-white/85">{err}</p>
+        <p role="alert" className="text-xs text-white/85">{err}</p>
       ) : (
         <p className="text-xs text-white/45">
           {restDays.length === 0

@@ -58,7 +58,8 @@ export function WeeklyGoalPicker({
             type="button"
             onClick={() => pick(n)}
             disabled={busy}
-            className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition disabled:opacity-50 ${
+            aria-pressed={goal === n}
+            className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-50 ${
               goal === n
                 ? "bg-white text-black"
                 : "border border-white/20 bg-white/[0.06] text-white/60 hover:bg-white/15"
@@ -69,7 +70,7 @@ export function WeeklyGoalPicker({
         ))}
       </div>
       {err ? (
-        <p className="text-xs text-white/85">{err}</p>
+        <p role="alert" className="text-xs text-white/85">{err}</p>
       ) : (
         <p className="text-xs text-white/45">
           Days per week you aim to check in. Penalties apply when you fall short.

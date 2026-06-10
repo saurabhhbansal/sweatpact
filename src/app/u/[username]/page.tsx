@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarCheck2, Flame, MapPin, Users2 } from "lucide-react";
+import { CalendarCheck2, Flame, MapPin, Moon, Target, User, Users2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { areUsersInSameChallenge, computeProfileStats } from "@/lib/stats";
 import { computePeriodStats } from "@/lib/period-stats";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MobileNav, TopNav } from "@/components/nav";
 import { ChallengeButton } from "./challenge-button";
 import { AvatarUpload } from "./avatar-upload";
@@ -206,21 +205,19 @@ export default async function ProfilePage({
         ) : null}
 
         {!canSeeStats ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Private profile</CardTitle>
-              <CardDescription>
-                This user keeps their stats private. Start a challenge together to see them.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+            <p className="text-base font-semibold text-white">Private profile</p>
+            <p className="mt-1 text-sm text-white/55">
+              This user keeps their stats private. Start a challenge together to see them.
+            </p>
+            <div className="mt-4 flex justify-center">
               <ChallengeButton
                 targetUserId={profile.id}
                 targetUsername={profile.username!}
                 targetName={displayName}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         ) : stats ? (
           <>
             <section aria-label="Stats" className="grid grid-cols-2 gap-3">
@@ -320,34 +317,45 @@ export default async function ProfilePage({
             ) : null}
 
             {isOwner ? (
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Weekly goal</p>
-                <p className="mt-1 text-xs text-white/50">
-                  Days per week you aim to check in. Penalties apply when you fall short.
-                </p>
-                <div className="mt-3">
-                  <WeeklyGoalPicker
-                    initialWeeklyGoal={profile.weekly_goal ?? 4}
-                    restDaysCount={Array.isArray(profile.rest_days) ? profile.rest_days.length : 0}
-                  />
-                </div>
-                <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">Rest days</p>
-                <p className="mt-1 text-xs text-white/50">
-                  Days marked rest are automatically excused — no check-in needed.
-                </p>
-                <div className="mt-3">
-                  <RestDaysPicker
-                    initialRestDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
-                    weeklyGoal={profile.weekly_goal ?? 4}
-                  />
-                </div>
-                <p className="mt-4 text-xs uppercase tracking-[0.18em] text-white/45">Gender</p>
-                <div className="mt-3">
-                  <GenderPicker
-                    initialGender={(profile.gender as "male" | "female" | null) ?? null}
-                  />
-                </div>
-              </section>
+              <>
+                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                  <div className="flex items-center gap-1.5 text-white/45">
+                    <Target className="h-3.5 w-3.5" aria-hidden="true" />
+                    <p className="text-xs uppercase tracking-[0.18em]">Weekly goal</p>
+                  </div>
+                  <div className="mt-3">
+                    <WeeklyGoalPicker
+                      initialWeeklyGoal={profile.weekly_goal ?? 4}
+                      restDaysCount={Array.isArray(profile.rest_days) ? profile.rest_days.length : 0}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                  <div className="flex items-center gap-1.5 text-white/45">
+                    <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+                    <p className="text-xs uppercase tracking-[0.18em]">Rest days</p>
+                  </div>
+                  <div className="mt-3">
+                    <RestDaysPicker
+                      initialRestDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
+                      weeklyGoal={profile.weekly_goal ?? 4}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                  <div className="flex items-center gap-1.5 text-white/45">
+                    <User className="h-3.5 w-3.5" aria-hidden="true" />
+                    <p className="text-xs uppercase tracking-[0.18em]">Gender</p>
+                  </div>
+                  <div className="mt-3">
+                    <GenderPicker
+                      initialGender={(profile.gender as "male" | "female" | null) ?? null}
+                    />
+                  </div>
+                </section>
+              </>
             ) : null}
 
             {periodStats ? <PeriodStatsCard stats={periodStats} /> : null}
@@ -380,18 +388,16 @@ function PeriodStatsCard({
 }) {
   if (stats.cyclesSampled === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Period</CardTitle>
-          <CardDescription>
-            No period days logged yet. Log them on the{" "}
-            <Link href="/cycle" className="underline hover:text-white">
-              Cycle tab
-            </Link>
-            , or set up Apple Health sync in Settings → Period sync.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <p className="text-base font-semibold text-white">Period</p>
+        <p className="mt-2 text-sm text-white/55">
+          No period days logged yet. Log them on the{" "}
+          <Link href="/cycle" className="underline hover:text-white">
+            Cycle tab
+          </Link>
+          , or set up Apple Health sync in Settings → Period sync.
+        </p>
+      </section>
     );
   }
 
