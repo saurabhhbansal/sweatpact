@@ -91,7 +91,7 @@ export function CheckInButton({
             : "Checked in and verified."
           : data.action === "existing"
             ? "Your unverified check-in is already on the board."
-            : "Saved as unverified. It counts now, but managers can review it."
+            : "Saved as unverified. It counts now, but whoever runs your challenge can reverse it."
     );
     if (data.verified !== undefined) {
       onOptimistic?.(data.verified ? "verified" : "unverified");
@@ -116,7 +116,7 @@ export function CheckInButton({
       <div className="space-y-3">
         <p className="rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/80">
           You&apos;re outside your gym radius ({distanceLabel}). Submit anyway as an unverified
-          check-in? It will count immediately, but managers can reverse it.
+          check-in? It counts immediately, but whoever runs your challenge can reverse it.
         </p>
         <div className="flex gap-2">
           <Button

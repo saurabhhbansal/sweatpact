@@ -185,14 +185,14 @@ export default async function Dashboard() {
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/45">This week</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">This week</p>
                 <p className="mt-0.5 text-xs">
-                  <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/80"}>
+                  <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/70"}>
                     {thisWeekCheckins}
                   </span>
                   <span className="text-white/35">/{weeklyGoal}</span>
                   {thisWeekCheckins >= weeklyGoal ? (
-                    <span className="ml-1.5 text-white/75">goal met</span>
+                    <span className="ml-1.5 font-medium text-emerald-400">goal met</span>
                   ) : (
                     <span className="ml-1.5 text-white/35">days done</span>
                   )}
@@ -208,33 +208,48 @@ export default async function Dashboard() {
             />
           </section>
 
+          {todayStatus === "pending" && (
+            <TodayActionCard
+              initialStatus={todayStatus}
+              isTodayRestDay={isTodayRestDay}
+              gymCount={gymCount ?? 0}
+              gender={profile.gender ?? "male"}
+            />
+          )}
+
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-6 text-center backdrop-blur-xl">
             <div className="relative mx-auto mb-4 h-40 w-40">
               <div className="absolute inset-0 rounded-full bg-white p-[2px]">
                 <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-black">
                   <p className="text-5xl font-bold text-white">{weekStreak}</p>
-                  <p className="text-xs text-white/50">week streak</p>
+                  <p className="text-xs text-white/55">week streak</p>
                 </div>
               </div>
             </div>
-            <p className="text-sm text-white/65">
-              A week counts when you hit your {weeklyGoal}-day goal. Partial weeks don&apos;t break the streak.
+            {weekStreak === 0 ? (
+              <p className="text-sm text-white/65">
+                A week counts when you hit your {weeklyGoal}-day goal. Partial weeks don&apos;t break the streak.
+              </p>
+            ) : null}
+            <p className="mt-2 text-xs text-white/45">
+              {new Date(today + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
             </p>
-            <p className="mt-2 text-xs text-white/45">{today}</p>
           </section>
 
-          <TodayActionCard
-            initialStatus={todayStatus}
-            isTodayRestDay={isTodayRestDay}
-            gymCount={gymCount ?? 0}
-            gender={profile.gender ?? "male"}
-          />
+          {todayStatus !== "pending" && (
+            <TodayActionCard
+              initialStatus={todayStatus}
+              isTodayRestDay={isTodayRestDay}
+              gymCount={gymCount ?? 0}
+              gender={profile.gender ?? "male"}
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[1.7rem] border-l-2 border-white/40 border-y border-r border-y-white/10 border-r-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+            <div className={`rounded-[1.7rem] border p-4 backdrop-blur-xl ${totalOwes > 0 ? "border-red-500/20 bg-red-500/[0.04]" : "border-white/10 bg-white/[0.04]"}`}>
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">You owe</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
-              <p className="mt-1 text-xs text-white/40">
+              <p className="mt-1 text-xs text-white/45">
                 {owesPeopleCount === 0
                   ? "all clear"
                   : owesPeopleCount === 1
@@ -245,7 +260,7 @@ export default async function Dashboard() {
             <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">Owed to you</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
-              <p className="mt-1 text-xs text-white/40">
+              <p className="mt-1 text-xs text-white/45">
                 {owedPeopleCount === 0
                   ? "all clear"
                   : owedPeopleCount === 1
