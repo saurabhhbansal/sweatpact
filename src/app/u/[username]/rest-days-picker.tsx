@@ -79,9 +79,9 @@ export function RestDaysPicker({
               onClick={() => toggle(n)}
               disabled={busy}
               aria-pressed={active}
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50 ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-50 ${
                 active
-                  ? "bg-white/25 text-white ring-1 ring-white/40"
+                  ? "bg-white/25 text-white"
                   : "border border-white/20 bg-white/[0.06] text-white/45 hover:bg-white/[0.12]"
               }`}
             >

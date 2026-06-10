@@ -57,7 +57,7 @@ export function GenderPicker({
             onClick={() => pick(opt.value)}
             disabled={busy}
             aria-pressed={gender === opt.value}
-            className={`flex h-9 flex-1 items-center justify-center rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50 ${
+            className={`flex h-9 flex-1 items-center justify-center rounded-full text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-50 ${
               gender === opt.value
                 ? "bg-white text-black"
                 : "border border-white/20 bg-white/[0.06] text-white/60 hover:bg-white/15"
