@@ -192,7 +192,7 @@ export default async function Dashboard() {
                   </span>
                   <span className="text-white/35">/{weeklyGoal}</span>
                   {thisWeekCheckins >= weeklyGoal ? (
-                    <span className="ml-1.5 text-white/75">goal met</span>
+                    <span className="ml-1.5 font-medium text-emerald-400">goal met</span>
                   ) : (
                     <span className="ml-1.5 text-white/35">days done</span>
                   )}
@@ -222,7 +222,7 @@ export default async function Dashboard() {
               <div className="absolute inset-0 rounded-full bg-white p-[2px]">
                 <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-black">
                   <p className="text-5xl font-bold text-white">{weekStreak}</p>
-                  <p className="text-xs text-white/50">week streak</p>
+                  <p className="text-xs text-white/55">week streak</p>
                 </div>
               </div>
             </div>
@@ -247,7 +247,7 @@ export default async function Dashboard() {
             <div className={`rounded-[1.7rem] border p-4 backdrop-blur-xl ${totalOwes > 0 ? "border-red-500/20 bg-red-500/[0.04]" : "border-white/10 bg-white/[0.04]"}`}>
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">You owe</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
-              <p className="mt-1 text-xs text-white/40">
+              <p className="mt-1 text-xs text-white/45">
                 {owesPeopleCount === 0
                   ? "all clear"
                   : owesPeopleCount === 1
@@ -258,7 +258,7 @@ export default async function Dashboard() {
             <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">Owed to you</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
-              <p className="mt-1 text-xs text-white/40">
+              <p className="mt-1 text-xs text-white/45">
                 {owedPeopleCount === 0
                   ? "all clear"
                   : owedPeopleCount === 1
