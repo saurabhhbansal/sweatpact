@@ -7,6 +7,14 @@ import { ExcuseButton } from "@/components/excuse-button";
 
 const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
 
+// Clear, human subtext per excused status — beats restating the raw status slug.
+const EXCUSED_LABEL: Record<string, string> = {
+  sick_day: "Sick day logged. Your streak is safe.",
+  rest_day: "Rest day logged. Your streak is safe.",
+  gym_closed: "Logged as a rest day. Your streak is safe.",
+  period_day: "Period day logged. Your streak is safe.",
+};
+
 export function TodayActionCard({
   initialStatus,
   isTodayRestDay,
@@ -34,14 +42,14 @@ export function TodayActionCard({
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Scheduled rest day</p>
           <p className="mt-1 text-sm text-white/55">
-            You planned today as a rest day.{" "}
-            <Link href="/settings" className="underline text-white/40">
-              Change
-            </Link>
+            You set this in your weekly schedule. Going anyway still counts.
           </p>
           <div className="mt-4">
             <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
           </div>
+          <Link href="/settings" className="mt-3 inline-block text-xs text-white/55 underline">
+            Change rest days
+          </Link>
         </div>
       ) : todayStatus === "pending" ? (
         <>
@@ -56,7 +64,9 @@ export function TodayActionCard({
           ) : null}
           <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
           <div className="mt-3 text-center text-xs text-white/50">
-            Need a valid excuse for today?
+            {gender === "female"
+              ? "Can't make it? Log a valid reason — sick, rest, or period."
+              : "Can't make it? Log a valid reason — sick or rest."}
             <ExcuseButton
               gender={gender}
               onOptimistic={(s) => setOverrideStatus(s)}
@@ -72,7 +82,7 @@ export function TodayActionCard({
         <div className="py-2 text-center">
           <p className="text-xl font-semibold text-white">Unverified, but counted</p>
           <p className="mt-1 text-sm text-white/65">
-            Managers can reverse it, otherwise it keeps your streak alive.
+            It keeps your streak alive. Whoever runs your challenge can reverse it.
           </p>
         </div>
       ) : todayStatus === "period_day" ? (
@@ -88,17 +98,17 @@ export function TodayActionCard({
       ) : EXCUSED_STATUSES.has(todayStatus) ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Excused for today</p>
-          <p className="mt-1 text-sm text-white/55">{todayStatus.replace(/_/g, " ")}</p>
+          <p className="mt-1 text-sm text-white/55">{EXCUSED_LABEL[todayStatus] ?? "Your streak is safe."}</p>
         </div>
       ) : todayStatus === "missed" ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Missed — day&apos;s done</p>
-          <p className="mt-1 text-sm text-white/55">Nothing counted today. Your streak handles it.</p>
+          <p className="mt-1 text-sm text-white/55">Today didn&apos;t count. You can still hit your weekly goal.</p>
         </div>
       ) : todayStatus === "rejected" ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Check-in rejected</p>
-          <p className="mt-1 text-sm text-white/55">Your challenge manager reversed this check-in.</p>
+          <p className="mt-1 text-sm text-white/55">Whoever runs your challenge reversed this check-in.</p>
         </div>
       ) : (
         <div className="py-2 text-center">
