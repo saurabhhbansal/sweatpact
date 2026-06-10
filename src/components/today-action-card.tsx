@@ -66,12 +66,12 @@ export function TodayActionCard({
       ) : todayStatus === "verified" ? (
         <div className="py-2 text-center">
           <p className="text-xl font-semibold text-white">Verified and locked in</p>
-          <p className="mt-1 text-sm text-white/62">Your streak already reflects it.</p>
+          <p className="mt-1 text-sm text-white/65">Your streak already reflects it.</p>
         </div>
       ) : todayStatus === "unverified" ? (
         <div className="py-2 text-center">
           <p className="text-xl font-semibold text-white">Unverified, but counted</p>
-          <p className="mt-1 text-sm text-white/62">
+          <p className="mt-1 text-sm text-white/65">
             Managers can reverse it, otherwise it keeps your streak alive.
           </p>
         </div>
@@ -90,10 +90,20 @@ export function TodayActionCard({
           <p className="text-lg font-semibold text-white">Excused for today</p>
           <p className="mt-1 text-sm text-white/55">{todayStatus.replace(/_/g, " ")}</p>
         </div>
+      ) : todayStatus === "missed" ? (
+        <div className="py-2 text-center">
+          <p className="text-lg font-semibold text-white">Missed — day&apos;s done</p>
+          <p className="mt-1 text-sm text-white/55">Nothing counted today. Your streak handles it.</p>
+        </div>
+      ) : todayStatus === "rejected" ? (
+        <div className="py-2 text-center">
+          <p className="text-lg font-semibold text-white">Check-in rejected</p>
+          <p className="mt-1 text-sm text-white/55">Your challenge manager reversed this check-in.</p>
+        </div>
       ) : (
         <div className="py-2 text-center">
-          <p className="text-lg font-semibold text-white">Waiting on another attempt</p>
-          <p className="mt-1 text-sm text-white/55">Nothing is counted for today yet.</p>
+          <p className="text-lg font-semibold text-white">Waiting on today</p>
+          <p className="mt-1 text-sm text-white/55">Nothing is counted yet.</p>
         </div>
       )}
     </section>
