@@ -1,7 +1,15 @@
 import { MobileNav, TopNav } from "@/components/nav";
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`animate-skeleton rounded-xl bg-white/10 ${className ?? ""}`} />;
+  return <div className={`animate-skeleton rounded-[1rem] bg-white/[0.08] ${className ?? ""}`} />;
+}
+
+function SkeletonRow() {
+  return <Skel className="h-14 rounded-[1.4rem]" />;
+}
+
+function SkeletonSectionLabel() {
+  return <Skel className="h-2.5 w-24 rounded-full" />;
 }
 
 export default function SettingsLoading() {
@@ -9,23 +17,40 @@ export default function SettingsLoading() {
     <>
       <TopNav />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <div className="rounded-[1rem] border border-white/15 p-5 space-y-4">
-          <Skel className="h-5 w-32 rounded-full" />
-          <div className="space-y-3">
-            <Skel className="h-10 rounded-lg" />
-            <Skel className="h-10 rounded-lg" />
-            <Skel className="h-10 rounded-lg" />
-            <Skel className="h-10 rounded-lg" />
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+          {/* Title */}
+          <div className="mb-5 space-y-1.5">
+            <Skel className="h-5 w-24 rounded-full" />
+            <Skel className="h-3.5 w-40 rounded-full" />
           </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <Skel key={n} className="h-9 w-9 rounded-full" />
-            ))}
+          <div className="space-y-6">
+            {/* Profile row */}
+            <SkeletonRow />
+
+            {/* Gyms */}
+            <SkeletonSectionLabel />
+            <div className="space-y-2">
+              <SkeletonRow />
+              <SkeletonRow />
+            </div>
+
+            {/* App Setup */}
+            <SkeletonSectionLabel />
+            <SkeletonRow />
+
+            {/* Notifications */}
+            <SkeletonSectionLabel />
+            <div className="space-y-2">
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
+            </div>
+
+            {/* Account */}
+            <SkeletonSectionLabel />
+            <SkeletonRow />
           </div>
-          <Skel className="h-10 rounded-full" />
-        </div>
-        <Skel className="h-24 rounded-[1rem]" />
-        <Skel className="h-24 rounded-[1rem]" />
+        </section>
       </main>
       <MobileNav />
     </>

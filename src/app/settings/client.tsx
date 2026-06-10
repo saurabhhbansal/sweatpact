@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Bell, Lock, MapPin, Moon, Smartphone, UserCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,18 +41,27 @@ export function SettingsForm({
 }) {
   return (
     <div className="space-y-6">
-      <p className="text-xs text-white/45">
-        Name, username, photo, gender, weekly goal and rest days are managed on your{" "}
-        <Link href={`/u/${profile.username}`} className="underline text-white/65 hover:text-white">
-          profile
-        </Link>
-        .
-      </p>
+      {/* Profile link row */}
+      <Link
+        href={`/u/${profile.username}`}
+        className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm transition hover:bg-white/[0.06]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08]">
+            <UserCircle className="h-[18px] w-[18px] text-white/60" />
+          </div>
+          <div>
+            <p className="font-medium text-white">Your profile</p>
+            <p className="mt-0.5 text-xs text-white/50">Name, photo, gender, weekly goal, rest days</p>
+          </div>
+        </div>
+        <span className="text-white/35">›</span>
+      </Link>
 
-      <SectionHeader title="Gyms" />
+      <SectionHeader title="Gyms" icon={MapPin} />
       <GymsSection initialGyms={initialGyms} />
 
-      <SectionHeader title="iOS Shortcuts" />
+      <SectionHeader title="iOS Shortcuts" icon={Smartphone} />
       <Link
         href="/shortcut"
         className="flex items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm transition hover:bg-white/[0.06]"
@@ -66,7 +77,7 @@ export function SettingsForm({
         <span className="text-white/35">›</span>
       </Link>
 
-      <SectionHeader title="Notifications" />
+      <SectionHeader title="Notifications" icon={Bell} />
       <div className="space-y-3">
         <PushPermissionPrompt />
         <NotifyToggle
@@ -91,7 +102,7 @@ export function SettingsForm({
 
       {sharesWithMe.length > 0 ? (
         <>
-          <SectionHeader title="Period reminders" />
+          <SectionHeader title="Period reminders" icon={Moon} />
           <div className="space-y-3">
             {sharesWithMe.map((share) => {
               const display =
@@ -110,7 +121,7 @@ export function SettingsForm({
         </>
       ) : null}
 
-      <SectionHeader title="Security" />
+      <SectionHeader title="Account" icon={Lock} />
       <ChangePasswordButton />
 
       {profile.username ? (
@@ -126,10 +137,13 @@ export function SettingsForm({
   );
 }
 
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title, icon: Icon }: { title: string; icon?: LucideIcon }) {
   return (
     <div className="border-t border-white/10 pt-4 first:border-t-0 first:pt-0">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/45">{title}</p>
+      <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-white/45">
+        {Icon ? <Icon className="h-3 w-3" /> : null}
+        {title}
+      </p>
     </div>
   );
 }
