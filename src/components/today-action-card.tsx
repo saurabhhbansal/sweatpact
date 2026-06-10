@@ -54,7 +54,7 @@ export function TodayActionCard({
       ) : todayStatus === "pending" ? (
         <>
           {gymCount === 0 ? (
-            <p className="mb-3 rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/80">
+            <p className="mb-3 rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/70">
               Set your gym location in{" "}
               <Link className="underline" href="/settings">
                 Settings
@@ -63,7 +63,7 @@ export function TodayActionCard({
             </p>
           ) : null}
           <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
-          <div className="mt-3 text-center text-xs text-white/50">
+          <div className="mt-3 text-center text-xs text-white/45">
             {gender === "female"
               ? "Can't make it? Log a valid reason — sick, rest, or period."
               : "Can't make it? Log a valid reason — sick or rest."}

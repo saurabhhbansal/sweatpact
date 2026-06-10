@@ -226,9 +226,11 @@ export default async function Dashboard() {
                 </div>
               </div>
             </div>
-            <p className="text-sm text-white/65">
-              A week counts when you hit your {weeklyGoal}-day goal. Partial weeks don&apos;t break the streak.
-            </p>
+            {weekStreak === 0 ? (
+              <p className="text-sm text-white/65">
+                A week counts when you hit your {weeklyGoal}-day goal. Partial weeks don&apos;t break the streak.
+              </p>
+            ) : null}
             <p className="mt-2 text-xs text-white/45">
               {new Date(today + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
             </p>
