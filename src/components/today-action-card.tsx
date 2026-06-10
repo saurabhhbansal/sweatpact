@@ -113,12 +113,12 @@ export function TodayActionCard({
       ) : todayStatus === "missed" ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Missed — day&apos;s done</p>
-          <p className="mt-1 text-sm text-white/55">Nothing counted today. Your streak handles it.</p>
+          <p className="mt-1 text-sm text-white/55">Today didn&apos;t count. You can still hit your weekly goal.</p>
         </div>
       ) : todayStatus === "rejected" ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Check-in rejected</p>
-          <p className="mt-1 text-sm text-white/55">Your challenge manager reversed this check-in.</p>
+          <p className="mt-1 text-sm text-white/55">Whoever runs your challenge reversed this check-in.</p>
         </div>
       ) : (
         <div className="py-2 text-center">
