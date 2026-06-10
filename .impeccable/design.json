@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-10T00:00:00.000Z",
+  "title": "Design System: SweatPact",
+  "extensions": {
+    "colorMeta": {
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#000000",
+        "tonalRamp": ["#000000", "#0a0a0a", "#141414", "#1a1a1a", "#262626", "#333333", "#404040", "#595959"]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#404040", "#525252", "#737373", "#a3a3a3", "#d4d4d4", "#e5e5e5", "#f5f5f5", "#ffffff"]
+      },
+      "card-surface": {
+        "role": "neutral",
+        "displayName": "Card Surface",
+        "canonical": "#0f0f0f",
+        "tonalRamp": ["#000000", "#0a0a0a", "#0f0f0f", "#141414", "#1a1a1a", "#212121", "#292929", "#333333"]
+      },
+      "earned-green": {
+        "role": "secondary",
+        "displayName": "Earned Green",
+        "canonical": "#10b981",
+        "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"]
+      },
+      "owed-red": {
+        "role": "secondary",
+        "displayName": "Owed Red",
+        "canonical": "#ef4444",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"]
+      },
+      "destructive": {
+        "role": "neutral",
+        "displayName": "Destructive",
+        "canonical": "#dc2828",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2828", "#ef4444", "#f87171", "#fca5a5"]
+      }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Title", "purpose": "Card headings, section titles, dialog headers." },
+      "body": { "displayName": "Body", "purpose": "Row labels, descriptions, form fields. Max 65ch on prose." },
+      "label": { "displayName": "Label", "purpose": "Status text within components, supporting descriptions, badge content." },
+      "micro": { "displayName": "Micro", "purpose": "Badge text, nav item labels, smallest metadata. Tracking compensates for 11px optical crowding." },
+      "section-label": { "displayName": "Section Label", "purpose": "Icon-prefixed section headers. One per visual grouping." }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "fade-up",
+        "value": "fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "purpose": "Section and list entrance. Reduced-motion: animation none."
+      },
+      {
+        "name": "stagger-offset",
+        "value": "--stagger CSS variable (50-60ms per item)",
+        "purpose": "List entrance stagger. Apply via animation-delay: var(--stagger, 0ms)."
+      },
+      {
+        "name": "skeleton-pulse",
+        "value": "skeleton-pulse 1.5s ease-in-out infinite",
+        "purpose": "Loading skeleton opacity oscillation: 0.5 → 0.25 → 0.5."
+      },
+      {
+        "name": "transition-standard",
+        "value": "transition-all duration-200",
+        "purpose": "Default state change transitions: hover, focus, active. 200ms."
+      },
+      {
+        "name": "button-press",
+        "value": "active:scale-[0.98]",
+        "purpose": "Micro-compression on interactive button tap."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "900px" },
+      { "name": "max-content", "value": "448px (max-w-md container)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary confirmation actions: submit, accept, check in.",
+      "html": "<button class=\"ds-btn-primary\">Check In</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; background: #ffffff; color: #000000; border: none; border-radius: 9999px; font-size: 14px; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, transform 0.2s; cursor: pointer; } .ds-btn-primary:hover { background: rgba(255,255,255,0.9); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(255,255,255,0.8); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary confirmation. Pairs alongside a primary button.",
+      "html": "<button class=\"ds-btn-outline\">Invite</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; background: transparent; color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 9999px; font-size: 14px; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, transform 0.2s; cursor: pointer; } .ds-btn-outline:hover { background: rgba(255,255,255,0.06); } .ds-btn-outline:focus-visible { outline: 2px solid rgba(255,255,255,0.8); outline-offset: 2px; } .ds-btn-outline:active { transform: scale(0.98); } .ds-btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Icon buttons, cancel actions, inline text controls.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 16px; background: transparent; color: rgba(255,255,255,0.7); border: none; border-radius: 9999px; font-size: 14px; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, color 0.2s, transform 0.2s; cursor: pointer; } .ds-btn-ghost:hover { background: rgba(255,255,255,0.06); color: #ffffff; } .ds-btn-ghost:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard single-line input. Used in forms, invite flows, settings.",
+      "html": "<input class=\"ds-input\" placeholder=\"@username\" type=\"text\" />",
+      "css": ".ds-input { display: flex; width: 100%; height: 44px; padding: 0 12px; background: rgba(255,255,255,0.06); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; font-size: 14px; font-family: system-ui, -apple-system, sans-serif; transition: border-color 0.2s; box-sizing: border-box; } .ds-input::placeholder { color: rgba(255,255,255,0.35); } .ds-input:focus { outline: none; border-color: #ffffff; } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Badge — Verified",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Confirmed gym check-in. Solid emerald fill.",
+      "html": "<span class=\"ds-badge-verified\">Verified</span>",
+      "css": ".ds-badge-verified { display: inline-flex; align-items: center; padding: 4px 10px; background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 9999px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; font-family: system-ui, sans-serif; }"
+    },
+    {
+      "name": "Badge — Missed",
+      "kind": "chip",
+      "refersTo": "badge-destructive",
+      "description": "Missed check-in. Red tint — consequence is owed.",
+      "html": "<span class=\"ds-badge-missed\">Missed</span>",
+      "css": ".ds-badge-missed { display: inline-flex; align-items: center; padding: 4px 10px; background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.5); border-radius: 9999px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; font-family: system-ui, sans-serif; }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Primary content container. Floats on the void with glass depth.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-title\">Challenge vs Jamie</p><p class=\"ds-card-desc\">3 of 4 days this week</p></div>",
+      "css": ".ds-card { background: rgba(255,255,255,0.04); color: #ffffff; border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; padding: 20px; backdrop-filter: blur(24px); font-family: system-ui, sans-serif; transition: background 0.2s, border-color 0.2s; } .ds-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); } .ds-card-title { font-size: 16px; font-weight: 600; color: #ffffff; margin: 0 0 4px; line-height: 1.3; } .ds-card-desc { font-size: 14px; color: rgba(255,255,255,0.55); margin: 0; line-height: 1.5; }"
+    },
+    {
+      "name": "VS Challenge Card",
+      "kind": "card",
+      "description": "Head-to-head challenge card. Signature component — two avatars, status labels, stake pill.",
+      "html": "<div class=\"ds-vs-card\"><div class=\"ds-vs-body\"><div class=\"ds-vs-side\"><div class=\"ds-vs-avatar\">YO</div><p class=\"ds-vs-name\">You</p><p class=\"ds-vs-status ds-vs-verified\">✓ checked in</p></div><div class=\"ds-vs-center\"><span class=\"ds-vs-pill\">VS</span></div><div class=\"ds-vs-side\"><div class=\"ds-vs-avatar\">JD</div><p class=\"ds-vs-name\">Jamie</p><p class=\"ds-vs-status ds-vs-missed\">✗ missed</p></div></div><div class=\"ds-vs-footer\"><span class=\"ds-vs-stake\">$20 stake</span><span class=\"ds-vs-open\">Open ›</span></div></div>",
+      "css": ".ds-vs-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; padding: 20px; backdrop-filter: blur(24px); font-family: system-ui, sans-serif; transition: background 0.2s, border-color 0.2s; } .ds-vs-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); } .ds-vs-body { display: flex; justify-content: space-between; align-items: stretch; gap: 8px; } .ds-vs-side { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; text-align: center; } .ds-vs-avatar { width: 44px; height: 44px; border-radius: 9999px; background: rgba(255,255,255,0.12); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; } .ds-vs-name { font-size: 14px; font-weight: 600; color: #ffffff; margin: 0; } .ds-vs-status { font-size: 12px; margin: 0; } .ds-vs-verified { color: #34d399; } .ds-vs-missed { color: #f87171; } .ds-vs-center { display: flex; align-items: center; justify-content: center; padding: 0 4px; } .ds-vs-pill { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.15); border-radius: 9999px; padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; } .ds-vs-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 16px; } .ds-vs-stake { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); border-radius: 9999px; padding: 4px 12px; font-size: 12px; } .ds-vs-open { font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); }"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "description": "Fixed bottom navigation shell. 3-4 item grid, glass surface, active item has white indicator line.",
+      "html": "<nav class=\"ds-bottom-nav\"><a href=\"#\" class=\"ds-nav-item ds-nav-active\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/><path d=\"m9 16 2 2 4-4\"/></svg><span>Today</span></a><a href=\"#\" class=\"ds-nav-item\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg><span>Challenges</span></a><a href=\"#\" class=\"ds-nav-item\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/></svg><span>Profile</span></a></nav>",
+      "css": ".ds-bottom-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 1.9rem; padding: 4px; backdrop-filter: blur(40px); font-family: system-ui, sans-serif; width: 100%; max-width: 448px; } .ds-nav-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 69px; border-radius: 1.4rem; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45); text-decoration: none; transition: background 0.2s, color 0.2s; } .ds-nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); } .ds-nav-active { color: #ffffff; font-weight: 600; } .ds-nav-active::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; border-radius: 9999px; background: #ffffff; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pact",
+    "overview": "SweatPact runs at negative space. A pure black field — not dark gray, not midnight blue, absolute #000000 — says that the data breaking the silence carries weight. White appears only where consequence lives: your score, their score, the verdict. The system does not decorate. Two people made an agreement; the interface records whether it was kept.\n\nColor arrives at exactly two moments. Earned Green (#10b981 emerald) means you showed up and banked a day. Owed Red (#ef4444) means someone defaulted and a debt accrued. Everything else is achromatic. This is not minimalism for aesthetics — it is clarity that raises the stakes of the moments that do use color.\n\nGlass surfaces create the only other dimension. Containers float at 4% white opacity on a black void, blur the layer behind them with backdrop-blur-xl, and lift to 6% on hover. This depth is structural, not decorative: it orients the user's eye without pulling focus from the status data that actually matters.",
+    "keyCharacteristics": [
+      "Absolute black canvas (#000000), no tints, no near-blacks",
+      "White ink on void: pure achromatic hierarchy",
+      "Earned Green / Owed Red — the only chromatic signals, both semantic",
+      "Glass surfaces via opacity layering and backdrop-blur, zero box-shadows",
+      "Rounded-full pills for all interactive controls; 2rem curves for container shells",
+      "System font throughout — no display type, no typographic decoration",
+      "280ms ease-out-expo transitions; stagger on lists; full reduced-motion support"
+    ],
+    "rules": [
+      {
+        "name": "The Pact Rule",
+        "body": "Color appears only at consequence. Emerald = fulfilled. Red = defaulted. Every other surface is achromatic. If you find yourself reaching for a third hue, you are decorating, not communicating. Prohibited.",
+        "section": "colors"
+      },
+      {
+        "name": "The Opacity Ladder Rule",
+        "body": "Glass surfaces follow exactly four steps: bg-white/[0.04] (rest), /[0.06] (hover), /[0.08] (active / unread / nav shell), /[0.14] (secondary button hover only). Border opacity: /10, /15, /18, /20, /25 only. Text opacity: /35, /40, /45, /55, /65, /70 only.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Shadow Rule",
+        "body": "Box shadows are prohibited system-wide. Any perceived depth must be achievable through the opacity ladder and backdrop-blur. If you need a shadow to distinguish two elements, restructure the layout.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Glass Ceiling Rule",
+        "body": "Backdrop-blur exists only on persistent shells (top nav, bottom nav) and modal overlays. Content cards use backdrop-blur-xl (24px). Do not add blur to inline content elements like list rows, badges, or form fields.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "System font only. No Google Fonts, no display typefaces, no monospace decoration. Type that draws attention to itself competes with the data it labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracking Rule",
+        "body": "Letter-spacing is used at exactly two levels: 0.08em on micro (11px) labels, 0.18em on section labels (all-caps). Nowhere else. Tracking for atmosphere is prohibited.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Use bg-white/[0.04] for default glass surfaces, /[0.06] for hover, /[0.08] for active and nav shells",
+      "Keep border opacity in the set: /10, /15, /18, /20, /25. Keep text opacity in: /35, /40, /45, /55, /65, /70",
+      "Use rounded-[2rem] for section containers, rounded-full for pills and buttons, rounded-[1.4rem] for list items, rounded-[1rem] for inputs",
+      "Use bg-emerald-500/90 fill for verified; dashed border-emerald-400 ring for unverified; bg-red-500/15 + border-red-500/70 for missed",
+      "Use icon + label on all section headers: icon at 12×12px, label text-xs uppercase tracking-[0.18em] text-white/45",
+      "Add active:scale-[0.98] to all interactive buttons",
+      "Stagger list entrance animations with --stagger CSS variable (50–60ms per item)",
+      "Use backdrop-blur-xl on content cards, backdrop-blur-2xl on nav shells and modals"
+    ],
+    "donts": [
+      "Don't use non-standard Tailwind opacity values (/8, /12, /42, /46, /58, /74)",
+      "Don't add box shadows anywhere — the No-Shadow Rule is absolute",
+      "Don't use a third hue for anything other than semantic status (no blue accents, purple gradients, amber highlights)",
+      "Don't use rounded-2xl — section containers are rounded-[2rem] (32px), the distinction is intentional",
+      "Don't design like MyFitnessPal: no chart-heavy data density, no clinical metric grids, no logging-as-homework UX",
+      "Don't design like a standard SaaS dashboard: no gray sidebar nav, no metric cards in uniform grids",
+      "Don't design like Nike Run Club: no brand-forward logo treatment, no marketing-hero layout within app UI",
+      "Don't use display fonts or decorative typefaces in UI labels, buttons, or data",
+      "Don't add glassmorphism decoratively — no blur on inline content elements",
+      "Don't omit prefers-reduced-motion alternatives from any animation"
+    ]
+  }
+}
