@@ -234,7 +234,7 @@ export default async function ProfilePage({
                 </div>
               </div>
 
-              <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+              <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-[10px] uppercase tracking-[0.16em]">This week</p>
@@ -263,7 +263,7 @@ export default async function ProfilePage({
                 </p>
               </div>
 
-              <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+              <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <Users2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-[10px] uppercase tracking-[0.16em]">Challenges</p>
