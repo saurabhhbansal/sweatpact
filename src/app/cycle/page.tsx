@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { computePeriodStats } from "@/lib/period-stats";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { MobileNav, TopNav } from "@/components/nav";
 import { CycleView } from "./client";
@@ -86,19 +85,17 @@ export default async function CyclePage() {
     console.error("Cycle page render failed", error);
     return (
       <main className="container max-w-md py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Couldn&apos;t load your cycle</CardTitle>
-            <CardDescription>
-              Please refresh. If it still fails, open Settings and save your timezone.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h1 className="text-base font-semibold text-white">Couldn&apos;t load your cycle</h1>
+          <p className="mt-1 text-sm text-white/55">
+            Please refresh. If it still fails, open Settings and save your timezone.
+          </p>
+          <div className="mt-4">
             <Link className={buttonVariants({ variant: "outline" })} href="/dashboard">
               Back to dashboard
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </main>
     );
   }
