@@ -208,11 +208,11 @@ export default async function Dashboard() {
             />
           </section>
 
-          <section className="flex min-h-[11rem] flex-1 flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 text-center backdrop-blur-xl">
-            <div className="relative mb-3 h-28 w-28">
+          <section className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 text-center backdrop-blur-xl">
+            <div className="relative mb-3 h-40 w-40">
               <div className="absolute inset-0 rounded-full bg-white p-[2px]">
                 <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-black">
-                  <p className="text-4xl font-bold text-white">{weekStreak}</p>
+                  <p className="text-5xl font-bold text-white">{weekStreak}</p>
                   <p className="text-xs text-white/55">week streak</p>
                 </div>
               </div>
