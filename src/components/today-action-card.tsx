@@ -110,6 +110,16 @@ export function TodayActionCard({
           <p className="text-lg font-semibold text-white">Check-in rejected</p>
           <p className="mt-1 text-sm text-white/55">Whoever runs your challenge reversed this check-in.</p>
         </div>
+      ) : todayStatus === "missed" ? (
+        <div className="py-2 text-center">
+          <p className="text-lg font-semibold text-white">Missed — day&apos;s done</p>
+          <p className="mt-1 text-sm text-white/55">Nothing counted today. Your streak handles it.</p>
+        </div>
+      ) : todayStatus === "rejected" ? (
+        <div className="py-2 text-center">
+          <p className="text-lg font-semibold text-white">Check-in rejected</p>
+          <p className="mt-1 text-sm text-white/55">Your challenge manager reversed this check-in.</p>
+        </div>
       ) : (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Waiting on today</p>
