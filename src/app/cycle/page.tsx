@@ -61,8 +61,8 @@ export default async function CyclePage() {
     return (
       <>
         <TopNav name={topName} username={profile.username} />
-        <main className="animate-fade-up container max-w-md pb-28 pt-4">
-          <div className="mb-5">
+        <main className="container max-w-md pb-28 pt-4">
+          <div className="animate-fade-up-item mb-5">
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">Your cycle</p>
             <h1 className="mt-1 text-3xl font-semibold text-white">Cycle Tracking</h1>
           </div>

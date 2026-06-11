@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PeriodDayEditor } from "@/components/progress-section";
@@ -472,9 +474,12 @@ export function CycleView({
       </div>
 
       {/* Next period prediction hero */}
-      <NextPeriodHero stats={stats} />
+      <div className="animate-fade-up-item" style={{ "--stagger": "40ms" } as React.CSSProperties}>
+        <NextPeriodHero stats={stats} />
+      </div>
 
       {/* Date strip */}
+      <div className="animate-fade-up-item" style={{ "--stagger": "90ms" } as React.CSSProperties}>
       <DateStrip
         today={today}
         selectedDay={selectedDay}
@@ -483,8 +488,10 @@ export function CycleView({
         predictedStart={predictedStart}
         predictedEnd={predictedEnd ?? null}
       />
+      </div>
 
       {/* Log section */}
+      <div className="animate-fade-up-item" style={{ "--stagger": "140ms" } as React.CSSProperties}>
       <LogSection
         selectedDay={selectedDay}
         today={today}
@@ -494,12 +501,17 @@ export function CycleView({
         onEdit={(day) => setEditingDay(day)}
         readonly={readonly}
       />
+      </div>
 
       {/* Highlights grid */}
-      <Highlights stats={stats} excludePrediction={hasPrediction} />
+      <div className="animate-fade-up-item" style={{ "--stagger": "190ms" } as React.CSSProperties}>
+        <Highlights stats={stats} excludePrediction={hasPrediction} />
+      </div>
 
       {/* Trends */}
-      <Trends cycles={stats.cycles} averageCycleDays={stats.averageCycleDays} />
+      <div className="animate-fade-up-item" style={{ "--stagger": "240ms" } as React.CSSProperties}>
+        <Trends cycles={stats.cycles} averageCycleDays={stats.averageCycleDays} />
+      </div>
 
       {/* Sharing manager — owner only (hidden in readonly grantee view) */}
       {!readonly ? <PeriodSharingManager /> : null}
