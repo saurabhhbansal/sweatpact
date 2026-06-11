@@ -470,7 +470,7 @@ export default async function GroupPage({
           <LeaveGroupButton groupId={group.id} isOwner={isOwner} />
         </div>
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

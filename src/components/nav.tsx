@@ -32,15 +32,22 @@ type NavLink = {
   matchPrefix?: string;
 };
 
-const BASE_LINKS: NavLink[] = [
-  { href: "/dashboard", label: "Today", icon: CalendarCheck2 },
-  { href: "/groups", label: "Challenges", icon: Users2 },
-  { href: "/u/me", label: "Profile", icon: UserIcon, matchPrefix: "/u/" },
-];
-
 const CYCLE_LINK: NavLink = { href: "/cycle", label: "Cycle", icon: Droplet };
 
-export function MobileNav() {
+function buildLinks(username?: string): NavLink[] {
+  return [
+    { href: "/dashboard", label: "Today", icon: CalendarCheck2 },
+    { href: "/groups", label: "Challenges", icon: Users2 },
+    {
+      href: username ? `/u/${username}` : "/u/me",
+      label: "Profile",
+      icon: UserIcon,
+      matchPrefix: "/u/",
+    },
+  ];
+}
+
+export function MobileNav({ username }: { username?: string }) {
   const pathname = usePathname();
   // Read the cached gender synchronously so the correct tab count renders on
   // first paint (avoids a 3→4 tab flicker for returning female users).
@@ -71,8 +78,8 @@ export function MobileNav() {
     };
   }, []);
 
-  const links =
-    gender === "female" ? [...BASE_LINKS, CYCLE_LINK] : BASE_LINKS;
+  const baseLinks = buildLinks(username);
+  const links = gender === "female" ? [...baseLinks, CYCLE_LINK] : baseLinks;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-3">

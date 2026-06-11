@@ -271,7 +271,7 @@ export default async function Dashboard() {
           </div>
 
         </main>
-        <MobileNav />
+        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {

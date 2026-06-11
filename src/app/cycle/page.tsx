@@ -68,7 +68,7 @@ export default async function CyclePage() {
           </div>
           <CycleView today={today} stats={stats} records={records} />
         </main>
-        <MobileNav />
+        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {

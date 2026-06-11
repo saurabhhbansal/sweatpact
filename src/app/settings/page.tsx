@@ -63,7 +63,7 @@ export default async function SettingsPage() {
           />
         </section>
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }
