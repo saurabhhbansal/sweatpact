@@ -11,6 +11,14 @@ export type VersusPerson = {
   status?: string | null;
 };
 
+type Standing = { text: string; tone: "positive" | "negative" | "neutral" };
+
+const STANDING_CLASSES: Record<Standing["tone"], string> = {
+  positive: "text-emerald-400",
+  negative: "text-red-400",
+  neutral: "text-white/55",
+};
+
 // Head-to-head challenge card: you vs them (1-on-1) or you + a stack (3+).
 // Presentational only — wraps a Link to the challenge detail page.
 export function ChallengeVersusCard({
@@ -19,12 +27,14 @@ export function ChallengeVersusCard({
   me,
   others,
   isOneOnOne,
+  standing,
 }: {
   challengeId: string;
   stakeCents: number;
   me: VersusPerson;
   others: VersusPerson[];
   isOneOnOne: boolean;
+  standing?: Standing;
 }) {
   const other = others[0];
   // 1-on-1: the other person's name is the card identity. 3+: "You + N others".
@@ -87,14 +97,19 @@ export function ChallengeVersusCard({
         </div>
       </div>
 
-      {/* Footer: stake pill + open affordance */}
+      {/* Footer: stake pill + standing + open affordance */}
       <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
         <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
-          {formatCents(stakeCents)} stake
+          {formatCents(stakeCents)}/day
         </span>
-        <span className="flex items-center gap-0.5 text-xs font-medium uppercase tracking-[0.14em] text-white/45 transition-colors duration-200 group-hover:text-white/70">
-          Open <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-        </span>
+        <div className="flex items-center gap-2">
+          {standing ? (
+            <span className={`text-xs font-medium ${STANDING_CLASSES[standing.tone]}`}>
+              {standing.text}
+            </span>
+          ) : null}
+          <ChevronRight className="h-3.5 w-3.5 text-white/40 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-white/70" />
+        </div>
       </div>
     </Link>
   );

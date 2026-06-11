@@ -5,6 +5,7 @@ import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { betterStatus } from "@/lib/challenge-view";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
+import { formatCents } from "@/lib/money";
 import { MobileNav, TopNav } from "@/components/nav";
 import { UserSearch } from "@/components/user-search";
 import { ChallengeVersusCard, type VersusPerson } from "@/components/challenge-versus-card";
@@ -49,29 +50,38 @@ export default async function ChallengesPage() {
   const memberships = await listUserMemberships(supa, auth.user.id);
   const groupIds = memberships.map((m) => m.group_id);
 
-  // Fetch members (avatars/names) and today's check-ins for all the user's
-  // groups in two batched queries, then build a per-challenge view model.
-  const [{ data: memberRows }, { data: todayCheckins }, { data: pendingInvites }] =
-    await Promise.all([
-      groupIds.length > 0
-        ? supa
-            .from("group_members")
-            .select("group_id, user_id, profiles:user_id(id, name, username, avatar_url)")
-            .in("group_id", groupIds)
-        : Promise.resolve({ data: [] as any[] }),
-      groupIds.length > 0
-        ? supa
-            .from("checkin_events")
-            .select("group_id, user_id, status")
-            .in("group_id", groupIds)
-            .eq("local_day", today)
-        : Promise.resolve({ data: [] as any[] }),
-      supa
-        .from("challenge_invitations")
-        .select("id")
-        .eq("to_user", profile.id)
-        .eq("status", "pending"),
-    ]);
+  const [
+    { data: memberRows },
+    { data: todayCheckins },
+    { data: pendingInvites },
+    { data: pendingObligations },
+  ] = await Promise.all([
+    groupIds.length > 0
+      ? supa
+          .from("group_members")
+          .select("group_id, user_id, profiles:user_id(id, name, username, avatar_url)")
+          .in("group_id", groupIds)
+      : Promise.resolve({ data: [] as any[] }),
+    groupIds.length > 0
+      ? supa
+          .from("checkin_events")
+          .select("group_id, user_id, status")
+          .in("group_id", groupIds)
+          .eq("local_day", today)
+      : Promise.resolve({ data: [] as any[] }),
+    supa
+      .from("challenge_invitations")
+      .select("id")
+      .eq("to_user", profile.id)
+      .eq("status", "pending"),
+    groupIds.length > 0
+      ? supa
+          .from("obligations")
+          .select("group_id, from_user, to_user, amount_cents")
+          .in("group_id", groupIds)
+          .eq("status", "pending")
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
 
   // group_id → (user_id → profile)
   const membersByGroup = new Map<string, Map<string, MemberProfileRow>>();
@@ -90,52 +100,69 @@ export default async function ChallengesPage() {
     inner.set(row.user_id, betterStatus(row.status, inner.get(row.user_id)));
   }
 
+  // group_id → standing from the current user's perspective
+  type Standing = { text: string; tone: "positive" | "negative" | "neutral" };
+  const standingByGroup = new Map<string, Standing>();
+
+  type OblSummary = { iOwe: number; theyOwe: number; otherPairs: number };
+  const oblSummaryByGroup = new Map<string, OblSummary>();
+  for (const obl of (pendingObligations ?? []) as any[]) {
+    const s = oblSummaryByGroup.get(obl.group_id) ?? { iOwe: 0, theyOwe: 0, otherPairs: 0 };
+    if (obl.from_user === profile.id) {
+      s.iOwe += obl.amount_cents;
+    } else if (obl.to_user === profile.id) {
+      s.theyOwe += obl.amount_cents;
+    } else {
+      s.otherPairs += 1;
+    }
+    oblSummaryByGroup.set(obl.group_id, s);
+  }
+
+  for (const [gid, s] of oblSummaryByGroup.entries()) {
+    if (s.iOwe > 0) {
+      standingByGroup.set(gid, { text: `You owe ${formatCents(s.iOwe)}`, tone: "negative" });
+    } else if (s.theyOwe > 0) {
+      standingByGroup.set(gid, { text: `Owes you ${formatCents(s.theyOwe)}`, tone: "positive" });
+    } else if (s.otherPairs > 0) {
+      standingByGroup.set(gid, { text: `${s.otherPairs} pending`, tone: "neutral" });
+    }
+  }
+
   const pendingCount = pendingInvites?.length ?? 0;
 
   return (
     <>
-      <TopNav name={profile.name || profile.email} username={profile.username} />
+      <TopNav name={profile.name || profile.username ? (profile.name || `@${profile.username}`) : "You"} username={profile.username} />
       <main className="container max-w-md space-y-5 pb-28 pt-4">
         <div className="animate-fade-up-item">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Your active bets</h1>
         </div>
 
-        {/* New-challenge search — slim, no heavy card chrome */}
-        <section
-          className="animate-fade-up-item rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl"
-          style={{ "--stagger": "50ms" } as React.CSSProperties}
-        >
-          <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/45">
-            Challenge someone new
-          </p>
-          <UserSearch />
-        </section>
-
-        {/* Pending invitations — slim banner */}
+        {/* Pending invitations — slim banner, shown before the list so it requires action */}
         {pendingCount > 0 ? (
           <Link
             href="/notifications"
             className="animate-fade-up-item flex items-center justify-between gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white transition hover:bg-white/[0.1]"
-            style={{ "--stagger": "100ms" } as React.CSSProperties}
+            style={{ "--stagger": "50ms" } as React.CSSProperties}
           >
             <span>
               {pendingCount} pending challenge{pendingCount === 1 ? "" : "s"}
             </span>
-            <span className="text-xs uppercase tracking-[0.14em] text-white/55">Review →</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-white/55">Review</span>
           </Link>
         ) : null}
 
-        {/* Challenge versus cards */}
+        {/* Challenge versus cards — primary daily view */}
         <div className="space-y-3">
           {memberships.length === 0 ? (
             <div
               className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl"
-              style={{ "--stagger": "100ms" } as React.CSSProperties}
+              style={{ "--stagger": "50ms" } as React.CSSProperties}
             >
               <p className="text-base font-semibold text-white">No challenges yet</p>
               <p className="mt-2 text-sm text-white/55">
-                Search for a friend above. Once they accept, the stakes start.
+                Search below to challenge a friend. Once they accept, the stakes start.
               </p>
             </div>
           ) : (
@@ -165,7 +192,7 @@ export default async function ChallengesPage() {
                 <div
                   key={membership.group_id}
                   className="animate-fade-up-item"
-                  style={{ "--stagger": `${Math.min(100 + index * 60, 400)}ms` } as React.CSSProperties}
+                  style={{ "--stagger": `${Math.min(50 + index * 60, 350)}ms` } as React.CSSProperties}
                 >
                   <ChallengeVersusCard
                     challengeId={membership.group_id}
@@ -173,12 +200,24 @@ export default async function ChallengesPage() {
                     me={me}
                     others={others}
                     isOneOnOne={totalMembers === 2}
+                    standing={standingByGroup.get(membership.group_id)}
                   />
                 </div>
               );
             })
           )}
         </div>
+
+        {/* New-challenge search — below the daily view */}
+        <section
+          className="animate-fade-up-item rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl"
+          style={{ "--stagger": "150ms" } as React.CSSProperties}
+        >
+          <p className="mb-2 text-xs uppercase tracking-[0.18em] text-white/45">
+            Challenge someone new
+          </p>
+          <UserSearch />
+        </section>
       </main>
       <MobileNav />
     </>
