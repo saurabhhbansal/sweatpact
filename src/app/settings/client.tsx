@@ -19,11 +19,6 @@ type SettingsProfile = Pick<
   "username" | "gender" | "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share"
 >;
 
-type SettingsProfile = Pick<
-  Profile,
-  "username" | "gender" | "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share"
->;
-
 type Gym = {
   id: string;
   name: string;
