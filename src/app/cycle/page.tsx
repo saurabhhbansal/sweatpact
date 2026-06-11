@@ -17,7 +17,7 @@ export default async function CyclePage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, onboarding_complete, gender, timezone, name, email")
       .eq("id", auth.user.id)
       .single();
     if (!profile) redirect("/login");
@@ -68,7 +68,7 @@ export default async function CyclePage() {
           </div>
           <CycleView today={today} stats={stats} records={records} />
         </main>
-        <MobileNav />
+        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {

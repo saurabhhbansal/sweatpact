@@ -35,21 +35,30 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Target must exist
-  const { data: target } = await admin
-    .from("profiles")
-    .select("id, username, name")
-    .eq("id", to_user)
-    .maybeSingle();
+  // Run all four validation/lookup queries in parallel — none depends on the others.
+  const [
+    { data: target },
+    { data: sharedMemberships },
+    { data: pending },
+    { data: fromProfile },
+  ] = await Promise.all([
+    admin.from("profiles").select("id, username, name").eq("id", to_user).maybeSingle(),
+    admin.from("group_members").select("group_id").in("user_id", [auth.user.id, to_user]),
+    admin
+      .from("challenge_invitations")
+      .select("id")
+      .eq("status", "pending")
+      .or(
+        `and(from_user.eq.${auth.user.id},to_user.eq.${to_user}),and(from_user.eq.${to_user},to_user.eq.${auth.user.id})`
+      )
+      .maybeSingle(),
+    admin.from("profiles").select("username, name").eq("id", auth.user.id).maybeSingle(),
+  ]);
+
   if (!target) {
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
-  // Already in a challenge together?
-  const { data: sharedMemberships } = await admin
-    .from("group_members")
-    .select("group_id")
-    .in("user_id", [auth.user.id, to_user]);
   const shared = new Map<string, number>();
   for (const row of sharedMemberships ?? []) {
     shared.set(row.group_id, (shared.get(row.group_id) ?? 0) + 1);
@@ -58,25 +67,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "already_in_challenge" }, { status: 409 });
   }
 
-  // Already a pending invitation between these two?
-  const { data: pending } = await admin
-    .from("challenge_invitations")
-    .select("id")
-    .eq("status", "pending")
-    .or(
-      `and(from_user.eq.${auth.user.id},to_user.eq.${to_user}),and(from_user.eq.${to_user},to_user.eq.${auth.user.id})`
-    )
-    .maybeSingle();
   if (pending) {
     return NextResponse.json({ error: "already_pending" }, { status: 409 });
   }
-
-  // Create a placeholder group (members only joined on accept).
-  const { data: fromProfile } = await admin
-    .from("profiles")
-    .select("username, name")
-    .eq("id", auth.user.id)
-    .maybeSingle();
 
   const groupName = `${fromProfile?.name?.trim() || fromProfile?.username || "Challenger"} vs ${target.name?.trim() || target.username}`;
 

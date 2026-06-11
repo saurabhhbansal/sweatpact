@@ -99,7 +99,7 @@ export default async function NotificationsPage() {
           </section>
         ) : null}
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

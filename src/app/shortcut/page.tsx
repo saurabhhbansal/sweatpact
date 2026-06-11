@@ -44,7 +44,7 @@ export default async function ShortcutPage() {
           />
         </div>
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

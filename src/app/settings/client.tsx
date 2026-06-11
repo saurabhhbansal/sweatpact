@@ -14,6 +14,11 @@ import { DeleteAccountButton } from "./delete-account";
 import { PushPermissionPrompt } from "@/components/push-permission";
 import { createClient as createBrowserClient } from "@/lib/supabase/browser";
 
+type SettingsProfile = Pick<
+  Profile,
+  "username" | "gender" | "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share"
+>;
+
 type Gym = {
   id: string;
   name: string;
@@ -35,7 +40,7 @@ export function SettingsForm({
   initialGyms,
   sharesWithMe = [],
 }: {
-  profile: Profile;
+  profile: SettingsProfile;
   initialGyms: Gym[];
   sharesWithMe?: PeriodShare[];
 }) {

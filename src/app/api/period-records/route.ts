@@ -59,27 +59,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "out_of_window" }, { status: 400 });
   }
 
-  // 1) Upsert the flow record (source of truth for stats).
-  const { error: periodError } = await admin
-    .from("period_records")
-    .upsert(
-      { user_id: profile.id, local_day, flow_level, source: "manual" as const },
-      { onConflict: "user_id,local_day" }
-    );
+  // 1) Upsert the flow record and read existing checkin_events in parallel —
+  // the checkin query doesn't depend on the upsert completing.
+  const [{ error: periodError }, { data: existing }] = await Promise.all([
+    admin
+      .from("period_records")
+      .upsert(
+        { user_id: profile.id, local_day, flow_level, source: "manual" as const },
+        { onConflict: "user_id,local_day" }
+      ),
+    // 2) Mirror as period_day in checkin_events, but only if there's no verified
+    // check-in that day. Don't overwrite real gym attendance.
+    admin
+      .from("checkin_events")
+      .select("status")
+      .eq("user_id", profile.id)
+      .eq("local_day", local_day),
+  ]);
   if (periodError) {
     return NextResponse.json(
       { error: "db_error", detail: periodError.message },
       { status: 500 }
     );
   }
-
-  // 2) Mirror as period_day in checkin_events, but only if there's no verified
-  // check-in that day. Don't overwrite real gym attendance.
-  const { data: existing } = await admin
-    .from("checkin_events")
-    .select("status")
-    .eq("user_id", profile.id)
-    .eq("local_day", local_day);
   const hasVerifiedOrUnverified = (existing ?? []).some(
     (r) => r.status === "verified" || r.status === "unverified"
   );

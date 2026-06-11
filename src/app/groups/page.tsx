@@ -229,7 +229,7 @@ export default async function ChallengesPage() {
           <UserSearch />
         </section>
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

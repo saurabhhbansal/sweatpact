@@ -48,7 +48,7 @@ export default async function GroupPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, username, onboarding_complete, timezone, name, email")
     .eq("id", auth.user.id)
     .single();
   if (!profile) redirect("/login");
@@ -260,10 +260,11 @@ export default async function GroupPage({
     checkinsByUser.set(c.user_id, arr);
   }
 
+  const viewerUserId = profile.id;
   function canManageMember(role: string, userId: string) {
     return (
       isManager &&
-      userId !== profile.id &&
+      userId !== viewerUserId &&
       role !== "owner" &&
       (isOwner || role !== "admin")
     );
@@ -470,7 +471,7 @@ export default async function GroupPage({
           <LeaveGroupButton groupId={group.id} isOwner={isOwner} />
         </div>
       </main>
-      <MobileNav />
+      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

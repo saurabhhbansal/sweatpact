@@ -31,11 +31,22 @@ export default async function ProfilePage({
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/login");
 
-  const { data: viewerProfile } = await supabase
-    .from("profiles")
-    .select("id, name, email, username, timezone, onboarding_complete")
-    .eq("id", auth.user.id)
-    .single();
+  // Fetch viewer profile and target profile in parallel — they're independent.
+  const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, name, email, username, timezone, onboarding_complete")
+      .eq("id", auth.user.id)
+      .single(),
+    supabase
+      .from("profiles")
+      .select(
+        "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at"
+      )
+      .ilike("username", params.username)
+      .maybeSingle(),
+  ]);
+
   if (!viewerProfile) redirect("/login");
 
   if (!viewerProfile.username || /^user_[a-f0-9]{8}$/.test(viewerProfile.username)) {
@@ -44,14 +55,6 @@ export default async function ProfilePage({
   if (!viewerProfile.onboarding_complete) {
     redirect("/onboarding/schedule");
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at"
-    )
-    .ilike("username", params.username)
-    .maybeSingle();
 
   if (!profile) notFound();
 
@@ -67,47 +70,61 @@ export default async function ProfilePage({
   const today = localDay(new Date(), timezone);
   const joinedDay = localDay(new Date(profile.created_at), timezone);
 
-  // daily_status has a self-only RLS policy and checkin_events requires
-  // same-group membership, so viewing another user's profile with the
-  // viewer's session returns empty rows. Use the admin client for non-owners,
-  // matching the same pattern used for gym names below.
-  const stats = canSeeStats
-    ? await computeProfileStats(
-        isOwner ? supabase : createAdminClient(),
-        profile.id,
-        today,
-        profile.weekly_goal ?? 4,
-        profile.created_at
-      )
-    : null;
+  // Fetch stats, gym names, and period-sharing permission in parallel — they
+  // all depend only on canSeeStats / profile fields already resolved above.
+  const cutoff6mo = new Date();
+  cutoff6mo.setUTCMonth(cutoff6mo.getUTCMonth() - 6);
+  const cutoff6moKey = cutoff6mo.toISOString().slice(0, 10);
 
-  // Period stats are owner-only and gender-gated. Fetch the last ~6 months.
+  const [stats, gymNames, periodShareRow] = await Promise.all([
+    // daily_status has a self-only RLS policy and checkin_events requires
+    // same-group membership, so viewing another user's profile with the
+    // viewer's session returns empty rows. Use the admin client for non-owners.
+    canSeeStats
+      ? computeProfileStats(
+          isOwner ? supabase : createAdminClient(),
+          profile.id,
+          today,
+          profile.weekly_goal ?? 4,
+          profile.created_at
+        )
+      : Promise.resolve(null),
+    // Gym names — visible to anyone who can see stats (owner + challenge partners).
+    // Uses admin client since viewer-scoped RLS only covers the viewer's own gyms.
+    canSeeStats
+      ? createAdminClient()
+          .from("user_gyms")
+          .select("name")
+          .eq("user_id", profile.id)
+          .order("created_at", { ascending: true })
+          .then((r) => (r.data ?? []).map((g) => g.name))
+      : Promise.resolve([] as string[]),
+    // Cycle-data sharing: a non-owner can view this profile's cycle data if the
+    // owner has granted them access via period_sharing. The grantee_read RLS
+    // policy lets the viewer read their own grant row.
+    !isOwner && profile.gender === "female"
+      ? supabase
+          .from("period_sharing")
+          .select("owner_id")
+          .eq("owner_id", profile.id)
+          .eq("shared_with_id", viewerProfile.id)
+          .maybeSingle()
+          .then((r) => r.data)
+      : Promise.resolve(null),
+  ]);
+
+  const canSeePeriod = isOwner || periodShareRow != null;
+
+  // Period stats — owner-only, gender-gated (last ~6 months).
   let periodStats: ReturnType<typeof computePeriodStats> | null = null;
   if (isOwner && profile.gender === "female") {
-    const cutoff = new Date();
-    cutoff.setUTCMonth(cutoff.getUTCMonth() - 6);
-    const cutoffKey = cutoff.toISOString().slice(0, 10);
     const { data: periodRecords } = await supabase
       .from("period_records")
       .select("local_day, flow_level")
       .eq("user_id", profile.id)
-      .gte("local_day", cutoffKey)
+      .gte("local_day", cutoff6moKey)
       .order("local_day", { ascending: true });
     periodStats = computePeriodStats(periodRecords ?? [], today);
-  }
-
-  // Cycle-data sharing: a non-owner can view this profile's cycle data if the
-  // owner has granted them access via period_sharing. The grantee_read RLS
-  // policy lets the viewer read their own grant row.
-  let canSeePeriod = isOwner;
-  if (!canSeePeriod && profile.gender === "female") {
-    const { data: share } = await supabase
-      .from("period_sharing")
-      .select("owner_id")
-      .eq("owner_id", profile.id)
-      .eq("shared_with_id", viewerProfile.id)
-      .maybeSingle();
-    canSeePeriod = share != null;
   }
 
   // Build the read-only cycle popup data for an authorised non-owner viewer.
@@ -127,19 +144,6 @@ export default async function ProfilePage({
       .order("local_day", { ascending: true });
     popupRecords = data ?? [];
     popupStats = computePeriodStats(popupRecords, today);
-  }
-
-  // Gym names — visible to anyone who can see stats (owner + challenge partners).
-  // Uses admin client since viewer-scoped RLS only covers the viewer's own gyms.
-  let gymNames: string[] = [];
-  if (canSeeStats) {
-    const admin = createAdminClient();
-    const { data: gyms } = await admin
-      .from("user_gyms")
-      .select("name")
-      .eq("user_id", profile.id)
-      .order("created_at", { ascending: true });
-    gymNames = (gyms ?? []).map((g) => g.name);
   }
 
   const displayName = profile.name?.trim() || `@${profile.username}`;
@@ -369,7 +373,7 @@ export default async function ProfilePage({
           </>
         ) : null}
       </main>
-      <MobileNav />
+      <MobileNav username={viewerProfile.username ?? undefined} />
     </>
   );
 }
