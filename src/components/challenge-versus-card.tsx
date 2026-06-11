@@ -38,7 +38,7 @@ export function ChallengeVersusCard({
   return (
     <Link
       href={`/groups/${challengeId}`}
-      className="block rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition duration-200 hover:border-white/20 hover:bg-white/[0.07]"
+      className="group block rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition duration-200 hover:border-white/20 hover:bg-white/[0.07] active:scale-[0.99]"
     >
       {/* Two sides with a VS / with divider */}
       <div className="flex items-stretch justify-between gap-2">
@@ -92,8 +92,8 @@ export function ChallengeVersusCard({
         <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
           {formatCents(stakeCents)} stake
         </span>
-        <span className="flex items-center gap-0.5 text-xs font-medium uppercase tracking-[0.14em] text-white/45">
-          Open <ChevronRight className="h-3.5 w-3.5" />
+        <span className="flex items-center gap-0.5 text-xs font-medium uppercase tracking-[0.14em] text-white/45 transition-colors duration-200 group-hover:text-white/70">
+          Open <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
         </span>
       </div>
     </Link>
