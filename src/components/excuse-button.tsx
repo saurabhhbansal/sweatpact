@@ -3,6 +3,7 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type Flow = "light" | "medium" | "heavy";
 
@@ -45,10 +46,10 @@ export function ExcuseButton({
   if (mode === "period_flow") {
     return (
       <div className="space-y-3">
-        <h2 className="text-center text-base font-semibold text-white">Flow today</h2>
-        <p className="text-center text-sm text-white/65">
+        <DialogTitle className="text-center text-base">Flow today</DialogTitle>
+        <DialogDescription className="text-center">
           Logging a period day keeps your streak safe.
-        </p>
+        </DialogDescription>
         <div className="grid grid-cols-3 gap-2 pt-1">
           <Button size="sm" variant="secondary" onClick={() => submit("period_day", "light")} disabled={busy}>Light</Button>
           <Button size="sm" variant="secondary" onClick={() => submit("period_day", "medium")} disabled={busy}>Medium</Button>
@@ -62,10 +63,10 @@ export function ExcuseButton({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-center text-base font-semibold text-white">Log an excused day</h2>
-      <p className="text-center text-sm text-white/65">
+      <DialogTitle className="text-center text-base">Log an excused day</DialogTitle>
+      <DialogDescription className="text-center">
         Pick a reason — your streak stays safe.
-      </p>
+      </DialogDescription>
       <div className={`grid gap-2 pt-1 ${gender === "female" ? "grid-cols-3" : "grid-cols-2"}`}>
         <Button size="sm" variant="secondary" onClick={() => submit("sick_day")} disabled={busy}>Sick day</Button>
         <Button size="sm" variant="secondary" onClick={() => submit("rest_day")} disabled={busy}>Rest day</Button>

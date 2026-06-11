@@ -35,7 +35,7 @@ export default async function Dashboard() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, onboarding_complete, timezone, created_at, weekly_goal, rest_days, name, email, gender")
       .eq("id", auth.user.id)
       .single();
 
@@ -179,11 +179,11 @@ export default async function Dashboard() {
     return (
       <>
         <TopNav name={topName} username={profile.username} />
-        <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
+        <main className="container max-w-md flex h-[calc(100dvh-4.25rem)] flex-col gap-3 overflow-hidden pb-[5.5rem] pt-3">
           <PushPermissionPrompt compact />
 
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
-            <div className="mb-3 flex items-center justify-between">
+          <section className="animate-fade-up-item shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+            <div className="mb-2 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-white/45">This week</p>
                 <p className="mt-0.5 text-xs">
@@ -208,17 +208,11 @@ export default async function Dashboard() {
             />
           </section>
 
-          {todayStatus === "pending" && (
-            <TodayActionCard
-              initialStatus={todayStatus}
-              isTodayRestDay={isTodayRestDay}
-              gymCount={gymCount ?? 0}
-              gender={profile.gender ?? "male"}
-            />
-          )}
-
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-6 text-center backdrop-blur-xl">
-            <div className="relative mx-auto mb-4 h-40 w-40">
+          <section
+            className="animate-fade-up-item flex min-h-0 flex-1 flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 text-center backdrop-blur-xl"
+            style={{ "--stagger": "60ms" } as React.CSSProperties}
+          >
+            <div className="relative mb-3 h-40 w-40">
               <div className="absolute inset-0 rounded-full bg-white p-[2px]">
                 <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-black">
                   <p className="text-5xl font-bold text-white">{weekStreak}</p>
@@ -236,17 +230,23 @@ export default async function Dashboard() {
             </p>
           </section>
 
-          {todayStatus !== "pending" && (
+          <div
+            className="animate-fade-up-item shrink-0"
+            style={{ "--stagger": "120ms" } as React.CSSProperties}
+          >
             <TodayActionCard
               initialStatus={todayStatus}
               isTodayRestDay={isTodayRestDay}
               gymCount={gymCount ?? 0}
               gender={profile.gender ?? "male"}
             />
-          )}
+          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className={`rounded-[1.7rem] border p-4 backdrop-blur-xl ${totalOwes > 0 ? "border-red-500/20 bg-red-500/[0.04]" : "border-white/10 bg-white/[0.04]"}`}>
+          <div
+            className="animate-fade-up-item shrink-0 grid grid-cols-2 gap-3"
+            style={{ "--stagger": "180ms" } as React.CSSProperties}
+          >
+            <div className={`rounded-[1.7rem] border p-3 backdrop-blur-xl ${totalOwes > 0 ? "border-red-500/20 bg-red-500/[0.04]" : "border-white/10 bg-white/[0.04]"}`}>
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">You owe</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
               <p className="mt-1 text-xs text-white/45">
@@ -257,7 +257,7 @@ export default async function Dashboard() {
                     : `to ${owesPeopleCount} people`}
               </p>
             </div>
-            <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+            <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl">
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">Owed to you</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
               <p className="mt-1 text-xs text-white/45">
@@ -271,7 +271,7 @@ export default async function Dashboard() {
           </div>
 
         </main>
-        <MobileNav />
+        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {
