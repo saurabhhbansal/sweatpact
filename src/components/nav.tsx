@@ -32,11 +32,9 @@ type NavLink = {
   matchPrefix?: string;
 };
 
-const CYCLE_LINK: NavLink = { href: "/cycle", label: "Cycle", icon: Droplet };
-
 function buildLinks(username?: string): NavLink[] {
   return [
-    { href: "/dashboard", label: "Today", icon: CalendarCheck2 },
+    { href: "/dashboard", label: "Dashboard", icon: CalendarCheck2 },
     { href: "/groups", label: "Challenges", icon: Users2 },
     {
       href: username ? `/u/${username}` : "/u/me",
@@ -49,8 +47,6 @@ function buildLinks(username?: string): NavLink[] {
 
 export function MobileNav({ username }: { username?: string }) {
   const pathname = usePathname();
-  // Read the cached gender synchronously so the correct tab count renders on
-  // first paint (avoids a 3→4 tab flicker for returning female users).
   const [gender, setGender] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return window.localStorage.getItem("sp_gender");
@@ -73,47 +69,58 @@ export function MobileNav({ username }: { username?: string }) {
       }
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  const baseLinks = buildLinks(username);
-  const links = gender === "female" ? [...baseLinks, CYCLE_LINK] : baseLinks;
+  const links = buildLinks(username);
+  const cycleActive = pathname?.startsWith("/cycle");
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-3">
-      <div
-        className={cn(
-          "container mx-auto grid max-w-md rounded-[1.9rem] border border-white/18 bg-white/[0.08] p-1 backdrop-blur-2xl",
-          links.length === 4 ? "grid-cols-4" : "grid-cols-3"
+      <div className="container mx-auto flex max-w-md items-center gap-2">
+        {/* Main 3-tab pill */}
+        <div className="grid flex-1 grid-cols-3 rounded-[1.9rem] border border-white/18 bg-white/[0.08] p-1 backdrop-blur-2xl">
+          {links.map((link) => {
+            const active = link.matchPrefix
+              ? pathname?.startsWith(link.matchPrefix)
+              : pathname === link.href || pathname?.startsWith(`${link.href}/`);
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-h-[4.3rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+                  active
+                    ? "bg-white/[0.11] text-white"
+                    : "text-white/45 hover:bg-white/[0.06] hover:text-white/80"
+                )}
+              >
+                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                <span className={cn("font-medium", active && "font-semibold")}>{link.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Cycle circle — females only */}
+        {gender === "female" && (
+          <Link
+            href="/cycle"
+            aria-current={cycleActive ? "page" : undefined}
+            aria-label="Cycle"
+            className={cn(
+              "flex h-[4.8rem] w-[4.8rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full border border-white/18 backdrop-blur-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              cycleActive
+                ? "bg-white/[0.11] text-white"
+                : "bg-white/[0.08] text-white/45 hover:bg-white/[0.11] hover:text-white/80"
+            )}
+          >
+            <Droplet className="h-[18px] w-[18px]" aria-hidden="true" />
+            <span className={cn("text-[11px] font-medium", cycleActive && "font-semibold")}>Cycle</span>
+          </Link>
         )}
-      >
-        {links.map((link) => {
-          const active = link.matchPrefix
-            ? pathname?.startsWith(link.matchPrefix)
-            : pathname === link.href || pathname?.startsWith(`${link.href}/`);
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative flex min-h-[4.3rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                active
-                  ? "text-white"
-                  : "text-white/45 hover:bg-white/[0.06] hover:text-white/80"
-              )}
-            >
-              {active && (
-                <span className="absolute top-2 left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white" />
-              )}
-              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-              <span className={cn("font-medium", active && "font-semibold")}>{link.label}</span>
-            </Link>
-          );
-        })}
       </div>
     </nav>
   );
