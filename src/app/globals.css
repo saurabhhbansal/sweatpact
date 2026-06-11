@@ -49,7 +49,8 @@ body {
   .animate-sheet-in,
   .animate-skeleton,
   .dialog-overlay,
-  .dialog-content {
+  .dialog-content,
+  .dropdown-content {
     animation: none !important;
   }
   * {
@@ -201,6 +202,22 @@ body {
 }
 .dialog-content[data-state="closed"] {
   animation: dialog-out 0.18s ease-in both;
+}
+
+/* Dropdown menus: quick settle from the trigger side. */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-content[data-state="open"] {
+  animation: dropdown-in 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes skeleton-pulse {

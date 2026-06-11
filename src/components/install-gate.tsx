@@ -81,7 +81,7 @@ export function InstallGate({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black px-6">
-      <div className="w-full max-w-sm space-y-8 text-center">
+      <div className="animate-fade-up w-full max-w-sm space-y-8 text-center">
         {/* Wordmark */}
         <div>
           <p className="text-3xl font-bold tracking-tight text-white">SweatPact</p>

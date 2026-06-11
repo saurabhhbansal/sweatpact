@@ -15,7 +15,7 @@ export default function AppError({
   }, [error]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+    <main className="animate-fade-up flex min-h-screen flex-col items-center justify-center px-6 text-center">
       <p className="text-xs uppercase tracking-[0.18em] text-white/45">Something went wrong</p>
       <h1 className="mt-2 text-2xl font-semibold text-white">An unexpected error occurred</h1>
       <p className="mt-3 max-w-sm text-sm text-white/55">
