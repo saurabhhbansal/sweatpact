@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CheckInButton } from "@/components/check-in-button";
 import { ExcuseButton } from "@/components/excuse-button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
 
@@ -63,31 +64,33 @@ export function TodayActionCard({
               to unlock verified check-ins.
             </p>
           ) : null}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setExcuseOpen((v) => !v)}
-              aria-label="Log excused day"
-              aria-expanded={excuseOpen}
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-[0.98] ${
-                excuseOpen
-                  ? "border-white/20 bg-white/[0.12] text-white/80"
-                  : "border-white/15 bg-white/[0.06] text-white/55 hover:border-white/20 hover:bg-white/[0.10] hover:text-white/75"
-              }`}
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex-1">
-              <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
+          <Dialog open={excuseOpen} onOpenChange={setExcuseOpen}>
+            <div className="flex items-center gap-2">
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Log excused day"
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-[0.98] ${
+                    excuseOpen
+                      ? "border-white/20 bg-white/[0.12] text-white/80"
+                      : "border-white/15 bg-white/[0.06] text-white/55 hover:border-white/20 hover:bg-white/[0.10] hover:text-white/75"
+                  }`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </DialogTrigger>
+              <div className="flex-1">
+                <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
+              </div>
             </div>
-          </div>
-          {excuseOpen && (
-            <ExcuseButton
-              gender={gender}
-              onOptimistic={(s) => setOverrideStatus(s)}
-              onClose={() => setExcuseOpen(false)}
-            />
-          )}
+            <DialogContent className="max-w-sm">
+              <ExcuseButton
+                gender={gender}
+                onOptimistic={(s) => setOverrideStatus(s)}
+                onClose={() => setExcuseOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       ) : todayStatus === "verified" ? (
         <div className="py-2 text-center">
