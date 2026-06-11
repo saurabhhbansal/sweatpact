@@ -35,7 +35,7 @@ export default async function Dashboard() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, onboarding_complete, timezone, created_at, weekly_goal, rest_days, name, email, gender")
       .eq("id", auth.user.id)
       .single();
 

@@ -12,7 +12,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, username, onboarding_complete, name, email, gender, notify_unverified_checkin, notify_rest_day, notify_cycle_share")
     .eq("id", auth.user.id)
     .single();
   if (!profile) redirect("/login");
