@@ -482,7 +482,8 @@ function Wizard({
         Step {index + 1} of {steps.length}
       </p>
 
-      {/* Title + description */}
+      {/* Step body — keyed so each step transition reads as a state change */}
+      <div key={index} className="animate-state-in space-y-6">
       <div className="space-y-2 text-center">
         <h2 className="text-xl font-semibold text-white">{step.title}</h2>
         <p className="text-sm leading-relaxed text-white/65">{step.description}</p>
@@ -549,6 +550,7 @@ function Wizard({
           <RotateSecretButton />
         </div>
       ) : null}
+      </div>
 
       {/* Navigation */}
       <div className="flex items-center gap-3">
