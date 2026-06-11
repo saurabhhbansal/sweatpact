@@ -1,3 +1,4 @@
+import type React from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +30,7 @@ export default async function UsernameOnboarding() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
+        <div className="animate-fade-up-item mb-6 text-center">
           <div className="flex justify-center text-white">
             <SweatPactSeal size="md" />
           </div>
@@ -38,7 +39,10 @@ export default async function UsernameOnboarding() {
             Pick a username. Others will use it to find you and start challenges.
           </p>
         </div>
-        <StepIndicator current={0} total={4} />
+        <div className="animate-fade-up-item" style={{ "--stagger": "60ms" } as React.CSSProperties}>
+          <StepIndicator current={0} total={4} />
+        </div>
+        <div className="animate-fade-up-item" style={{ "--stagger": "110ms" } as React.CSSProperties}>
         <Card>
           <CardHeader>
             <CardTitle>Pick a username</CardTitle>
@@ -48,6 +52,7 @@ export default async function UsernameOnboarding() {
             <UsernamePicker />
           </CardContent>
         </Card>
+        </div>
       </div>
     </main>
   );
