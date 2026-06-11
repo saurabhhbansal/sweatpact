@@ -38,6 +38,9 @@ export function TodayActionCard({
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+      {/* Keyed on status so a check-in or excuse visibly transforms the card
+          instead of the content flickering in place. */}
+      <div key={todayStatus} className="animate-state-in">
       {todayStatus === "pending" && isTodayRestDay ? (
         <div className="py-2 text-center">
           <p className="text-lg font-semibold text-white">Scheduled rest day</p>
@@ -129,6 +132,7 @@ export function TodayActionCard({
           <p className="mt-1 text-sm text-white/55">Nothing is counted yet.</p>
         </div>
       )}
+      </div>
     </section>
   );
 }

@@ -42,6 +42,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-fade-up-item,
+  .animate-state-in,
+  .animate-menu-in,
   .animate-skeleton {
     animation: none;
   }
@@ -83,6 +85,39 @@ body {
 .animate-fade-up-item {
   animation: fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--stagger, 0ms);
+}
+
+/* State swap: a card's content replaced by a new status. Slight scale settle
+   so the change reads as "this transformed", not "this flickered". */
+@keyframes state-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-state-in {
+  animation: state-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Inline reveal: menus and panels that mount below a trigger. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-menu-in {
+  animation: menu-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes skeleton-pulse {
