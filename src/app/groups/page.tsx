@@ -165,7 +165,7 @@ export default async function ChallengesPage() {
                 <div
                   key={membership.group_id}
                   className="animate-fade-up-item"
-                  style={{ "--stagger": `${100 + index * 60}ms` } as React.CSSProperties}
+                  style={{ "--stagger": `${Math.min(100 + index * 60, 400)}ms` } as React.CSSProperties}
                 >
                   <ChallengeVersusCard
                     challengeId={membership.group_id}
