@@ -55,15 +55,15 @@ export default function SignupPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md animate-fade-up">
-        <div className="mb-8 text-center">
+      <div className="w-full max-w-md">
+        <div className="animate-fade-up-item mb-8 text-center">
           <div className="flex justify-center text-white">
             <SweatPactSeal size="md" />
           </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Create account</h1>
           <p className="mt-2 text-sm text-white/55">Set up your profile, then start wiring up your groups.</p>
         </div>
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "80ms" } as React.CSSProperties}>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
@@ -106,8 +106,8 @@ export default function SignupPage() {
                 <option value="female" className="text-slate-950">Female</option>
               </select>
             </div>
-            {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
-            {message ? <p role="status" aria-live="polite" className="text-sm text-white/55">{message}</p> : null}
+            {error ? <p role="alert" aria-live="assertive" className="animate-menu-in text-sm text-destructive">{error}</p> : null}
+            {message ? <p role="status" aria-live="polite" className="animate-menu-in text-sm text-white/55">{message}</p> : null}
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create account"}
             </Button>
