@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Profile } from "@/lib/types";
+import { GymsSection } from "./gyms-section";
+import { DeleteAccountButton } from "./delete-account";
+import { PushPermissionPrompt } from "@/components/push-permission";
+import { createClient as createBrowserClient } from "@/lib/supabase/browser";
 
 type SettingsProfile = Pick<
   Profile,
   "username" | "gender" | "notify_unverified_checkin" | "notify_rest_day" | "notify_cycle_share"
 >;
-import { GymsSection } from "./gyms-section";
-import { DeleteAccountButton } from "./delete-account";
-import { PushPermissionPrompt } from "@/components/push-permission";
-import { createClient as createBrowserClient } from "@/lib/supabase/browser";
 
 type SettingsProfile = Pick<
   Profile,
