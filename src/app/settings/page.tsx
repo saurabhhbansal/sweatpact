@@ -50,8 +50,8 @@ export default async function SettingsPage() {
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
-      <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+      <main className="container max-w-md space-y-4 pb-28 pt-4">
+        <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
           <div className="mb-5">
             <h1 className="text-base font-semibold text-white">Settings</h1>
             <p className="mt-1 text-sm text-white/55">Tune your accountability rules.</p>

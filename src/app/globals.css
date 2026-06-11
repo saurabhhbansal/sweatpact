@@ -45,6 +45,8 @@ body {
   .animate-state-in,
   .animate-menu-in,
   .animate-bar-in,
+  .animate-overlay-in,
+  .animate-sheet-in,
   .animate-skeleton,
   .dialog-overlay,
   .dialog-content {
@@ -166,6 +168,26 @@ body {
     opacity: 0;
     transform: translate(-50%, -49%) scale(0.98);
   }
+}
+
+.animate-overlay-in {
+  animation: overlay-in 0.2s ease-out both;
+}
+
+/* Bottom sheet: rises from the lower edge. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-sheet-in {
+  animation: sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .dialog-overlay[data-state="open"] {
