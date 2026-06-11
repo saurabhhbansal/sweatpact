@@ -113,7 +113,7 @@ export function CheckInButton({
         : "unknown distance";
 
     return (
-      <div className="space-y-3">
+      <div className="animate-state-in space-y-3">
         <p className="rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/80">
           You&apos;re outside your gym radius ({distanceLabel}). Submit anyway as an unverified
           check-in? It counts immediately, but whoever runs your challenge can reverse it.
@@ -140,8 +140,8 @@ export function CheckInButton({
       <Button size="lg" className="w-full text-base" onClick={onPrimary} disabled={busy}>
         {busy ? "Checking in..." : periodDayMode ? "Hit the gym anyway" : "Check in now"}
       </Button>
-      {message ? <p role="status" aria-live="polite" className="text-sm text-success">{message}</p> : null}
-      {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
+      {message ? <p role="status" aria-live="polite" className="animate-menu-in text-sm text-success">{message}</p> : null}
+      {error ? <p role="alert" aria-live="assertive" className="animate-menu-in text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

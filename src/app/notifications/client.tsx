@@ -48,7 +48,7 @@ export function SentInvitations({ initial }: { initial: SentInvitation[] }) {
         return (
           <li
             key={inv.id}
-            className="rounded-[2rem] border border-white/15 bg-white/[0.04] px-4 py-3"
+            className="animate-fade-up-item rounded-[2rem] border border-white/15 bg-white/[0.04] px-4 py-3"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">

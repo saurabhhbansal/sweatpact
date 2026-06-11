@@ -50,7 +50,7 @@ export function ExcuseButton({
 
   if (mode === "period_flow") {
     return (
-      <div className="space-y-2 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
+      <div className="animate-menu-in space-y-2 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
         <p className="mb-2 text-center text-xs text-white/45">Flow today</p>
         <div className="grid grid-cols-3 gap-2">
           <Button size="sm" variant="secondary" onClick={() => submit("period_day", "light")} disabled={busy}>Light</Button>
@@ -64,7 +64,7 @@ export function ExcuseButton({
   }
 
   return (
-    <div className="space-y-2 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
+    <div className="animate-menu-in space-y-2 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
       <p className="mb-2 text-center text-xs text-white/45">Log an excused day</p>
       <div className={`grid gap-2 ${gender === "female" ? "grid-cols-3" : "grid-cols-2"}`}>
         <Button size="sm" variant="secondary" onClick={() => submit("sick_day")} disabled={busy}>Sick day</Button>

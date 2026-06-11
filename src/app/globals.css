@@ -42,8 +42,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-fade-up-item,
-  .animate-skeleton {
-    animation: none;
+  .animate-state-in,
+  .animate-menu-in,
+  .animate-bar-in,
+  .animate-overlay-in,
+  .animate-sheet-in,
+  .animate-skeleton,
+  .dialog-overlay,
+  .dialog-content,
+  .dropdown-content {
+    animation: none !important;
   }
   * {
     transition-duration: 0.01ms !important;
@@ -83,6 +91,133 @@ body {
 .animate-fade-up-item {
   animation: fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--stagger, 0ms);
+}
+
+/* State swap: a card's content replaced by a new status. Slight scale settle
+   so the change reads as "this transformed", not "this flickered". */
+@keyframes state-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-state-in {
+  animation: state-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Inline reveal: menus and panels that mount below a trigger. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-menu-in {
+  animation: menu-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Progress fill: bar grows from the left once on arrival. */
+@keyframes bar-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-bar-in {
+  transform-origin: left;
+  animation: bar-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+/* Dialog choreography — Radix drives data-state; exits run faster than entries. */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -49%) scale(0.98);
+  }
+}
+
+.animate-overlay-in {
+  animation: overlay-in 0.2s ease-out both;
+}
+
+/* Bottom sheet: rises from the lower edge. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-sheet-in {
+  animation: sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dialog-overlay[data-state="open"] {
+  animation: overlay-in 0.2s ease-out both;
+}
+.dialog-overlay[data-state="closed"] {
+  animation: overlay-out 0.15s ease-in both;
+}
+.dialog-content[data-state="open"] {
+  animation: dialog-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dialog-content[data-state="closed"] {
+  animation: dialog-out 0.18s ease-in both;
+}
+
+/* Dropdown menus: quick settle from the trigger side. */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-content[data-state="open"] {
+  animation: dropdown-in 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes skeleton-pulse {

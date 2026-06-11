@@ -40,14 +40,15 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md animate-fade-up">
-        <div className="mb-8 text-center">
+      <div className="w-full max-w-md">
+        <div className="animate-fade-up-item mb-8 text-center">
           <div className="flex justify-center text-white">
             <SweatPactSeal size="md" />
           </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Welcome back</h1>
           <p className="mt-2 text-sm text-white/55">Back in the ring. Time to earn your streak.</p>
         </div>
+        <div className="animate-fade-up-item" style={{ "--stagger": "80ms" } as React.CSSProperties}>
         <Card>
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
@@ -77,7 +78,7 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </div>
-            {error ? <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" aria-live="assertive" className="animate-menu-in text-sm text-destructive">{error}</p> : null}
             <Button className="w-full" disabled={loading} type="submit">
               {loading ? "Signing in..." : "Sign in"}
             </Button>
@@ -90,6 +91,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         </Card>
+        </div>
       </div>
     </main>
   );

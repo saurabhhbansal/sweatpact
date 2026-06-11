@@ -355,7 +355,7 @@ export function PeriodDayEditor({
       role="dialog"
       aria-modal="true"
       aria-labelledby="period-editor-title"
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-xl sm:items-center"
+      className="animate-overlay-in fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-xl sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget && !busy) onClose();
       }}
@@ -364,7 +364,7 @@ export function PeriodDayEditor({
       }}
     >
       <div
-        className="w-full max-w-md rounded-t-[2rem] border border-white/15 bg-[#0a0a0a] p-5 sm:rounded-[2rem]"
+        className="animate-sheet-in w-full max-w-md rounded-t-[2rem] border border-white/15 bg-[#0a0a0a] p-5 sm:rounded-[2rem]"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1.25rem)" }}
       >
         <div className="mb-1 flex items-center justify-between">

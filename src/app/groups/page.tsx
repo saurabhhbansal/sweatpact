@@ -95,14 +95,17 @@ export default async function ChallengesPage() {
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
-      <main className="animate-fade-up container max-w-md space-y-5 pb-28 pt-4">
-        <div>
+      <main className="container max-w-md space-y-5 pb-28 pt-4">
+        <div className="animate-fade-up-item">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Your active bets</h1>
         </div>
 
         {/* New-challenge search — slim, no heavy card chrome */}
-        <section className="rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+        <section
+          className="animate-fade-up-item rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl"
+          style={{ "--stagger": "50ms" } as React.CSSProperties}
+        >
           <p className="mb-2 text-xs uppercase tracking-[0.16em] text-white/45">
             Challenge someone new
           </p>
@@ -113,7 +116,8 @@ export default async function ChallengesPage() {
         {pendingCount > 0 ? (
           <Link
             href="/notifications"
-            className="flex items-center justify-between gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white transition hover:bg-white/[0.1]"
+            className="animate-fade-up-item flex items-center justify-between gap-3 rounded-full border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white transition hover:bg-white/[0.1]"
+            style={{ "--stagger": "100ms" } as React.CSSProperties}
           >
             <span>
               {pendingCount} pending challenge{pendingCount === 1 ? "" : "s"}
@@ -125,7 +129,10 @@ export default async function ChallengesPage() {
         {/* Challenge versus cards */}
         <div className="space-y-3">
           {memberships.length === 0 ? (
-            <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
+            <div
+              className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl"
+              style={{ "--stagger": "100ms" } as React.CSSProperties}
+            >
               <p className="text-base font-semibold text-white">No challenges yet</p>
               <p className="mt-2 text-sm text-white/55">
                 Search for a friend above. Once they accept, the stakes start.
@@ -158,7 +165,7 @@ export default async function ChallengesPage() {
                 <div
                   key={membership.group_id}
                   className="animate-fade-up-item"
-                  style={{ "--stagger": `${index * 60}ms` } as React.CSSProperties}
+                  style={{ "--stagger": `${Math.min(100 + index * 60, 400)}ms` } as React.CSSProperties}
                 >
                   <ChallengeVersusCard
                     challengeId={membership.group_id}
