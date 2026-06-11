@@ -109,7 +109,6 @@ export function MobileNav({ username }: { username?: string }) {
           <Link
             href="/cycle"
             aria-current={cycleActive ? "page" : undefined}
-            aria-label="Cycle"
             className={cn(
               "flex h-[4.8rem] w-[4.8rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full border border-white/18 backdrop-blur-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               cycleActive
