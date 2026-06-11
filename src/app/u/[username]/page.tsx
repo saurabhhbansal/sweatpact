@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarCheck2, Flame, MapPin, Moon, Target, User, Users2 } from "lucide-react";
@@ -150,8 +151,8 @@ export default async function ProfilePage({
   return (
     <>
       <TopNav name={viewerProfile.name || viewerProfile.email} username={viewerProfile.username} />
-      <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
-        <section className="flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
+      <main className="container max-w-md space-y-4 pb-28 pt-4">
+        <section className="animate-fade-up-item flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
           {isOwner ? (
             <AvatarUpload
               userId={profile.id}
@@ -205,7 +206,7 @@ export default async function ProfilePage({
         ) : null}
 
         {!canSeeStats ? (
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "60ms" } as React.CSSProperties}>
             <p className="text-base font-semibold text-white">Private profile</p>
             <p className="mt-1 text-sm text-white/55">
               This user keeps their stats private. Start a challenge together to see them.
@@ -220,7 +221,7 @@ export default async function ProfilePage({
           </section>
         ) : stats ? (
           <>
-            <section aria-label="Stats" className="grid grid-cols-2 gap-3">
+            <section aria-label="Stats" className="animate-fade-up-item grid grid-cols-2 gap-3" style={{ "--stagger": "60ms" } as React.CSSProperties}>
               <div className="col-span-2 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <Flame className="h-3.5 w-3.5" aria-hidden="true" />
@@ -252,7 +253,7 @@ export default async function ProfilePage({
                   className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
                 >
                   <div
-                    className="h-full rounded-full bg-white"
+                    className="animate-bar-in h-full rounded-full bg-white"
                     style={{
                       width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
                     }}
@@ -273,7 +274,7 @@ export default async function ProfilePage({
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
+            <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl" style={{ "--stagger": "120ms" } as React.CSSProperties}>
               <p className="mb-3 text-xs uppercase tracking-[0.2em] text-white/45">Activity</p>
               <CheckinStrip
                 today={today}
@@ -298,7 +299,7 @@ export default async function ProfilePage({
             </section>
 
             {gymNames.length > 0 ? (
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+              <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                 <div className="flex items-center gap-1.5 text-white/45">
                   <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-xs uppercase tracking-[0.18em]">Gyms</p>
@@ -318,7 +319,7 @@ export default async function ProfilePage({
 
             {isOwner ? (
               <>
-                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <Target className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Weekly goal</p>
@@ -331,7 +332,7 @@ export default async function ProfilePage({
                   </div>
                 </section>
 
-                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <Moon className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Rest days</p>
@@ -344,7 +345,7 @@ export default async function ProfilePage({
                   </div>
                 </section>
 
-                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <User className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Gender</p>

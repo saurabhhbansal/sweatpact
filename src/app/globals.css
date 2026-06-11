@@ -44,6 +44,7 @@ body {
   .animate-fade-up-item,
   .animate-state-in,
   .animate-menu-in,
+  .animate-bar-in,
   .animate-skeleton,
   .dialog-overlay,
   .dialog-content {
@@ -120,6 +121,21 @@ body {
 
 .animate-menu-in {
   animation: menu-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Progress fill: bar grows from the left once on arrival. */
+@keyframes bar-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-bar-in {
+  transform-origin: left;
+  animation: bar-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
 }
 
 /* Dialog choreography — Radix drives data-state; exits run faster than entries. */
