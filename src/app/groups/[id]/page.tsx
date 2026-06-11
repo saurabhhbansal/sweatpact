@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMembership, isManagerRole, normalizeRelation } from "@/lib/groups";
@@ -299,8 +300,8 @@ export default async function GroupPage({
   return (
     <>
       <TopNav name={profile.name || profile.email} username={profile.username} />
-      <main className="animate-fade-up container max-w-md space-y-4 pb-28 pt-4">
-        <div className="flex items-center justify-between">
+      <main className="container max-w-md space-y-4 pb-28 pt-4">
+        <div className="animate-fade-up-item flex items-center justify-between">
           <Link href="/groups" className="text-xs uppercase tracking-[0.18em] text-white/45">
             ← Challenges
           </Link>
@@ -317,7 +318,10 @@ export default async function GroupPage({
         </div>
 
         {/* Versus hero */}
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
+        <section
+          className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl"
+          style={{ "--stagger": "50ms" } as React.CSSProperties}
+        >
           <div className="flex items-stretch justify-between gap-2">
             {/* Me */}
             <div className="flex flex-1 justify-center">
@@ -410,19 +414,26 @@ export default async function GroupPage({
         </section>
 
         {/* Balances + Recent activity overlays */}
-        <LedgerButtons
-          balances={balanceRows}
-          disputes={disputeRows}
-          settlements={settlementRows}
-          activity={activityRows}
-        />
+        <div className="animate-fade-up-item" style={{ "--stagger": "110ms" } as React.CSSProperties}>
+          <LedgerButtons
+            balances={balanceRows}
+            disputes={disputeRows}
+            settlements={settlementRows}
+            activity={activityRows}
+          />
+        </div>
 
         {/* Calendar colour key */}
-        <CalendarLegend />
+        <div className="animate-fade-up-item" style={{ "--stagger": "160ms" } as React.CSSProperties}>
+          <CalendarLegend />
+        </div>
 
         {/* Members — only for 3+ challenges (1-on-1 status lives in the hero) */}
         {memberSummaries.length > 2 ? (
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <section
+            className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl"
+            style={{ "--stagger": "200ms" } as React.CSSProperties}
+          >
             <p className="mb-4 text-xs uppercase tracking-[0.18em] text-white/45">Members</p>
             <div className="flex flex-wrap gap-5">
               {memberSummaries.map((member) => (
@@ -449,7 +460,10 @@ export default async function GroupPage({
           </section>
         ) : null}
 
-        <div className="flex items-center justify-between gap-3 px-1">
+        <div
+          className="animate-fade-up-item flex items-center justify-between gap-3 px-1"
+          style={{ "--stagger": "240ms" } as React.CSSProperties}
+        >
           <Link href="/groups" className="text-sm text-white/55 transition hover:text-white">
             Back to all groups
           </Link>

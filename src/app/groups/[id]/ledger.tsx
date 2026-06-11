@@ -52,7 +52,7 @@ export function LedgerButtons({
         <button
           type="button"
           onClick={() => setOpen("balances")}
-          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06]"
+          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06] active:scale-[0.98]"
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-white">
             <Wallet className="h-4 w-4" /> Balances
@@ -64,7 +64,7 @@ export function LedgerButtons({
         <button
           type="button"
           onClick={() => setOpen("activity")}
-          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06]"
+          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06] active:scale-[0.98]"
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-white">
             <Activity className="h-4 w-4" /> Recent activity

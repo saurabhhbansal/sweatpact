@@ -44,8 +44,10 @@ body {
   .animate-fade-up-item,
   .animate-state-in,
   .animate-menu-in,
-  .animate-skeleton {
-    animation: none;
+  .animate-skeleton,
+  .dialog-overlay,
+  .dialog-content {
+    animation: none !important;
   }
   * {
     transition-duration: 0.01ms !important;
@@ -118,6 +120,49 @@ body {
 
 .animate-menu-in {
   animation: menu-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Dialog choreography — Radix drives data-state; exits run faster than entries. */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -49%) scale(0.98);
+  }
+}
+
+.dialog-overlay[data-state="open"] {
+  animation: overlay-in 0.2s ease-out both;
+}
+.dialog-overlay[data-state="closed"] {
+  animation: overlay-out 0.15s ease-in both;
+}
+.dialog-content[data-state="open"] {
+  animation: dialog-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dialog-content[data-state="closed"] {
+  animation: dialog-out 0.18s ease-in both;
 }
 
 @keyframes skeleton-pulse {
