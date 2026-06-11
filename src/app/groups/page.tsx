@@ -100,31 +100,41 @@ export default async function ChallengesPage() {
     inner.set(row.user_id, betterStatus(row.status, inner.get(row.user_id)));
   }
 
-  // group_id → standing from the current user's perspective
+  // group_id → standing from the current user's perspective.
+  // Aggregate individual obligation rows by (from_user|to_user) pair first, then
+  // derive standing — matching the detail page's aggregation approach.
   type Standing = { text: string; tone: "positive" | "negative" | "neutral" };
   const standingByGroup = new Map<string, Standing>();
 
-  type OblSummary = { iOwe: number; theyOwe: number; otherPairs: number };
-  const oblSummaryByGroup = new Map<string, OblSummary>();
+  // group_id → ("fromUser|toUser" → summed cents)
+  const oblByGroup = new Map<string, Map<string, number>>();
   for (const obl of (pendingObligations ?? []) as any[]) {
-    const s = oblSummaryByGroup.get(obl.group_id) ?? { iOwe: 0, theyOwe: 0, otherPairs: 0 };
-    if (obl.from_user === profile.id) {
-      s.iOwe += obl.amount_cents;
-    } else if (obl.to_user === profile.id) {
-      s.theyOwe += obl.amount_cents;
-    } else {
-      s.otherPairs += 1;
-    }
-    oblSummaryByGroup.set(obl.group_id, s);
+    if (!oblByGroup.has(obl.group_id)) oblByGroup.set(obl.group_id, new Map());
+    const pairKey = `${obl.from_user}|${obl.to_user}`;
+    const inner = oblByGroup.get(obl.group_id)!;
+    inner.set(pairKey, (inner.get(pairKey) ?? 0) + obl.amount_cents);
   }
 
-  for (const [gid, s] of oblSummaryByGroup.entries()) {
-    if (s.iOwe > 0) {
-      standingByGroup.set(gid, { text: `You owe ${formatCents(s.iOwe)}`, tone: "negative" });
-    } else if (s.theyOwe > 0) {
-      standingByGroup.set(gid, { text: `Owes you ${formatCents(s.theyOwe)}`, tone: "positive" });
-    } else if (s.otherPairs > 0) {
-      standingByGroup.set(gid, { text: `${s.otherPairs} pending`, tone: "neutral" });
+  for (const [gid, pairs] of oblByGroup.entries()) {
+    let iOweCents = 0;
+    let theyOweCents = 0;
+    let otherPairCount = 0;
+    for (const [pairKey, cents] of pairs.entries()) {
+      const [fromUser, toUser] = pairKey.split("|");
+      if (fromUser === profile.id) {
+        iOweCents += cents;
+      } else if (toUser === profile.id) {
+        theyOweCents += cents;
+      } else {
+        otherPairCount++;
+      }
+    }
+    if (iOweCents > 0) {
+      standingByGroup.set(gid, { text: `You owe ${formatCents(iOweCents)}`, tone: "negative" });
+    } else if (theyOweCents > 0) {
+      standingByGroup.set(gid, { text: `Owes you ${formatCents(theyOweCents)}`, tone: "positive" });
+    } else if (otherPairCount > 0) {
+      standingByGroup.set(gid, { text: `${otherPairCount} outstanding`, tone: "neutral" });
     }
   }
 
