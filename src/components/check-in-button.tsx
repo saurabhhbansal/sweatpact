@@ -2,6 +2,7 @@
 
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CheckinResponse = {
@@ -15,10 +16,15 @@ type CheckinResponse = {
 export function CheckInButton({
   onOptimistic,
   periodDayMode = false,
+  compact = false,
 }: {
   onOptimistic?: (status: "verified" | "unverified") => void;
   // When true, shows a period-specific congratulation message on success.
   periodDayMode?: boolean;
+  // When true, renders a circular tick button instead of the full-width text
+  // button. Must be placed directly inside a `flex flex-wrap` row: messages and
+  // the unverified-confirm panel use `basis-full` to wrap onto their own line.
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -113,7 +119,7 @@ export function CheckInButton({
         : "unknown distance";
 
     return (
-      <div className="animate-state-in space-y-3">
+      <div className={`animate-state-in space-y-3 ${compact ? "basis-full" : ""}`}>
         <p className="rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/80">
           You&apos;re outside your gym radius ({distanceLabel}). Submit anyway as an unverified
           check-in? It counts immediately, but whoever runs your challenge can reverse it.
@@ -132,6 +138,24 @@ export function CheckInButton({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <>
+        <Button
+          size="icon"
+          className="h-12 w-12 shrink-0"
+          aria-label="Check in now"
+          onClick={onPrimary}
+          disabled={busy}
+        >
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+        </Button>
+        {message ? <p role="status" aria-live="polite" className="basis-full animate-menu-in text-sm text-success">{message}</p> : null}
+        {error ? <p role="alert" aria-live="assertive" className="basis-full animate-menu-in text-sm text-destructive">{error}</p> : null}
+      </>
     );
   }
 
