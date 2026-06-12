@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getViewerProfile } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
+import { RefreshOnFocus } from "@/components/refresh-on-focus";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export default function TabsLayout({
 }) {
   return (
     <>
+      <RefreshOnFocus />
       <Suspense fallback={<TopNav />}>
         <TopBar />
       </Suspense>
