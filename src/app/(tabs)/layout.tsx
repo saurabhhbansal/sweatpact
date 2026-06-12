@@ -1,20 +1,20 @@
 import { Suspense, cache } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
 
 export const dynamic = "force-dynamic";
 
 // One fetch per request, shared by both nav slots below.
 const getNavProfile = cache(async () => {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("name, email, username")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
   if (!profile) redirect("/login");
   return profile;

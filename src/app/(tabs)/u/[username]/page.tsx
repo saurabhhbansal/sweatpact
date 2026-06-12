@@ -2,7 +2,7 @@ import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarCheck2, Flame, MapPin, Moon, Target, User, Users2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { areUsersInSameChallenge, computeProfileStats } from "@/lib/stats";
@@ -26,16 +26,16 @@ export default async function ProfilePage({
 }: {
   params: { username: string };
 }) {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   // Fetch viewer profile and target profile in parallel — they're independent.
   const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, username, timezone, onboarding_complete")
-      .eq("id", auth.user.id)
+      .eq("id", user.id)
       .single(),
     supabase
       .from("profiles")
@@ -154,7 +154,7 @@ export default async function ProfilePage({
   return (
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <section className="animate-fade-up-item flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
+        <section className="animate-fade-up-item flex flex-col items-center rounded-[2rem] glass-card p-6 text-center">
           {isOwner ? (
             <AvatarUpload
               userId={profile.id}
@@ -208,7 +208,7 @@ export default async function ProfilePage({
         ) : null}
 
         {!canSeeStats ? (
-          <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "60ms" } as React.CSSProperties}>
+          <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "60ms" } as React.CSSProperties}>
             <p className="text-base font-semibold text-white">Private profile</p>
             <p className="mt-1 text-sm text-white/55">
               This user keeps their stats private. Start a challenge together to see them.
@@ -224,7 +224,7 @@ export default async function ProfilePage({
         ) : stats ? (
           <>
             <section aria-label="Stats" className="animate-fade-up-item grid grid-cols-2 gap-3" style={{ "--stagger": "60ms" } as React.CSSProperties}>
-              <div className="col-span-2 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+              <div className="col-span-2 rounded-[2rem] glass-card p-5">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <Flame className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-xs uppercase tracking-[0.18em]">Week streak</p>
@@ -237,7 +237,7 @@ export default async function ProfilePage({
                 </div>
               </div>
 
-              <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+              <div className="rounded-[1.7rem] glass-card p-4">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-[10px] uppercase tracking-[0.16em]">This week</p>
@@ -266,7 +266,7 @@ export default async function ProfilePage({
                 </p>
               </div>
 
-              <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+              <div className="rounded-[1.7rem] glass-card p-4">
                 <div className="flex items-center gap-1.5 text-white/45">
                   <Users2 className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-[10px] uppercase tracking-[0.16em]">Challenges</p>
@@ -276,7 +276,7 @@ export default async function ProfilePage({
               </div>
             </section>
 
-            <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl" style={{ "--stagger": "120ms" } as React.CSSProperties}>
+            <section className="animate-fade-up-item rounded-[2rem] glass-card px-4 py-4" style={{ "--stagger": "120ms" } as React.CSSProperties}>
               <p className="mb-3 text-xs uppercase tracking-[0.2em] text-white/45">Activity</p>
               <CheckinStrip
                 today={today}
@@ -301,7 +301,7 @@ export default async function ProfilePage({
             </section>
 
             {gymNames.length > 0 ? (
-              <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
+              <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                 <div className="flex items-center gap-1.5 text-white/45">
                   <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                   <p className="text-xs uppercase tracking-[0.18em]">Gyms</p>
@@ -321,7 +321,7 @@ export default async function ProfilePage({
 
             {isOwner ? (
               <>
-                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
+                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <Target className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Weekly goal</p>
@@ -334,7 +334,7 @@ export default async function ProfilePage({
                   </div>
                 </section>
 
-                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
+                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <Moon className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Rest days</p>
@@ -347,7 +347,7 @@ export default async function ProfilePage({
                   </div>
                 </section>
 
-                <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "180ms" } as React.CSSProperties}>
+                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
                   <div className="flex items-center gap-1.5 text-white/45">
                     <User className="h-3.5 w-3.5" aria-hidden="true" />
                     <p className="text-xs uppercase tracking-[0.18em]">Gender</p>
@@ -390,7 +390,7 @@ function PeriodStatsCard({
 }) {
   if (stats.cyclesSampled === 0) {
     return (
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+      <section className="rounded-[2rem] glass-card p-5">
         <p className="text-base font-semibold text-white">Period</p>
         <p className="mt-2 text-sm text-white/55">
           No period days logged yet. Log them on the{" "}
@@ -424,7 +424,7 @@ function PeriodStatsCard({
               : `in ${stats.daysUntilPredicted} days`;
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card p-5">
       <p className="text-xs uppercase tracking-[0.18em] text-white/45">Period</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>

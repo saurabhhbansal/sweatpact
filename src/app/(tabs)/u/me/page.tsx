@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 
 export const dynamic = "force-dynamic";
 
 export default async function MyProfileRedirect() {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, onboarding_complete")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {

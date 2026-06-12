@@ -40,7 +40,7 @@ export function VisibilityToggle({
   }
 
   return (
-    <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+    <div className="rounded-[1.7rem] glass-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-white">Profile visibility</p>

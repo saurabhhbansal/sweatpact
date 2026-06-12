@@ -38,7 +38,7 @@ export function TodayActionCard({
   const todayStatus = overrideStatus ?? initialStatus;
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card p-4">
       {/* Keyed on status so a check-in or excuse visibly transforms the card
           instead of the content flickering in place. */}
       <div key={todayStatus} className="animate-state-in">

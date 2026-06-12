@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMembership, isManagerRole, normalizeRelation } from "@/lib/groups";
 import { formatCents } from "@/lib/money";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { AvatarStack } from "@/components/avatar";
 import { betterStatus } from "@/lib/challenge-view";
@@ -41,14 +41,14 @@ export default async function GroupPage({
 }: {
   params: { id: string };
 }) {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, username, onboarding_complete, timezone")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
@@ -58,7 +58,7 @@ export default async function GroupPage({
     redirect("/onboarding/schedule");
   }
 
-  const membership = await getMembership(supabase, auth.user.id, params.id);
+  const membership = await getMembership(supabase, user.id, params.id);
   if (!membership || !membership.group) {
     redirect("/groups");
   }
@@ -318,7 +318,7 @@ export default async function GroupPage({
 
         {/* Versus hero */}
         <section
-          className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl"
+          className="animate-fade-up-item rounded-[2rem] glass-card p-6"
           style={{ "--stagger": "50ms" } as React.CSSProperties}
         >
           <div className="flex items-stretch justify-between gap-2">
@@ -430,7 +430,7 @@ export default async function GroupPage({
         {/* Members — only for 3+ challenges (1-on-1 status lives in the hero) */}
         {memberSummaries.length > 2 ? (
           <section
-            className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl"
+            className="animate-fade-up-item rounded-[2rem] glass-card p-5"
             style={{ "--stagger": "200ms" } as React.CSSProperties}
           >
             <p className="mb-4 text-xs uppercase tracking-[0.18em] text-white/45">Members</p>

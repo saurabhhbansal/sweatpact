@@ -48,7 +48,7 @@ export function ChallengeVersusCard({
   return (
     <Link
       href={`/groups/${challengeId}`}
-      className="group block rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl transition duration-200 hover:border-white/20 hover:bg-white/[0.07] active:scale-[0.99]"
+      className="group block rounded-[2rem] glass-card p-5 transition duration-200 hover:bg-white/[0.07] active:scale-[0.99]"
     >
       {/* Two sides with a VS / with divider */}
       <div className="flex items-stretch justify-between gap-2">

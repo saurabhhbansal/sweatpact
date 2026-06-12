@@ -2,20 +2,20 @@ import type React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { X } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { NotificationsList, SentInvitations } from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, username, onboarding_complete")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
@@ -64,7 +64,7 @@ export default async function NotificationsPage() {
   return (
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="animate-fade-up-item rounded-[2rem] glass-card p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h1 className="text-base font-semibold text-white">Notifications</h1>
@@ -86,7 +86,7 @@ export default async function NotificationsPage() {
         </section>
 
         {sentWithTarget.length > 0 ? (
-          <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "80ms" } as React.CSSProperties}>
+          <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "80ms" } as React.CSSProperties}>
             <div className="mb-4">
               <h2 className="text-base font-semibold text-white">Sent challenges</h2>
               <p className="mt-1 text-sm text-white/55">

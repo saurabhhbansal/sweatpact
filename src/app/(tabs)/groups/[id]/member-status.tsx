@@ -115,7 +115,7 @@ export function MemberStatusAvatar({
                   return (
                     <div
                       key={c.id}
-                      className="flex items-center justify-between gap-3 rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-[1rem] glass-card px-3 py-2"
                     >
                       <div className="min-w-0">
                         <p className={`text-sm ${TONE_TEXT[ct.tone]}`}>{ct.label}</p>

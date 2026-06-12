@@ -141,7 +141,7 @@ export function CalendarLegend() {
   ];
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card px-5 py-4">
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
         Reading the calendar
       </p>
@@ -388,7 +388,7 @@ export function GroupCheckinStrip({
 
       {/* Day detail popup */}
       {selectedDay && (
-        <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 backdrop-blur-sm">
+        <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
           <p className="mb-2 text-[10px] uppercase tracking-wider text-white/35">
             {popupDate}
           </p>

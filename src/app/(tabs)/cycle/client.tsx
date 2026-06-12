@@ -177,7 +177,7 @@ function LogSection({
   const canEdit = !readonly && !isFuture;
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card px-5 py-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Log</p>
         {isPeriod && canEdit ? (
@@ -253,7 +253,7 @@ function NextPeriodHero({ stats }: { stats: PeriodStats }) {
     .join(" · ");
 
   return (
-    <section className="rounded-[2rem] border border-rose-500/20 bg-rose-500/[0.07] px-5 py-5 backdrop-blur-xl">
+    <section className="rounded-[2rem] border border-rose-500/20 bg-rose-500/[0.07] px-5 py-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-200/70">
@@ -342,7 +342,7 @@ function Highlights({
         {items.map((item) => (
           <div
             key={item.label}
-            className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+            className="rounded-[1.7rem] glass-card p-4"
           >
             <p className="text-xs uppercase tracking-[0.14em] text-white/50">{item.label}</p>
             <p className="mt-1 truncate text-xl font-bold text-white">{item.value}</p>
@@ -372,7 +372,7 @@ function Trends({
   if (durationBars.length < 1) return null;
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card px-5 py-4">
       <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Trends</p>
       <div className="space-y-5">
         {lengthBars.length >= 2 ? (

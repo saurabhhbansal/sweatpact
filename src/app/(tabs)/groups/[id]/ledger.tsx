@@ -52,7 +52,7 @@ export function LedgerButtons({
         <button
           type="button"
           onClick={() => setOpen("balances")}
-          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06] active:scale-[0.98]"
+          className="flex flex-col items-start gap-1 rounded-[1.4rem] glass-card px-4 py-3 text-left transition hover:bg-white/[0.06] active:scale-[0.98]"
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-white">
             <Wallet className="h-4 w-4" /> Balances
@@ -64,7 +64,7 @@ export function LedgerButtons({
         <button
           type="button"
           onClick={() => setOpen("activity")}
-          className="flex flex-col items-start gap-1 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-left backdrop-blur-xl transition hover:bg-white/[0.06] active:scale-[0.98]"
+          className="flex flex-col items-start gap-1 rounded-[1.4rem] glass-card px-4 py-3 text-left transition hover:bg-white/[0.06] active:scale-[0.98]"
         >
           <span className="flex items-center gap-2 text-sm font-semibold text-white">
             <Activity className="h-4 w-4" /> Recent activity
@@ -93,7 +93,7 @@ export function LedgerButtons({
               balances.map((b, i) => (
                 <div
                   key={i}
-                  className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
+                  className="rounded-[1rem] glass-card px-4 py-3"
                 >
                   <div className="text-sm text-white">
                     <span className="font-medium">{b.fromName}</span>
@@ -118,7 +118,7 @@ export function LedgerButtons({
                 {disputes.map((d, i) => (
                   <div
                     key={i}
-                    className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
+                    className="rounded-[1rem] glass-card px-4 py-3"
                   >
                     <p className="text-sm text-white">
                       {d.raisedByName} · {d.targetType}
@@ -163,7 +163,7 @@ export function LedgerButtons({
               activity.map((row) => (
                 <div
                   key={row.id}
-                  className="flex items-start justify-between gap-3 rounded-[1rem] border border-white/10 bg-white/[0.04] px-4 py-3"
+                  className="flex items-start justify-between gap-3 rounded-[1rem] glass-card px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white">

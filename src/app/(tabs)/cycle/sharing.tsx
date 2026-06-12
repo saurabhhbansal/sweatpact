@@ -116,7 +116,7 @@ export function PeriodSharingManager() {
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card px-5 py-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

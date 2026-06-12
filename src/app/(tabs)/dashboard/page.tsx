@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/money";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
@@ -28,14 +28,14 @@ export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   try {
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/login");
+    const supabase = getSupabaseRSC();
+    const user = await getAuthUser();
+    if (!user) redirect("/login");
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, username, onboarding_complete, timezone, created_at, weekly_goal, rest_days, gender")
-      .eq("id", auth.user.id)
+      .eq("id", user.id)
       .single();
 
     if (!profile) redirect("/login");
@@ -171,7 +171,7 @@ export default async function Dashboard() {
     return (
       <>
         <main className="container max-w-md flex min-h-[calc(100dvh-4.25rem)] flex-col gap-3 pb-[5.5rem] pt-3">
-          <section className="animate-fade-up-item shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+          <section className="animate-fade-up-item shrink-0 rounded-[2rem] glass-card px-4 py-3">
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-white/45">This week</p>
@@ -201,7 +201,7 @@ export default async function Dashboard() {
           </section>
 
           <section
-            className="animate-fade-up-item flex min-h-0 flex-1 flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 text-center backdrop-blur-xl"
+            className="animate-fade-up-item flex min-h-0 flex-1 flex-col items-center justify-center rounded-[2rem] glass-card px-5 py-4 text-center"
             style={{ "--stagger": "60ms" } as React.CSSProperties}
           >
             <div className="relative mb-3 h-40 w-40">
@@ -238,7 +238,7 @@ export default async function Dashboard() {
             className="animate-fade-up-item shrink-0 grid grid-cols-2 gap-3"
             style={{ "--stagger": "180ms" } as React.CSSProperties}
           >
-            <div className={`rounded-[1.7rem] border p-3 backdrop-blur-xl ${totalOwes > 0 ? "border-red-500/20 bg-red-500/[0.04]" : "border-white/10 bg-white/[0.04]"}`}>
+            <div className={`rounded-[1.7rem] glass-card p-3 ${totalOwes > 0 ? "bg-red-500/[0.06]" : ""}`}>
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">You owe</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
               <p className="mt-1 text-xs text-white/45">
@@ -249,7 +249,7 @@ export default async function Dashboard() {
                     : `to ${owesPeopleCount} people`}
               </p>
             </div>
-            <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl">
+            <div className="rounded-[1.7rem] glass-card p-3">
               <p className="text-xs uppercase tracking-[0.14em] text-white/55">Owed to you</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
               <p className="mt-1 text-xs text-white/45">
@@ -280,7 +280,7 @@ export default async function Dashboard() {
     console.error("Dashboard render failed", error);
     return (
       <main className="container max-w-md py-10">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="rounded-[2rem] glass-card p-5">
           <h1 className="text-base font-semibold text-white">Couldn&apos;t load dashboard</h1>
           <p className="mt-1 text-sm text-white/55">
             Please refresh. If it still fails, open Settings and save your timezone.

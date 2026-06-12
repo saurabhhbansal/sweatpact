@@ -61,7 +61,7 @@ export function UserSearch({
       {busy && query.trim().length >= 2 ? (
         <p className="mt-2 text-xs text-white/45">Searching…</p>
       ) : results.length > 0 ? (
-        <ul className="mt-2 divide-y divide-white/10 overflow-hidden rounded-[1.4rem] border border-white/10 bg-card/55 backdrop-blur-xl">
+        <ul className="mt-2 divide-y divide-white/10 overflow-hidden rounded-[1.4rem] glass-card">
           {results.map((user) => (
             <li key={user.id}>
               <Link

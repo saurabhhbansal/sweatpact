@@ -24,7 +24,6 @@ import {
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/browser";
 import { SweatPactSeal } from "@/components/sweatpact-seal";
-import { useLiquidGlass } from "@/components/liquid-glass-filter";
 
 type NavLink = {
   href: string;
@@ -53,12 +52,7 @@ export function MobileNav({ username }: { username?: string }) {
     return window.localStorage.getItem("sp_gender");
   });
 
-  // Liquid glass — separate filter per element so sizes are measured correctly
-  const pillRef  = useRef<HTMLDivElement>(null);
-  const cycleRef = useRef<HTMLAnchorElement>(null);
   const indicatorRef = useRef<HTMLSpanElement>(null);
-  useLiquidGlass(pillRef,  { borderRadius: 30 }); // rounded-[1.9rem] ≈ 30 px
-  useLiquidGlass(cycleRef);                        // rounded-full → infers R = H/2
 
   useEffect(() => {
     let cancelled = false;
@@ -117,10 +111,7 @@ export function MobileNav({ username }: { username?: string }) {
       <div className="container mx-auto flex max-w-md items-center gap-2">
 
         {/* ── Main 3-tab pill ────────────────────────────────────────────── */}
-        <div
-          ref={pillRef}
-          className="relative grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.10]"
-        >
+        <div className="relative grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.10]">
           {/* Sliding active-tab indicator — one column wide, inset to match p-1. */}
           <span
             ref={indicatorRef}
@@ -161,7 +152,6 @@ export function MobileNav({ username }: { username?: string }) {
         {/* ── Cycle circle — female users only ──────────────────────────── */}
         {gender === "female" && (
           <Link
-            ref={cycleRef}
             href="/cycle"
             aria-current={cycleActive ? "page" : undefined}
             className={cn(
@@ -194,8 +184,6 @@ export function TopNav({
   username?: string | null;
 }) {
   const [unread, setUnread] = useState(0);
-  const navRef = useRef<HTMLDivElement>(null);
-  useLiquidGlass(navRef, { borderRadius: 29 }); // rounded-[1.8rem] ≈ 29 px
 
   useEffect(() => {
     let cancelled = false;
@@ -229,10 +217,7 @@ export function TopNav({
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3">
-      <div
-        ref={navRef}
-        className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]"
-      >
+      <div className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]">
         <Link
           href="/dashboard"
           aria-label="SweatPact — go to dashboard"

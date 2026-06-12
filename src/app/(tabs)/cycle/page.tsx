@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { computePeriodStats } from "@/lib/period-stats";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,14 +10,14 @@ export const dynamic = "force-dynamic";
 
 export default async function CyclePage() {
   try {
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) redirect("/login");
+    const supabase = getSupabaseRSC();
+    const user = await getAuthUser();
+    if (!user) redirect("/login");
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, username, onboarding_complete, gender, timezone")
-      .eq("id", auth.user.id)
+      .eq("id", user.id)
       .single();
     if (!profile) redirect("/login");
 
@@ -75,7 +75,7 @@ export default async function CyclePage() {
     console.error("Cycle page render failed", error);
     return (
       <main className="container max-w-md py-10">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="rounded-[2rem] glass-card p-5">
           <h1 className="text-base font-semibold text-white">Couldn&apos;t load your cycle</h1>
           <p className="mt-1 text-sm text-white/55">
             Please refresh. If it still fails, open Settings and save your timezone.
