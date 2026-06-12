@@ -56,6 +56,7 @@ export function MobileNav({ username }: { username?: string }) {
   // Liquid glass — separate filter per element so sizes are measured correctly
   const pillRef  = useRef<HTMLDivElement>(null);
   const cycleRef = useRef<HTMLAnchorElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
   useLiquidGlass(pillRef,  { borderRadius: 30 }); // rounded-[1.9rem] ≈ 30 px
   useLiquidGlass(cycleRef);                        // rounded-full → infers R = H/2
 
@@ -82,6 +83,31 @@ export function MobileNav({ username }: { username?: string }) {
   const links = buildLinks(username);
   const cycleActive = pathname?.startsWith("/cycle");
 
+  // Which of the three tabs is active (−1 when on a non-tab route, e.g. /cycle).
+  const activeIndex = links.findIndex((link) =>
+    link.matchPrefix
+      ? pathname?.startsWith(link.matchPrefix)
+      : pathname === link.href || pathname?.startsWith(`${link.href}/`)
+  );
+
+  // Slide the indicator between tabs, stretching from the trailing edge toward
+  // the direction of travel. Stretch runs on the independent `scale` property
+  // so it composes with the `translate` slide instead of fighting it. (The
+  // slide is only visible while the nav stays mounted across routes.)
+  const prevIndexRef = useRef(activeIndex);
+  useEffect(() => {
+    const prev = prevIndexRef.current;
+    const el = indicatorRef.current;
+    if (el && prev !== activeIndex && prev >= 0 && activeIndex >= 0) {
+      el.style.transformOrigin = activeIndex > prev ? "left" : "right";
+      el.animate?.(
+        [{ scale: "1 1" }, { scale: "1.18 1" }, { scale: "1 1" }],
+        { duration: 440, easing: "ease" }
+      );
+    }
+    prevIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 px-3"
@@ -92,12 +118,21 @@ export function MobileNav({ username }: { username?: string }) {
         {/* ── Main 3-tab pill ────────────────────────────────────────────── */}
         <div
           ref={pillRef}
-          className="grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.10]"
+          className="relative grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.10]"
         >
-          {links.map((link) => {
-            const active = link.matchPrefix
-              ? pathname?.startsWith(link.matchPrefix)
-              : pathname === link.href || pathname?.startsWith(`${link.href}/`);
+          {/* Sliding active-tab indicator — one column wide, inset to match p-1. */}
+          <span
+            ref={indicatorRef}
+            aria-hidden="true"
+            className="glass-pill pointer-events-none absolute bottom-1 left-1 top-1 z-0 rounded-[1.4rem]"
+            style={{
+              width: "calc((100% - 0.5rem) / 3)",
+              translate: `calc(${Math.max(activeIndex, 0)} * 100%) 0`,
+              opacity: activeIndex < 0 ? 0 : 1,
+            }}
+          />
+          {links.map((link, i) => {
+            const active = i === activeIndex;
             const Icon = link.icon;
             return (
               <Link
@@ -106,13 +141,14 @@ export function MobileNav({ username }: { username?: string }) {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
-                  "flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                  active
-                    ? "bg-white/[0.18] text-white"
-                    : "text-white/50 hover:bg-white/[0.08] hover:text-white/85"
+                  "group relative z-10 flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+                  active ? "text-white" : "text-white/55 hover:text-[#03d5ff]"
                 )}
               >
-                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                <Icon
+                  className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110"
+                  aria-hidden="true"
+                />
                 <span className={cn("font-medium", active && "font-semibold")}>
                   {link.label}
                 </span>
