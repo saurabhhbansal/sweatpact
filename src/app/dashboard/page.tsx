@@ -180,8 +180,6 @@ export default async function Dashboard() {
       <>
         <TopNav name={topName} username={profile.username} />
         <main className="container max-w-md flex h-[calc(100dvh-4.25rem)] flex-col gap-3 overflow-hidden pb-[5.5rem] pt-3">
-          <PushPermissionPrompt compact />
-
           <section className="animate-fade-up-item shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <div>
@@ -206,6 +204,9 @@ export default async function Dashboard() {
               history={[...(dailyHistory ?? []), { local_day: today, status: todayStatus }]}
               restDays={restDays}
             />
+            <div className="mt-2">
+              <PushPermissionPrompt compact />
+            </div>
           </section>
 
           <section
