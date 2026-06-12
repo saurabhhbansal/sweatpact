@@ -33,7 +33,7 @@ export default async function ChallengesPage() {
 
   const { data: profile } = await supa
     .from("profiles")
-    .select("id, name, email, username, timezone, avatar_url, onboarding_complete")
+    .select("id, name, username, timezone, avatar_url, onboarding_complete")
     .eq("id", auth.user.id)
     .single();
 

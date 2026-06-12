@@ -14,7 +14,7 @@ export default async function NotificationsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, name, email, username, onboarding_complete")
+    .select("id, username, onboarding_complete")
     .eq("id", auth.user.id)
     .single();
   if (!profile) redirect("/login");

@@ -16,7 +16,7 @@ export default async function CyclePage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, username, onboarding_complete, gender, timezone, name, email")
+      .select("id, username, onboarding_complete, gender, timezone")
       .eq("id", auth.user.id)
       .single();
     if (!profile) redirect("/login");

@@ -47,7 +47,7 @@ export default async function GroupPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, onboarding_complete, timezone, name, email")
+    .select("id, username, onboarding_complete, timezone")
     .eq("id", auth.user.id)
     .single();
   if (!profile) redirect("/login");

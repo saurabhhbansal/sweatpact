@@ -34,7 +34,7 @@ export default async function ProfilePage({
   const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, name, email, username, timezone, onboarding_complete")
+      .select("id, username, timezone, onboarding_complete")
       .eq("id", auth.user.id)
       .single(),
     supabase
