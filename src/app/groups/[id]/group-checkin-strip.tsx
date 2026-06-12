@@ -198,7 +198,10 @@ export function GroupCheckinStrip({
     const dow = new Date(day).getUTCDay();
     const member = members.find((m) => m.userId === userId);
     if (member?.restDays.includes(dow)) return "rest_day";
-    return "pending";
+    // "missed" is derived at read time, not stored: a past day with no check-in
+    // and no rest-day exemption is a miss. Today stays "pending" — still time
+    // to check in. Mirrors the dashboard/profile strip (checkin-strip.tsx).
+    return day < today ? "missed" : "pending";
   }
 
   function handleDayClick(day: string) {
