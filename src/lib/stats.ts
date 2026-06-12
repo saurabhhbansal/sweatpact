@@ -91,17 +91,15 @@ export async function computeProfileStats(
   }
   const totalCheckins = totalGymDays;
 
-  const currentWeekMonday = isoWeekMonday(today);
-  const weekCheckins = new Map<string, number>();
-  for (const [day, status] of statusByDay) {
-    if (!shouldCountTowardStreak(status)) continue;
-    const mon = isoWeekMonday(day);
-    weekCheckins.set(mon, (weekCheckins.get(mon) ?? 0) + 1);
-  }
-
   const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal);
 
-  const thisWeekCheckins = weekCheckins.get(currentWeekMonday) ?? 0;
+  const currentWeekMonday = isoWeekMonday(today);
+  let thisWeekCheckins = 0;
+  for (const [day, status] of statusByDay) {
+    if (shouldCountTowardStreak(status) && isoWeekMonday(day) === currentWeekMonday) {
+      thisWeekCheckins++;
+    }
+  }
 
   const history = [...statusByDay.entries()].map(([local_day, status]) => ({
     local_day,

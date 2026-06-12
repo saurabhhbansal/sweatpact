@@ -4,13 +4,6 @@ import { localDay, normalizeTimeZone } from "@/lib/time";
 import { isoWeekMonday } from "@/lib/derived-status";
 import type { CheckinStatus, DailyStatus } from "@/lib/types";
 
-const EXCUSED_STATUSES = new Set<CheckinStatus>([
-  "sick_day",
-  "gym_closed",
-  "rest_day",
-  "period_day",
-]);
-
 const ACTIVE_STATUSES = new Set<CheckinStatus>([
   "verified",
   "unverified",

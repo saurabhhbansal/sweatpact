@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
+import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { listUserMemberships } from "@/lib/groups";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -33,7 +34,6 @@ const FLOW_RANK: Record<Flow, number> = {
   unspecified: 1,
 };
 
-const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
 const WINDOW_DAYS = 60;
 
 export async function POST(req: NextRequest) {
