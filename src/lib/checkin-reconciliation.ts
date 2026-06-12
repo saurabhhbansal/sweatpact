@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { localDay, normalizeTimeZone } from "@/lib/time";
+import { isoWeekMonday } from "@/lib/derived-status";
 import type { CheckinStatus, DailyStatus } from "@/lib/types";
 
 const EXCUSED_STATUSES = new Set<CheckinStatus>([
@@ -19,7 +20,7 @@ const ACTIVE_STATUSES = new Set<CheckinStatus>([
   "period_day",
 ]);
 
-type CheckinRow = {
+export type CheckinRow = {
   id: string;
   submission_id: string;
   group_id: string | null;
@@ -27,14 +28,14 @@ type CheckinRow = {
   occurred_at: string;
 };
 
-function splitCentsEvenly(total: number, n: number): number[] {
+export function splitCentsEvenly(total: number, n: number): number[] {
   if (n <= 0 || total <= 0) return [];
   const base = Math.floor(total / n);
   const remainder = total - base * n;
   return Array.from({ length: n }, (_, index) => base + (index < remainder ? 1 : 0));
 }
 
-function deriveStatus(checkins: CheckinRow[]): {
+export function deriveStatus(checkins: CheckinRow[]): {
   status: DailyStatus;
   checkinId: string | null;
   submissionId: string | null;
@@ -92,7 +93,7 @@ function deriveStatus(checkins: CheckinRow[]): {
 }
 
 // A day is closed once its midnight has passed in the user's timezone — no cutoff needed.
-function isClosedDay(day: string, now: Date, timezone: string): boolean {
+export function isClosedDay(day: string, now: Date, timezone: string): boolean {
   return day < localDay(now, timezone);
 }
 
@@ -325,17 +326,9 @@ export async function reconcileUserDay(
   };
 }
 
-// Compute the ISO week Monday for a YYYY-MM-DD string.
-function weekMonday(day: string): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const dow = (date.getUTCDay() + 6) % 7; // 0=Mon, 6=Sun
-  date.setUTCDate(date.getUTCDate() - dow);
-  const yy = date.getUTCFullYear();
-  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(date.getUTCDate()).padStart(2, "0");
-  return `${yy}-${mm}-${dd}`;
-}
+// ISO week Monday — shared with the dashboard/profile streak math so the
+// weekly enforcement and the displayed streak can never use different weeks.
+const weekMonday = isoWeekMonday;
 
 // Called once per week (after Sunday ends) to create obligations if the weekly
 // goal was not met. Uses weekEndDay (Sunday) as the anchor date.

@@ -1,18 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
-
-function shouldCountTowardStreak(status: string) {
-  return status === "verified" || status === "unverified";
-}
-
-function isoWeekMonday(day: string): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const dow = (date.getUTCDay() + 6) % 7;
-  date.setUTCDate(date.getUTCDate() - dow);
-  return date.toISOString().slice(0, 10);
-}
+import {
+  EXCUSED_STATUSES,
+  computeWeekStreak,
+  isoWeekMonday,
+  shouldCountTowardStreak,
+} from "@/lib/derived-status";
 
 export type ProfileStats = {
   weekStreak: number;
@@ -107,20 +99,7 @@ export async function computeProfileStats(
     weekCheckins.set(mon, (weekCheckins.get(mon) ?? 0) + 1);
   }
 
-  const sortedWeekMondays = [
-    ...new Set([...statusByDay.keys()].map(isoWeekMonday)),
-  ].sort((a, b) => b.localeCompare(a));
-
-  let weekStreak = 0;
-  for (const mon of sortedWeekMondays) {
-    const count = weekCheckins.get(mon) ?? 0;
-    const isCurrentWeek = mon === currentWeekMonday;
-    if (count >= weeklyGoal) {
-      weekStreak++;
-    } else if (!isCurrentWeek) {
-      break;
-    }
-  }
+  const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal);
 
   const thisWeekCheckins = weekCheckins.get(currentWeekMonday) ?? 0;
 
