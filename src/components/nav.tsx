@@ -165,13 +165,16 @@ export function MobileNav({ username }: { username?: string }) {
             aria-current={cycleActive ? "page" : undefined}
             className={cn(
               // Outer height matches the pill (3.25rem content + 2×4px p-1 ≈ 3.75rem)
-              "flex h-[3.75rem] w-[3.75rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full glass-liquid transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              "group flex h-[3.75rem] w-[3.75rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full glass-liquid transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               cycleActive
-                ? "bg-white/[0.16] text-white"
-                : "bg-white/[0.08] text-white/50 hover:bg-white/[0.12] hover:text-white/85"
+                ? "glass-pill text-white"
+                : "bg-white/[0.08] text-white/55 hover:text-[#03d5ff]"
             )}
           >
-            <Droplet className="h-[18px] w-[18px]" aria-hidden="true" />
+            <Droplet
+              className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110"
+              aria-hidden="true"
+            />
             <span className={cn("text-[11px] font-medium", cycleActive && "font-semibold")}>
               Cycle
             </span>
@@ -241,9 +244,9 @@ export function TopNav({
           <Link
             href="/notifications"
             aria-label={unread > 0 ? `Notifications — ${unread} unread` : "Notifications"}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition-colors hover:text-[#03d5ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            <Bell className="h-[18px] w-[18px]" />
+            <Bell className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
             {unread > 0 && (
               <span
                 aria-hidden="true"
@@ -261,7 +264,7 @@ export function TopNav({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs text-white/70 transition hover:bg-white/[0.06] hover:text-white"
+                  className="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs text-white/70 transition-colors hover:text-[#03d5ff]"
                 >
                   <span className="max-w-[7rem] truncate">{name}</span>
                   <ChevronDown className="h-3.5 w-3.5" />
