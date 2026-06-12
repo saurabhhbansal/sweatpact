@@ -43,17 +43,11 @@ export function TodayActionCard({
           instead of the content flickering in place. */}
       <div key={todayStatus} className="animate-state-in">
       {todayStatus === "pending" && isTodayRestDay ? (
-        <div className="py-2 text-center">
-          <p className="text-lg font-semibold text-white">Scheduled rest day</p>
-          <p className="mt-1 text-sm text-white/55">
-            You set this in your weekly schedule. Going anyway still counts.
-          </p>
-          <div className="mt-4">
+        <div className="flex items-center gap-3">
+          <p className="flex-1 text-sm text-white/60">Rest day · going still counts</p>
+          <div className="w-36 shrink-0">
             <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
           </div>
-          <Link href="/settings" className="mt-3 inline-block text-xs text-white/55 underline">
-            Change rest days
-          </Link>
         </div>
       ) : todayStatus === "pending" ? (
         <div className="space-y-3">
