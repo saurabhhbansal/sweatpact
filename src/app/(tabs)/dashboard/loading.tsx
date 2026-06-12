@@ -6,7 +6,7 @@ function Skel({ className }: { className?: string }) {
 export default function DashboardLoading() {
   return (
     <>
-      <main className="container max-w-md flex h-[calc(100dvh-4.25rem)] flex-col gap-3 overflow-hidden pb-[5.5rem] pt-3">
+      <main className="container max-w-md flex min-h-[calc(100dvh-3.5rem-max(env(safe-area-inset-top),0.75rem))] flex-col gap-3 pb-[calc(4.25rem+max(env(safe-area-inset-bottom),20px))] pt-3">
         <Skel className="h-[6.5rem] shrink-0 rounded-[2rem]" />
         <Skel className="min-h-[11rem] flex-1 rounded-[2rem]" />
         <Skel className="h-[6.5rem] shrink-0 rounded-[2rem]" />
