@@ -26,6 +26,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Required for env(safe-area-inset-*) to be non-zero on notched iPhones —
+  // the bottom nav pads itself with safe-area-inset-bottom.
+  viewportFit: "cover",
   themeColor: "#000000",
 };
 

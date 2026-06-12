@@ -89,7 +89,7 @@ export function InstallGate({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Install card */}
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
+        <div className="rounded-[2rem] glass-card p-6">
           {platform === "ios" ? (
             <div className="space-y-5">
               <p className="text-base font-semibold text-white">Add to your Home Screen</p>

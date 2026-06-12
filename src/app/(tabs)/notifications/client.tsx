@@ -66,7 +66,7 @@ export function SentInvitations({ initial }: { initial: SentInvitation[] }) {
                   {formatCents(inv.penalty_cents)}/week · {timeAgo(inv.created_at)}
                 </p>
                 {inv.message ? (
-                  <p className="mt-1.5 rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs italic text-white/70">
+                  <p className="mt-1.5 rounded-[1rem] glass-card px-3 py-2 text-xs italic text-white/70">
                     &ldquo;{inv.message}&rdquo;
                   </p>
                 ) : null}
@@ -267,7 +267,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
                   {amountCents != null ? ` for ${formatCents(amountCents)}/week` : ""}.
                 </p>
                 {message ? (
-                  <p className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs italic text-white/70">
+                  <p className="rounded-[1rem] glass-card px-3 py-2 text-xs italic text-white/70">
                     &ldquo;{message}&rdquo;
                   </p>
                 ) : null}

@@ -225,7 +225,7 @@ export function InviteSection({
 
   if (selected) {
     return (
-      <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+      <div className="space-y-3 rounded-[1.4rem] glass-card p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-white">{selected.name || `@${selected.username}`}</p>
@@ -506,7 +506,7 @@ export function GroupManagerMenu({
               When on, members get a notification whenever someone in this group checks in.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-5 flex items-start justify-between gap-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+          <div className="mt-5 flex items-start justify-between gap-3 rounded-[1.4rem] glass-card p-4">
             <div className="min-w-0">
               <p className="text-sm font-medium text-white">Notify on check-ins</p>
               <p className="mt-0.5 text-xs text-white/55">Applies to everyone in this challenge.</p>

@@ -117,7 +117,7 @@ export function ProgressSection({
   for (const r of periodRecords) flowByDay.set(r.local_day, r.flow_level);
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-4 backdrop-blur-xl">
+    <section className="rounded-[2rem] glass-card px-4 py-4">
       {calendarOnly ? (
         <p className="mb-1 text-xs uppercase tracking-[0.2em] text-white/45">Calendar</p>
       ) : (

@@ -36,6 +36,8 @@
   --glass-reflex-light: 0.3;
   --glass-reflex-dark: 2;
   --saturation: 150%;
+  /* iOS-bar-strength blur for surfaces floating over scrolling content. */
+  --glass-blur: 28px;
 }
 
 * {
@@ -48,6 +50,8 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
   overscroll-behavior: none;
+  /* Kill the gray tap flash on iOS — native apps never show it. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -250,21 +254,16 @@ body {
 
 /* ─── Liquid glass ────────────────────────────────────────────────────────────
  *
- * A two-tier glass treatment:
- *
- *   1. All browsers  – backdrop blur + saturation plus a stacked box-shadow
- *      bevel (inset light highlights, dark inset/outer shadows) weighted by
- *      the --glass-reflex-* variables.  Background tint stays in sibling
- *      Tailwind bg-white/* classes.
- *
- *   2. Chromium only – useLiquidGlass() hook generates a physics-based SVG
- *      displacement filter (Snell-law refraction at edges + specular overlay)
- *      and exposes it via --glass-filter-url.  @supports swaps the backdrop
- *      filter to the SVG variant when available.
+ * Heavy backdrop blur + saturation (GPU-composited on every platform) plus a
+ * stacked box-shadow bevel (inset light highlights, dark inset/outer shadows)
+ * weighted by the --glass-reflex-* variables.  Background tint stays in
+ * sibling Tailwind bg-white/* classes.  Reserved for surfaces that float over
+ * scrolling content (bars, menus, dialogs) — static cards on the black canvas
+ * use .glass-card, which skips backdrop-filter entirely.
  */
 .glass-liquid {
-  backdrop-filter: blur(8px) saturate(var(--saturation));
-  -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--saturation));
   /* Beveled glass edge: stacked inset highlights (light) + inset/outer shadows
      (dark), weighted by the --glass-reflex-* multipliers. */
   box-shadow:
@@ -280,12 +279,23 @@ body {
     0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
 }
 
-/* Chromium: upgrade to SVG displacement filter when hook has injected it.
-   The filter carries its own blur + saturation, so no CSS blur is added. */
-@supports (backdrop-filter: url(x)) {
-  .glass-liquid {
-    backdrop-filter: var(--glass-filter-url, blur(8px) saturate(var(--saturation)));
-    -webkit-backdrop-filter: var(--glass-filter-url, blur(8px) saturate(var(--saturation)));
+/* Static glass card: the same bevel language as the bars, but no
+   backdrop-filter — cards sit on the solid black canvas, so a blur has nothing
+   to sample and only costs GPU bandwidth. Replaces the old
+   `border border-white/10 bg-white/[0.04] backdrop-blur-*` recipe.
+   Lives in the components layer so sibling utilities (hover:bg-white/*, …)
+   still override its background. */
+@layer components {
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.045);
+    /* Plain ring fallback for browsers without color-mix. */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 65%), transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 50%), transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 14%), transparent),
+      0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
   }
 }
 
@@ -305,6 +315,8 @@ body {
     inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
     0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
   transition: translate 400ms cubic-bezier(1, 0, 0.4, 1), opacity 200ms ease;
+  /* Keep the slide on its own compositor layer. */
+  will-change: translate;
 }
 
 @media (prefers-reduced-motion: reduce) {

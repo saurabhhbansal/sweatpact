@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { betterStatus } from "@/lib/challenge-view";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { formatCents } from "@/lib/money";
 import { UserSearch } from "@/components/user-search";
@@ -27,14 +27,14 @@ function displayName(p: MemberProfileRow | null): string {
 }
 
 export default async function ChallengesPage() {
-  const supa = createClient();
-  const { data: auth } = await supa.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supa = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supa
     .from("profiles")
     .select("id, name, username, timezone, avatar_url, onboarding_complete")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/login");
@@ -46,7 +46,7 @@ export default async function ChallengesPage() {
   }
 
   const today = localDay(new Date(), normalizeTimeZone(profile.timezone));
-  const memberships = await listUserMemberships(supa, auth.user.id);
+  const memberships = await listUserMemberships(supa, user.id);
   const groupIds = memberships.map((m) => m.group_id);
 
   const [
@@ -165,7 +165,7 @@ export default async function ChallengesPage() {
         <div className="space-y-3">
           {memberships.length === 0 ? (
             <div
-              className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl"
+              className="animate-fade-up-item rounded-[2rem] glass-card p-6 text-center"
               style={{ "--stagger": "50ms" } as React.CSSProperties}
             >
               <p className="text-base font-semibold text-white">No challenges yet</p>
@@ -218,7 +218,7 @@ export default async function ChallengesPage() {
 
         {/* New-challenge search — below the daily view */}
         <section
-          className="animate-fade-up-item rounded-[1.7rem] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl"
+          className="animate-fade-up-item rounded-[1.7rem] glass-card p-4"
           style={{ "--stagger": "150ms" } as React.CSSProperties}
         >
           <p className="mb-2 text-xs uppercase tracking-[0.18em] text-white/45">

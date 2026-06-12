@@ -15,7 +15,7 @@ export default function SettingsLoading() {
   return (
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+        <section className="rounded-[2rem] glass-card p-5">
           {/* Title */}
           <div className="mb-5 space-y-1.5">
             <Skel className="h-5 w-24 rounded-full" />

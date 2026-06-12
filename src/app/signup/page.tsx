@@ -63,7 +63,7 @@ export default function SignupPage() {
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">Create account</h1>
           <p className="mt-2 text-sm text-white/55">Set up your profile, then start wiring up your groups.</p>
         </div>
-        <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl" style={{ "--stagger": "80ms" } as React.CSSProperties}>
+        <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "80ms" } as React.CSSProperties}>
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>

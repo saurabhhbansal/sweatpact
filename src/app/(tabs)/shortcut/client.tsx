@@ -529,19 +529,19 @@ function Wizard({
             alt={step.screenshotAlt}
             highlights={step.highlights}
           />
-          <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+          <div className="space-y-3 rounded-[1.4rem] glass-card p-4">
             <p className="text-xs uppercase tracking-[0.16em] text-white/45">Paste these when prompted</p>
             <CopyField label="User ID" value={step.action.userId} />
             <CopyField label="Secret Key" value={step.action.webhookSecret} hidden />
           </div>
         </>
       ) : step.action?.type === "credentials" && !step.screenshot ? (
-        <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+        <div className="space-y-3 rounded-[1.4rem] glass-card p-4">
           <CopyField label="User ID" value={step.action.userId} />
           <CopyField label="Secret Key" value={step.action.webhookSecret} hidden />
         </div>
       ) : step.action?.type === "rotate" ? (
-        <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+        <div className="space-y-3 rounded-[1.4rem] glass-card p-4">
           <p className="text-xs font-medium text-white/70">Secret Key</p>
           <p className="text-xs text-white/45">
             Rotate it if it ever leaks. Your Shortcut will need to be
@@ -597,7 +597,7 @@ export function ShortcutSetup({
   return (
     <div className="space-y-6">
       {isFemale ? (
-        <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-1">
+        <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] glass-card p-1">
           {(["gym", "period"] as const).map((t) => (
             <button
               key={t}

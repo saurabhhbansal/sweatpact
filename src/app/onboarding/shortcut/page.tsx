@@ -60,7 +60,7 @@ export default async function ShortcutOnboarding() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+            <div className="space-y-3 rounded-[1.4rem] glass-card p-4">
               <p className="text-xs text-white/50">
                 Copy these — the Shortcut will ask for them on install.
               </p>

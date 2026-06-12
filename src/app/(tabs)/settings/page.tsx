@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { SettingsForm } from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  const supabase = getSupabaseRSC();
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, username, onboarding_complete, name, email, gender, notify_unverified_checkin, notify_rest_day, notify_cycle_share")
-    .eq("id", auth.user.id)
+    .eq("id", user.id)
     .single();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
@@ -49,7 +49,7 @@ export default async function SettingsPage() {
   return (
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="animate-fade-up-item rounded-[2rem] glass-card p-5">
           <div className="mb-5">
             <h1 className="text-base font-semibold text-white">Settings</h1>
             <p className="mt-1 text-sm text-white/55">Tune your accountability rules.</p>

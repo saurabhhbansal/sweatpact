@@ -87,7 +87,7 @@ export function GymsSection({ initialGyms }: { initialGyms: Gym[] }) {
       {gyms.map((gym) => (
         <div
           key={gym.id}
-          className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3"
+          className="rounded-[1.4rem] glass-card p-3"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -265,7 +265,7 @@ function AddGymForm({
   }
 
   return (
-    <div className="space-y-2 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
+    <div className="space-y-2 rounded-[1.4rem] glass-card p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-white">Add a gym</p>
         <button
