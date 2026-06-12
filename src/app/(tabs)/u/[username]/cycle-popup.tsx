@@ -50,7 +50,10 @@ export function CycleDataPopup({
       {open && mounted
         ? createPortal(
             <div className="fixed inset-0 z-[100] flex flex-col bg-black/90 backdrop-blur-xl">
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/60 px-4 py-4 backdrop-blur-xl">
+              <div
+                className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/60 px-4 pb-4 backdrop-blur-xl"
+                style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
+              >
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.18em] text-white/45">Cycle data</p>
                   <p className="truncate text-base font-semibold text-white">{targetName}</p>
@@ -64,7 +67,10 @@ export function CycleDataPopup({
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto px-4 py-5">
+              <div
+                className="flex-1 overflow-y-auto px-4 pt-5"
+                style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+              >
                 <div className="mx-auto max-w-md">
                   <CycleView today={today} stats={stats} records={records} readonly />
                 </div>

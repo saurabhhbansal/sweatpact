@@ -216,7 +216,10 @@ export function TopNav({
   }
 
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3">
+    <header
+      className="sticky top-0 z-40 px-3"
+      style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}
+    >
       <div className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]">
         <Link
           href="/dashboard"
