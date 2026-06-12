@@ -71,10 +71,6 @@ export default async function ProfilePage({
 
   // Fetch stats, gym names, and period-sharing permission in parallel — they
   // all depend only on canSeeStats / profile fields already resolved above.
-  const cutoff6mo = new Date();
-  cutoff6mo.setUTCMonth(cutoff6mo.getUTCMonth() - 6);
-  const cutoff6moKey = cutoff6mo.toISOString().slice(0, 10);
-
   const [stats, gymNames, periodShareRow] = await Promise.all([
     // daily_status has a self-only RLS policy and checkin_events requires
     // same-group membership, so viewing another user's profile with the
@@ -113,18 +109,6 @@ export default async function ProfilePage({
   ]);
 
   const canSeePeriod = isOwner || periodShareRow != null;
-
-  // Period stats — owner-only, gender-gated (last ~6 months).
-  let periodStats: ReturnType<typeof computePeriodStats> | null = null;
-  if (isOwner && profile.gender === "female") {
-    const { data: periodRecords } = await supabase
-      .from("period_records")
-      .select("local_day, flow_level")
-      .eq("user_id", profile.id)
-      .gte("local_day", cutoff6moKey)
-      .order("local_day", { ascending: true });
-    periodStats = computePeriodStats(periodRecords ?? [], today);
-  }
 
   // Build the read-only cycle popup data for an authorised non-owner viewer.
   // Uses the admin client because viewer RLS doesn't cover another user's rows.
@@ -361,8 +345,6 @@ export default async function ProfilePage({
               </>
             ) : null}
 
-            {periodStats ? <PeriodStatsCard stats={periodStats} /> : null}
-
             {isOwner ? (
               <VisibilityToggle
                 initial={(profile.profile_visibility as "public" | "private") ?? "public"}
@@ -375,103 +357,3 @@ export default async function ProfilePage({
   );
 }
 
-function PeriodStatsCard({
-  stats,
-}: {
-  stats: {
-    lastPeriodStart: string | null;
-    daysSinceLastPeriodStart: number | null;
-    averageCycleDays: number | null;
-    averageDurationDays: number | null;
-    cyclesSampled: number;
-    nextPredictedStart: string | null;
-    daysUntilPredicted: number | null;
-  };
-}) {
-  if (stats.cyclesSampled === 0) {
-    return (
-      <section className="rounded-[2rem] glass-card p-5">
-        <p className="text-base font-semibold text-white">Period</p>
-        <p className="mt-2 text-sm text-white/55">
-          No period days logged yet. Log them on the{" "}
-          <Link href="/cycle" className="underline hover:text-white">
-            Cycle tab
-          </Link>
-          , or set up Apple Health sync in Settings → Period sync.
-        </p>
-      </section>
-    );
-  }
-
-  const startLabel = stats.lastPeriodStart
-    ? new Date(stats.lastPeriodStart).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-    : "—";
-
-  const predictedLabel = stats.nextPredictedStart
-    ? new Date(stats.nextPredictedStart).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-    : null;
-  const dueText =
-    stats.daysUntilPredicted == null
-      ? null
-      : stats.daysUntilPredicted < -1
-        ? `${Math.abs(stats.daysUntilPredicted)} days late`
-        : stats.daysUntilPredicted === -1
-          ? "1 day late"
-          : stats.daysUntilPredicted === 0
-            ? "due today"
-            : stats.daysUntilPredicted === 1
-              ? "due tomorrow"
-              : `in ${stats.daysUntilPredicted} days`;
-
-  return (
-    <section className="rounded-[2rem] glass-card p-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/45">Period</p>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-xs text-white/55">Last started</p>
-          <p className="mt-1 text-base font-semibold text-white">
-            {startLabel}
-          </p>
-          <p className="mt-0.5 text-xs text-white/45">
-            {stats.daysSinceLastPeriodStart != null
-              ? stats.daysSinceLastPeriodStart === 0
-                ? "today"
-                : `${stats.daysSinceLastPeriodStart} day${stats.daysSinceLastPeriodStart === 1 ? "" : "s"} ago`
-              : "—"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-white/55">Next predicted</p>
-          <p className="mt-1 text-base font-semibold text-white">
-            {predictedLabel ?? "—"}
-          </p>
-          <p className="mt-0.5 text-xs text-white/45">
-            {dueText ?? "needs 3 periods"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-white/55">Avg cycle</p>
-          <p className="mt-1 text-base font-semibold text-white">
-            {stats.averageCycleDays != null ? `${stats.averageCycleDays} days` : "—"}
-          </p>
-          <p className="mt-0.5 text-xs text-white/45">
-            {stats.averageCycleDays == null ? "needs 3 periods" : `from ${stats.cyclesSampled} cycles`}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-white/55">Avg duration</p>
-          <p className="mt-1 text-base font-semibold text-white">
-            {stats.averageDurationDays != null ? `${stats.averageDurationDays} days` : "—"}
-          </p>
-          <p className="mt-0.5 text-xs text-white/45">{stats.cyclesSampled} cycles, last 6 mo</p>
-        </div>
-      </div>
-      <Link
-        href="/cycle"
-        className="mt-4 inline-block text-xs text-white/55 underline transition hover:text-white"
-      >
-        View full cycle details →
-      </Link>
-    </section>
-  );
-}
