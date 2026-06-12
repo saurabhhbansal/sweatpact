@@ -108,13 +108,12 @@ export default async function ProfilePage({
       : Promise.resolve(null),
   ]);
 
-  const canSeePeriod = isOwner || periodShareRow != null;
-
-  // Build the read-only cycle popup data for an authorised non-owner viewer.
+  // Build the read-only cycle popup data for an authorised non-owner viewer
+  // (periodShareRow is only ever fetched for non-owners of female profiles).
   // Uses the admin client because viewer RLS doesn't cover another user's rows.
   let popupStats: ReturnType<typeof computePeriodStats> | null = null;
   let popupRecords: Array<{ local_day: string; flow_level: "light" | "medium" | "heavy" | "unspecified" }> = [];
-  if (canSeePeriod && !isOwner && profile.gender === "female") {
+  if (periodShareRow != null) {
     const admin = createAdminClient();
     const cutoff = new Date();
     cutoff.setUTCMonth(cutoff.getUTCMonth() - 12);
