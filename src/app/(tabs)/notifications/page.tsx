@@ -2,21 +2,15 @@ import type React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { X } from "lucide-react";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { NotificationsList, SentInvitations } from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, onboarding_complete")
-    .eq("id", user.id)
-    .single();
+  const profile = await getViewerProfile();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
     redirect("/onboarding/username");

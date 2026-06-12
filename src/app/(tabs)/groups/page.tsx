@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { betterStatus } from "@/lib/challenge-view";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { formatCents } from "@/lib/money";
 import { UserSearch } from "@/components/user-search";
@@ -28,14 +28,8 @@ function displayName(p: MemberProfileRow | null): string {
 
 export default async function ChallengesPage() {
   const supa = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  const { data: profile } = await supa
-    .from("profiles")
-    .select("id, name, username, timezone, avatar_url, onboarding_complete")
-    .eq("id", user.id)
-    .single();
+  const profile = await getViewerProfile();
 
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
@@ -46,7 +40,7 @@ export default async function ChallengesPage() {
   }
 
   const today = localDay(new Date(), normalizeTimeZone(profile.timezone));
-  const memberships = await listUserMemberships(supa, user.id);
+  const memberships = await listUserMemberships(supa, profile.id);
   const groupIds = memberships.map((m) => m.group_id);
 
   const [

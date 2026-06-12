@@ -1,26 +1,20 @@
 import type React from "react";
 import { redirect } from "next/navigation";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { ShortcutSetup } from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShortcutPage() {
   const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, gender")
-    .eq("id", user.id)
-    .single();
+  const profile = await getViewerProfile();
   if (!profile) redirect("/login");
 
   const { data: secretRow } = await supabase
     .from("profile_secrets")
     .select("webhook_secret")
-    .eq("user_id", user.id)
+    .eq("user_id", profile.id)
     .maybeSingle();
   const webhookSecret = secretRow?.webhook_secret ?? "";
 

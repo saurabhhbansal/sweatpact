@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { computePeriodStats } from "@/lib/period-stats";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,14 +11,8 @@ export const dynamic = "force-dynamic";
 export default async function CyclePage() {
   try {
     const supabase = getSupabaseRSC();
-    const user = await getAuthUser();
-    if (!user) redirect("/login");
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, username, onboarding_complete, gender, timezone")
-      .eq("id", user.id)
-      .single();
+    const profile = await getViewerProfile();
     if (!profile) redirect("/login");
 
     if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {

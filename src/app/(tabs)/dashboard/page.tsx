@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/money";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
@@ -20,14 +20,8 @@ export const dynamic = "force-dynamic";
 export default async function Dashboard() {
   try {
     const supabase = getSupabaseRSC();
-    const user = await getAuthUser();
-    if (!user) redirect("/login");
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, username, onboarding_complete, timezone, created_at, weekly_goal, rest_days, gender")
-      .eq("id", user.id)
-      .single();
+    const profile = await getViewerProfile();
 
     if (!profile) redirect("/login");
 
