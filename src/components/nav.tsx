@@ -126,7 +126,7 @@ export function MobileNav({ username }: { username?: string }) {
             aria-hidden="true"
             className="glass-pill pointer-events-none absolute bottom-1 left-1 top-1 z-0 rounded-[1.4rem]"
             style={{
-              width: "calc((100% - 0.5rem) / 3)",
+              width: `calc((100% - 0.5rem) / ${links.length})`,
               translate: `calc(${Math.max(activeIndex, 0)} * 100%) 0`,
               opacity: activeIndex < 0 ? 0 : 1,
             }}
@@ -142,7 +142,7 @@ export function MobileNav({ username }: { username?: string }) {
                 className={cn(
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
                   "group relative z-10 flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-                  active ? "text-white" : "text-white/55 hover:text-[#03d5ff]"
+                  active ? "text-white" : "text-white/55 hover:text-[color:var(--c-action)]"
                 )}
               >
                 <Icon
@@ -168,7 +168,7 @@ export function MobileNav({ username }: { username?: string }) {
               "group flex h-[3.75rem] w-[3.75rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full glass-liquid transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               cycleActive
                 ? "glass-pill text-white"
-                : "bg-white/[0.08] text-white/55 hover:text-[#03d5ff]"
+                : "bg-white/[0.08] text-white/55 hover:text-[color:var(--c-action)]"
             )}
           >
             <Droplet
@@ -244,7 +244,7 @@ export function TopNav({
           <Link
             href="/notifications"
             aria-label={unread > 0 ? `Notifications — ${unread} unread` : "Notifications"}
-            className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition-colors hover:text-[#03d5ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition-colors hover:text-[color:var(--c-action)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <Bell className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
             {unread > 0 && (
@@ -264,7 +264,7 @@ export function TopNav({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs text-white/70 transition-colors hover:text-[#03d5ff]"
+                  className="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs text-white/70 transition-colors hover:text-[color:var(--c-action)]"
                 >
                   <span className="max-w-[7rem] truncate">{name}</span>
                   <ChevronDown className="h-3.5 w-3.5" />
