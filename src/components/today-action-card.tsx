@@ -43,11 +43,9 @@ export function TodayActionCard({
           instead of the content flickering in place. */}
       <div key={todayStatus} className="animate-state-in">
       {todayStatus === "pending" && isTodayRestDay ? (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <p className="flex-1 text-sm text-white/60">Rest day · going still counts</p>
-          <div className="w-36 shrink-0">
-            <CheckInButton onOptimistic={(s) => setOverrideStatus(s)} />
-          </div>
+          <CheckInButton compact onOptimistic={(s) => setOverrideStatus(s)} />
         </div>
       ) : todayStatus === "pending" ? (
         <div className="space-y-3">
