@@ -123,6 +123,10 @@ export function MobileNav({ username }: { username?: string }) {
               opacity: activeIndex < 0 ? 0 : 1,
             }}
           />
+          {/* prefetch={true}: force-dynamic routes otherwise only prefetch the
+              loading shell, so every tab switch waits on a full server render.
+              Full prefetch makes switches instant; check-in actions call
+              router.refresh() so acted-on data never goes stale. */}
           {links.map((link, i) => {
             const active = i === activeIndex;
             const Icon = link.icon;
@@ -130,6 +134,7 @@ export function MobileNav({ username }: { username?: string }) {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={true}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
@@ -153,6 +158,7 @@ export function MobileNav({ username }: { username?: string }) {
         {gender === "female" && (
           <Link
             href="/cycle"
+            prefetch={true}
             aria-current={cycleActive ? "page" : undefined}
             className={cn(
               // Outer height matches the pill (3.25rem content + 2×4px p-1 ≈ 3.75rem)
@@ -232,6 +238,7 @@ export function TopNav({
         <div className="flex items-center gap-2">
           <Link
             href="/notifications"
+            prefetch={true}
             aria-label={unread > 0 ? `Notifications — ${unread} unread` : "Notifications"}
             className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition-colors hover:text-[color:var(--c-action)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
