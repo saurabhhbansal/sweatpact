@@ -4,6 +4,14 @@ import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type CheckinResponse = {
   ok?: boolean;
@@ -22,8 +30,8 @@ export function CheckInButton({
   // When true, shows a period-specific congratulation message on success.
   periodDayMode?: boolean;
   // When true, renders a circular tick button instead of the full-width text
-  // button. Must be placed directly inside a `flex flex-wrap` row: messages and
-  // the unverified-confirm panel use `basis-full` to wrap onto their own line.
+  // button. Must be placed directly inside a `flex flex-wrap` row: messages
+  // use `basis-full` to wrap onto their own line.
   compact?: boolean;
 }) {
   const router = useRouter();
@@ -76,9 +84,11 @@ export function CheckInButton({
         return;
       }
       if (data.error === "already_checked_in") {
+        setPendingUnverified(null);
         setMessage("You already have a valid check-in for today.");
         return;
       }
+      setPendingUnverified(null);
       setError(data.error ?? "Check-in failed");
       return;
     }
@@ -112,34 +122,41 @@ export function CheckInButton({
     await send(position?.coords.latitude, position?.coords.longitude, false);
   }
 
-  if (pendingUnverified) {
-    const distanceLabel =
-      pendingUnverified.distance != null
-        ? `${Math.round(pendingUnverified.distance)} m`
-        : "unknown distance";
+  const distanceLabel =
+    pendingUnverified?.distance != null
+      ? `${Math.round(pendingUnverified.distance)} m`
+      : "unknown distance";
 
-    return (
-      <div className={`animate-state-in space-y-3${compact ? " basis-full" : ""}`}>
-        <p className="rounded-[1.2rem] border border-white/20 bg-white/[0.04] p-3 text-sm text-white/80">
-          You&apos;re outside your gym radius ({distanceLabel}). Submit anyway as an unverified
-          check-in? It counts immediately, but whoever runs your challenge can reverse it.
-        </p>
-        <div className="flex gap-2">
-          <Button
-            className="flex-1"
-            variant="secondary"
-            disabled={busy}
-            onClick={() => send(pendingUnverified.lat, pendingUnverified.lng, true)}
-          >
-            {busy ? "Sending..." : "Submit unverified"}
-          </Button>
+  const unverifiedConfirmDialog = (
+    <Dialog
+      open={pendingUnverified !== null}
+      onOpenChange={(open) => {
+        if (!open && !busy) setPendingUnverified(null);
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Outside your gym radius</DialogTitle>
+          <DialogDescription>
+            You&apos;re {distanceLabel} from your gym. Submit anyway as an unverified check-in?
+            It counts immediately, but whoever runs your challenge can reverse it.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
           <Button variant="ghost" disabled={busy} onClick={() => setPendingUnverified(null)}>
             Cancel
           </Button>
-        </div>
-      </div>
-    );
-  }
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => send(pendingUnverified?.lat, pendingUnverified?.lng, true)}
+          >
+            {busy ? "Sending..." : "Submit unverified"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   const feedback = (
     <>
@@ -162,6 +179,7 @@ export function CheckInButton({
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
         </Button>
         {feedback}
+        {unverifiedConfirmDialog}
       </>
     );
   }
@@ -172,6 +190,7 @@ export function CheckInButton({
         {busy ? "Checking in..." : periodDayMode ? "Hit the gym anyway" : "Check in now"}
       </Button>
       {feedback}
+      {unverifiedConfirmDialog}
     </div>
   );
 }
