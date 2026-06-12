@@ -85,14 +85,14 @@ export function MobileNav({ username }: { username?: string }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 px-3"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
     >
       <div className="container mx-auto flex max-w-md items-center gap-2">
 
         {/* ── Main 3-tab pill ────────────────────────────────────────────── */}
         <div
           ref={pillRef}
-          className="grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.04]"
+          className="grid flex-1 grid-cols-3 rounded-[1.9rem] p-1 glass-liquid bg-white/[0.10]"
         >
           {links.map((link) => {
             const active = link.matchPrefix
@@ -108,8 +108,8 @@ export function MobileNav({ username }: { username?: string }) {
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
                   "flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                   active
-                    ? "bg-white/[0.10] text-white"
-                    : "text-white/45 hover:bg-white/[0.06] hover:text-white/80"
+                    ? "bg-white/[0.18] text-white"
+                    : "text-white/50 hover:bg-white/[0.08] hover:text-white/85"
                 )}
               >
                 <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -131,8 +131,8 @@ export function MobileNav({ username }: { username?: string }) {
               // Outer height matches the pill (3.25rem content + 2×4px p-1 ≈ 3.75rem)
               "flex h-[3.75rem] w-[3.75rem] shrink-0 flex-col items-center justify-center gap-1 rounded-full glass-liquid transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               cycleActive
-                ? "bg-white/[0.09] text-white"
-                : "bg-white/[0.04] text-white/45 hover:bg-white/[0.07] hover:text-white/80"
+                ? "bg-white/[0.16] text-white"
+                : "bg-white/[0.08] text-white/50 hover:bg-white/[0.12] hover:text-white/85"
             )}
           >
             <Droplet className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -191,7 +191,7 @@ export function TopNav({
     <header className="sticky top-0 z-40 px-3 pt-3">
       <div
         ref={navRef}
-        className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.04]"
+        className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]"
       >
         <Link
           href="/dashboard"
