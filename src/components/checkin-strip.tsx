@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { deriveDayStatus } from "@/lib/derived-status";
 
 type HistoryEntry = { local_day: string; status: string };
 
@@ -120,9 +121,12 @@ export function CheckinStrip({
         const isFuture = day > today;
 
         const recorded = statusByDay.get(day);
-        const isPast = day < today;
-        const status =
-          recorded ?? (isFuture ? "future" : restDays.includes(dow) ? "rest_day" : isPast ? "missed" : "pending");
+        const status = deriveDayStatus({
+          recorded,
+          day,
+          today,
+          isRestDay: restDays.includes(dow),
+        });
 
         // Month label above the first cell of each new month.
         const showMonth = i === 0 || day.slice(5, 7) !== days[i - 1].slice(5, 7);

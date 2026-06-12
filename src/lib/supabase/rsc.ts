@@ -13,3 +13,19 @@ export const getAuthUser = cache(async () => {
   const { data } = await getSupabaseRSC().auth.getUser();
   return data.user;
 });
+
+// The viewer's own profile row, fetched once per request with the union of
+// the columns the (tabs) layout and pages need — replaces the per-page
+// profiles selects so layout + page share a single query.
+export const getViewerProfile = cache(async () => {
+  const user = await getAuthUser();
+  if (!user) return null;
+  const { data } = await getSupabaseRSC()
+    .from("profiles")
+    .select(
+      "id, username, name, email, gender, timezone, created_at, weekly_goal, rest_days, onboarding_complete, avatar_url, notify_unverified_checkin, notify_rest_day, notify_cycle_share"
+    )
+    .eq("id", user.id)
+    .single();
+  return data;
+});

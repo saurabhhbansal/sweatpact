@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { CheckInButton } from "@/components/check-in-button";
 import { ExcuseButton } from "@/components/excuse-button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-
-const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
 
 const EXCUSED_LABEL: Record<string, string> = {
   sick_day: "Sick day logged. Your streak is safe.",

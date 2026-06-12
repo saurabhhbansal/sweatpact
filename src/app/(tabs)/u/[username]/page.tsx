@@ -2,7 +2,7 @@ import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarCheck2, Flame, MapPin, Moon, Target, User, Users2 } from "lucide-react";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { areUsersInSameChallenge, computeProfileStats } from "@/lib/stats";
@@ -27,16 +27,11 @@ export default async function ProfilePage({
   params: { username: string };
 }) {
   const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  // Fetch viewer profile and target profile in parallel — they're independent.
-  const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, username, timezone, onboarding_complete")
-      .eq("id", user.id)
-      .single(),
+  // Viewer profile is request-cached (shared with the (tabs) layout); the
+  // target profile is the only DB hit unique to this page.
+  const [viewerProfile, { data: profile }] = await Promise.all([
+    getViewerProfile(),
     supabase
       .from("profiles")
       .select(

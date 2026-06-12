@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
+import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { notifyGroupCheckin } from "@/lib/checkin-notify";
 import { listUserMemberships } from "@/lib/groups";
 import { haversineMeters } from "@/lib/geo";
@@ -21,12 +22,6 @@ const Body = z.object({
   occurred_at: z.string().datetime().optional(),
 });
 
-const EXCUSED_STATUSES = new Set([
-  "sick_day",
-  "gym_closed",
-  "rest_day",
-  "period_day",
-]);
 
 type CheckinRow = {
   id: string;

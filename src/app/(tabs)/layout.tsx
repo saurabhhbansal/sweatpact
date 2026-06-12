@@ -1,24 +1,18 @@
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getViewerProfile } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
+import { RefreshOnFocus } from "@/components/refresh-on-focus";
 
 export const dynamic = "force-dynamic";
 
-// One fetch per request, shared by both nav slots below.
-const getNavProfile = cache(async () => {
-  const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("name, email, username")
-    .eq("id", user.id)
-    .single();
+// getViewerProfile is request-cached, so the two nav slots and the page all
+// share one auth round trip and one profiles select.
+async function getNavProfile() {
+  const profile = await getViewerProfile();
   if (!profile) redirect("/login");
   return profile;
-});
+}
 
 async function TopBar() {
   const profile = await getNavProfile();
@@ -47,6 +41,7 @@ export default function TabsLayout({
 }) {
   return (
     <>
+      <RefreshOnFocus />
       <Suspense fallback={<TopNav />}>
         <TopBar />
       </Suspense>

@@ -1,42 +1,27 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/money";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
 import { StatusBadge } from "@/components/status-badge";
 import { TodayActionCard } from "@/components/today-action-card";
 import { PushPermissionPrompt } from "@/components/push-permission";
-
-const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
-
-function shouldCountTowardStreak(status: string) {
-  return status === "verified" || status === "unverified";
-}
-
-// Returns the ISO-week Monday for a YYYY-MM-DD date string.
-function isoWeekMonday(day: string): string {
-  const [y, m, d] = day.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const dow = (date.getUTCDay() + 6) % 7; // 0=Mon, 6=Sun
-  date.setUTCDate(date.getUTCDate() - dow);
-  return date.toISOString().slice(0, 10);
-}
+import {
+  EXCUSED_STATUSES,
+  computeWeekStreak,
+  isoWeekMonday,
+  shouldCountTowardStreak,
+} from "@/lib/derived-status";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   try {
     const supabase = getSupabaseRSC();
-    const user = await getAuthUser();
-    if (!user) redirect("/login");
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, username, onboarding_complete, timezone, created_at, weekly_goal, rest_days, gender")
-      .eq("id", user.id)
-      .single();
+    const profile = await getViewerProfile();
 
     if (!profile) redirect("/login");
 
@@ -112,31 +97,7 @@ export default async function Dashboard() {
     statusByDay.set(today, todayStatus);
 
     const currentWeekMonday = isoWeekMonday(today);
-
-    // Build a map of weekMonday → checkin count for completed weeks
-    const weekCheckins = new Map<string, number>();
-    for (const [day, status] of statusByDay) {
-      if (!shouldCountTowardStreak(status)) continue;
-      const mon = isoWeekMonday(day);
-      weekCheckins.set(mon, (weekCheckins.get(mon) ?? 0) + 1);
-    }
-
-    // Walk weeks from most recent backward; break on a complete week that missed the goal
-    const sortedWeekMondays = [...new Set(
-      [...statusByDay.keys()].map(isoWeekMonday)
-    )].sort((a, b) => b.localeCompare(a));
-
-    let weekStreak = 0;
-    for (const mon of sortedWeekMondays) {
-      const count = weekCheckins.get(mon) ?? 0;
-      const isCurrentWeek = mon === currentWeekMonday;
-      if (count >= weeklyGoal) {
-        weekStreak++;
-      } else if (!isCurrentWeek) {
-        break; // Past complete week that didn't hit goal → streak ends
-      }
-      // Current in-progress week below goal: don't count, don't break
-    }
+    const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal);
 
     // ── Owed totals (aggregated by unique counterparty) ────────────────────
     const totalOwes = (pendingOwes ?? []).reduce(

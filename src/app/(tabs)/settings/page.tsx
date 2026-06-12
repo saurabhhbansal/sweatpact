@@ -1,19 +1,13 @@
 import { redirect } from "next/navigation";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { SettingsForm } from "./client";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, onboarding_complete, name, email, gender, notify_unverified_checkin, notify_rest_day, notify_cycle_share")
-    .eq("id", user.id)
-    .single();
+  const profile = await getViewerProfile();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
     redirect("/onboarding/username");

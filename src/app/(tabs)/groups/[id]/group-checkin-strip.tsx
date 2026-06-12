@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { deriveDayStatus } from "@/lib/derived-status";
 
 export type CalendarMember = {
   userId: string;
@@ -191,17 +192,15 @@ export function GroupCheckinStrip({
   const n = members.length;
   const sliceDeg = 360 / Math.max(n, 1);
 
-  function statusFor(day: string, userId: string, isFuture: boolean): string {
-    const recorded = calendarData[day]?.[userId];
-    if (recorded) return recorded;
-    if (isFuture) return "future";
+  function statusFor(day: string, userId: string): string {
     const dow = new Date(day).getUTCDay();
     const member = members.find((m) => m.userId === userId);
-    if (member?.restDays.includes(dow)) return "rest_day";
-    // "missed" is derived at read time, not stored: a past day with no check-in
-    // and no rest-day exemption is a miss. Today stays "pending" — still time
-    // to check in. Mirrors the dashboard/profile strip (checkin-strip.tsx).
-    return day < today ? "missed" : "pending";
+    return deriveDayStatus({
+      recorded: calendarData[day]?.[userId],
+      day,
+      today,
+      isRestDay: member?.restDays.includes(dow) ?? false,
+    });
   }
 
   function handleDayClick(day: string) {
@@ -220,7 +219,7 @@ export function GroupCheckinStrip({
     ? members.map((m) => ({
         userId: m.userId,
         name: m.name,
-        status: statusFor(selectedDay, m.userId, selectedDay > today),
+        status: statusFor(selectedDay, m.userId),
       }))
     : [];
 
@@ -241,9 +240,7 @@ export function GroupCheckinStrip({
           const showMonth =
             i === 0 || day.slice(5, 7) !== days[i - 1].slice(5, 7);
 
-          const statuses = members.map((m) =>
-            statusFor(day, m.userId, isFuture)
-          );
+          const statuses = members.map((m) => statusFor(day, m.userId));
 
           return (
             <div

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
+import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { notifyGroupCheckin } from "@/lib/checkin-notify";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -9,12 +10,6 @@ import { localDay, normalizeTimeZone } from "@/lib/time";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const EXCUSED_STATUSES = new Set([
-  "sick_day",
-  "gym_closed",
-  "rest_day",
-  "period_day",
-]);
 
 export async function GET() {
   const supabase = createClient();

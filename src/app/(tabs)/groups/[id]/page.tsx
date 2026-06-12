@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMembership, isManagerRole, normalizeRelation } from "@/lib/groups";
 import { formatCents } from "@/lib/money";
-import { getAuthUser, getSupabaseRSC } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { AvatarStack } from "@/components/avatar";
 import { betterStatus } from "@/lib/challenge-view";
@@ -42,14 +42,8 @@ export default async function GroupPage({
   params: { id: string };
 }) {
   const supabase = getSupabaseRSC();
-  const user = await getAuthUser();
-  if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, onboarding_complete, timezone")
-    .eq("id", user.id)
-    .single();
+  const profile = await getViewerProfile();
   if (!profile) redirect("/login");
   if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
     redirect("/onboarding/username");
@@ -58,7 +52,7 @@ export default async function GroupPage({
     redirect("/onboarding/schedule");
   }
 
-  const membership = await getMembership(supabase, user.id, params.id);
+  const membership = await getMembership(supabase, profile.id, params.id);
   if (!membership || !membership.group) {
     redirect("/groups");
   }
