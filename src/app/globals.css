@@ -26,6 +26,16 @@
   --input: 0 0% 10%;
   --ring: 0 0% 100%;
   --radius: 1rem;
+
+  /* Liquid-glass bevel palette (ported from the dark-mode reference). Drives
+     the multi-layer box-shadow edges on .glass-liquid / .glass-pill. */
+  --c-glass: #bbbbbc;
+  --c-light: #fff;
+  --c-dark: #000;
+  --c-action: #03d5ff;
+  --glass-reflex-light: 0.3;
+  --glass-reflex-dark: 2;
+  --saturation: 150%;
 }
 
 * {
@@ -242,10 +252,10 @@ body {
  *
  * A two-tier glass treatment:
  *
- *   1. All browsers  – enhanced backdrop blur + saturation, a gradient tint
- *      that suggests glass curvature, and a specular inset highlight along the
- *      top edge.  background-image (not background shorthand) lets sibling
- *      Tailwind bg-white/* classes still control background-color separately.
+ *   1. All browsers  – backdrop blur + saturation plus a stacked box-shadow
+ *      bevel (inset light highlights, dark inset/outer shadows) weighted by
+ *      the --glass-reflex-* variables.  Background tint stays in sibling
+ *      Tailwind bg-white/* classes.
  *
  *   2. Chromium only – useLiquidGlass() hook generates a physics-based SVG
  *      displacement filter (Snell-law refraction at edges + specular overlay)
@@ -253,32 +263,52 @@ body {
  *      filter to the SVG variant when available.
  */
 .glass-liquid {
-  backdrop-filter: blur(40px) saturate(2.2);
-  -webkit-backdrop-filter: blur(40px) saturate(2.2);
-  /* Gradient tint: brighter at top (curved glass catching ambient light) */
-  background-image: linear-gradient(
-    158deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0.09) 48%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  /* Top-edge specular + subtle border — no Tailwind border needed */
+  backdrop-filter: blur(8px) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
+  /* Beveled glass edge: stacked inset highlights (light) + inset/outer shadows
+     (dark), weighted by the --glass-reflex-* multipliers. */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+    inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
 }
 
-/* Chromium: upgrade to SVG displacement filter when hook has injected it */
+/* Chromium: upgrade to SVG displacement filter when hook has injected it.
+   The filter carries its own blur + saturation, so no CSS blur is added. */
 @supports (backdrop-filter: url(x)) {
   .glass-liquid {
-    backdrop-filter: var(--glass-filter-url, blur(40px) saturate(2.2));
-    -webkit-backdrop-filter: var(--glass-filter-url, blur(40px) saturate(2.2));
-    /* Slightly more transparent — SVG filter adds its own saturation boost */
-    background-image: linear-gradient(
-      158deg,
-      rgba(255, 255, 255, 0.16) 0%,
-      rgba(255, 255, 255, 0.07) 50%,
-      rgba(255, 255, 255, 0.04) 100%
-    );
+    backdrop-filter: var(--glass-filter-url, blur(8px) saturate(var(--saturation)));
+    -webkit-backdrop-filter: var(--glass-filter-url, blur(8px) saturate(var(--saturation)));
+  }
+}
+
+/* Sliding active-tab indicator for the bottom nav. Brighter glass fill + a
+   lighter bevel than the bar; slides on the `translate` property. */
+.glass-pill {
+  /* Plain rgba fallback (≈ --c-glass at 36%) for browsers without color-mix,
+     where every color-mix declaration below is dropped. */
+  background-color: rgba(187, 187, 188, 0.36);
+  background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+    inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+  transition: translate 400ms cubic-bezier(1, 0, 0.4, 1), opacity 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-pill {
+    transition: opacity 200ms ease;
   }
 }
