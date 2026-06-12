@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { computePeriodStats } from "@/lib/period-stats";
 import { buttonVariants } from "@/components/ui/button";
-import { MobileNav, TopNav } from "@/components/nav";
 import { CycleView } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -51,16 +50,8 @@ export default async function CyclePage() {
     const records = periodRecords ?? [];
     const stats = computePeriodStats(records, today);
 
-    const topName =
-      typeof profile.name === "string" && profile.name.trim().length > 0
-        ? profile.name
-        : typeof profile.email === "string"
-          ? profile.email
-          : "Account";
-
     return (
       <>
-        <TopNav name={topName} username={profile.username} />
         <main className="container max-w-md pb-28 pt-4">
           <div className="animate-fade-up-item mb-5">
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">Your cycle</p>
@@ -68,7 +59,6 @@ export default async function CyclePage() {
           </div>
           <CycleView today={today} stats={stats} records={records} />
         </main>
-        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {

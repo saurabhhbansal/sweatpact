@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
 import { StatusBadge } from "@/components/status-badge";
 import { TodayActionCard } from "@/components/today-action-card";
-import { MobileNav, TopNav } from "@/components/nav";
 import { PushPermissionPrompt } from "@/components/push-permission";
 
 const EXCUSED_STATUSES = new Set(["sick_day", "gym_closed", "rest_day", "period_day"]);
@@ -139,13 +138,6 @@ export default async function Dashboard() {
       // Current in-progress week below goal: don't count, don't break
     }
 
-    const topName =
-      typeof profile.name === "string" && profile.name.trim().length > 0
-        ? profile.name
-        : typeof profile.email === "string"
-          ? profile.email
-          : "Account";
-
     // ── Owed totals (aggregated by unique counterparty) ────────────────────
     const totalOwes = (pendingOwes ?? []).reduce(
       (sum, o) => sum + Number(o.amount_cents ?? 0), 0
@@ -178,7 +170,6 @@ export default async function Dashboard() {
 
     return (
       <>
-        <TopNav name={topName} username={profile.username} />
         <main className="container max-w-md flex min-h-[calc(100dvh-4.25rem)] flex-col gap-3 pb-[5.5rem] pt-3">
           <section className="animate-fade-up-item shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
@@ -272,7 +263,6 @@ export default async function Dashboard() {
           </div>
 
         </main>
-        <MobileNav username={profile.username ?? undefined} />
       </>
     );
   } catch (error) {

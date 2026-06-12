@@ -5,7 +5,6 @@ import { getMembership, isManagerRole, normalizeRelation } from "@/lib/groups";
 import { formatCents } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
-import { MobileNav, TopNav } from "@/components/nav";
 import { AvatarStack } from "@/components/avatar";
 import { betterStatus } from "@/lib/challenge-view";
 import { GroupManagerMenu, LeaveGroupButton } from "./client";
@@ -300,7 +299,6 @@ export default async function GroupPage({
 
   return (
     <>
-      <TopNav name={profile.name || profile.email} username={profile.username} />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <div className="animate-fade-up-item flex items-center justify-between">
           <Link href="/groups" className="text-xs uppercase tracking-[0.18em] text-white/45">
@@ -471,7 +469,6 @@ export default async function GroupPage({
           <LeaveGroupButton groupId={group.id} isOwner={isOwner} />
         </div>
       </main>
-      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

@@ -92,8 +92,9 @@ export function MobileNav({ username }: { username?: string }) {
 
   // Slide the indicator between tabs, stretching from the trailing edge toward
   // the direction of travel. Stretch runs on the independent `scale` property
-  // so it composes with the `translate` slide instead of fighting it. (The
-  // slide is only visible while the nav stays mounted across routes.)
+  // so it composes with the `translate` slide instead of fighting it. The nav
+  // stays mounted across tab routes via the (tabs) layout, so this animates
+  // on every navigation.
   const prevIndexRef = useRef(activeIndex);
   useEffect(() => {
     const prev = prevIndexRef.current;

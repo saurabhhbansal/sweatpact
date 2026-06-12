@@ -1,4 +1,3 @@
-import { MobileNav, TopNav } from "@/components/nav";
 
 function Skel({ className }: { className?: string }) {
   return <div className={`animate-skeleton rounded-[1rem] bg-white/[0.08] ${className ?? ""}`} />;
@@ -15,7 +14,6 @@ function SkeletonSectionLabel() {
 export default function SettingsLoading() {
   return (
     <>
-      <TopNav />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           {/* Title */}
@@ -52,7 +50,6 @@ export default function SettingsLoading() {
           </div>
         </section>
       </main>
-      <MobileNav />
     </>
   );
 }

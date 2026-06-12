@@ -1,4 +1,3 @@
-import { MobileNav, TopNav } from "@/components/nav";
 
 function Skel({ className }: { className?: string }) {
   return <div className={`animate-skeleton rounded-[1rem] bg-white/[0.08] ${className ?? ""}`} />;
@@ -7,7 +6,6 @@ function Skel({ className }: { className?: string }) {
 export default function CycleLoading() {
   return (
     <>
-      <TopNav />
       <main className="container max-w-md space-y-5 pb-28 pt-4">
         {/* Page title */}
         <div className="space-y-2">
@@ -30,7 +28,6 @@ export default function CycleLoading() {
         {/* Trends */}
         <Skel className="h-48 rounded-[2rem]" />
       </main>
-      <MobileNav />
     </>
   );
 }

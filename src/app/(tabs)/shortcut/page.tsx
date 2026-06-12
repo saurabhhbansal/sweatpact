@@ -1,7 +1,6 @@
 import type React from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { MobileNav, TopNav } from "@/components/nav";
 import { ShortcutSetup } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +26,6 @@ export default async function ShortcutPage() {
 
   return (
     <>
-      <TopNav />
       <main className="container max-w-md pb-28 pt-4">
         <div className="animate-fade-up-item mb-6">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Setup</p>
@@ -44,7 +42,6 @@ export default async function ShortcutPage() {
           />
         </div>
       </main>
-      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

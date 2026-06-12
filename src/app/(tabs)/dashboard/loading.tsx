@@ -1,4 +1,3 @@
-import { MobileNav, TopNav } from "@/components/nav";
 
 function Skel({ className }: { className?: string }) {
   return <div className={`animate-skeleton rounded-[1rem] bg-white/[0.08] ${className ?? ""}`} />;
@@ -7,7 +6,6 @@ function Skel({ className }: { className?: string }) {
 export default function DashboardLoading() {
   return (
     <>
-      <TopNav />
       <main className="container max-w-md flex h-[calc(100dvh-4.25rem)] flex-col gap-3 overflow-hidden pb-[5.5rem] pt-3">
         <Skel className="h-[6.5rem] shrink-0 rounded-[2rem]" />
         <Skel className="min-h-[11rem] flex-1 rounded-[2rem]" />
@@ -17,7 +15,6 @@ export default function DashboardLoading() {
           <Skel className="h-[5.5rem] rounded-[1.7rem]" />
         </div>
       </main>
-      <MobileNav />
     </>
   );
 }
