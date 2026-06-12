@@ -7,7 +7,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { areUsersInSameChallenge, computeProfileStats } from "@/lib/stats";
 import { computePeriodStats } from "@/lib/period-stats";
-import { MobileNav, TopNav } from "@/components/nav";
 import { ChallengeButton } from "./challenge-button";
 import { AvatarUpload } from "./avatar-upload";
 import { NameEditor } from "./name-editor";
@@ -35,7 +34,7 @@ export default async function ProfilePage({
   const [{ data: viewerProfile }, { data: profile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, name, email, username, timezone, onboarding_complete")
+      .select("id, username, timezone, onboarding_complete")
       .eq("id", auth.user.id)
       .single(),
     supabase
@@ -154,7 +153,6 @@ export default async function ProfilePage({
 
   return (
     <>
-      <TopNav name={viewerProfile.name || viewerProfile.email} username={viewerProfile.username} />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <section className="animate-fade-up-item flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
           {isOwner ? (
@@ -373,7 +371,6 @@ export default async function ProfilePage({
           </>
         ) : null}
       </main>
-      <MobileNav username={viewerProfile.username ?? undefined} />
     </>
   );
 }

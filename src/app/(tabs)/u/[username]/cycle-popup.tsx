@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Droplet, X } from "lucide-react";
-import { CycleView } from "@/app/cycle/client";
+import { CycleView } from "@/app/(tabs)/cycle/client";
 import type { PeriodStats } from "@/lib/period-stats";
 
 type FlowLevel = "light" | "medium" | "heavy" | "unspecified";

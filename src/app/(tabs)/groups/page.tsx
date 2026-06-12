@@ -6,7 +6,6 @@ import { betterStatus } from "@/lib/challenge-view";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { formatCents } from "@/lib/money";
-import { MobileNav, TopNav } from "@/components/nav";
 import { UserSearch } from "@/components/user-search";
 import { ChallengeVersusCard, type VersusPerson } from "@/components/challenge-versus-card";
 
@@ -34,7 +33,7 @@ export default async function ChallengesPage() {
 
   const { data: profile } = await supa
     .from("profiles")
-    .select("id, name, email, username, timezone, avatar_url, onboarding_complete")
+    .select("id, name, username, timezone, avatar_url, onboarding_complete")
     .eq("id", auth.user.id)
     .single();
 
@@ -142,7 +141,6 @@ export default async function ChallengesPage() {
 
   return (
     <>
-      <TopNav name={profile.name || profile.username ? (profile.name || `@${profile.username}`) : "You"} username={profile.username} />
       <main className="container max-w-md space-y-5 pb-28 pt-4">
         <div className="animate-fade-up-item">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
@@ -229,7 +227,6 @@ export default async function ChallengesPage() {
           <UserSearch />
         </section>
       </main>
-      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

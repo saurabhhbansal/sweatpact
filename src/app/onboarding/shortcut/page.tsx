@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CopyField } from "@/app/shortcut/client";
+import { CopyField } from "@/app/(tabs)/shortcut/client";
 import { StepIndicator } from "../step-indicator";
 import { FinishOnboardingButtons } from "./client";
 import { SweatPactSeal } from "@/components/sweatpact-seal";

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { MobileNav, TopNav } from "@/components/nav";
 import { NotificationsList, SentInvitations } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +14,7 @@ export default async function NotificationsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, name, email, username, onboarding_complete")
+    .select("id, username, onboarding_complete")
     .eq("id", auth.user.id)
     .single();
   if (!profile) redirect("/login");
@@ -64,7 +63,6 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <TopNav name={profile.name || profile.email} username={profile.username} />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <section className="animate-fade-up-item rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
           <div className="mb-4 flex items-start justify-between gap-3">
@@ -99,7 +97,6 @@ export default async function NotificationsPage() {
           </section>
         ) : null}
       </main>
-      <MobileNav username={profile.username ?? undefined} />
     </>
   );
 }

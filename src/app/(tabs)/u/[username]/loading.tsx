@@ -1,4 +1,3 @@
-import { MobileNav, TopNav } from "@/components/nav";
 
 function Skel({ className }: { className?: string }) {
   return <div className={`animate-skeleton rounded-[1rem] bg-white/[0.08] ${className ?? ""}`} />;
@@ -7,7 +6,6 @@ function Skel({ className }: { className?: string }) {
 export default function ProfileLoading() {
   return (
     <>
-      <TopNav />
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         {/* Profile header card */}
         <Skel className="h-56 rounded-[2rem]" />
@@ -21,7 +19,6 @@ export default function ProfileLoading() {
           <Skel className="h-24 rounded-[1.7rem]" />
         </div>
       </main>
-      <MobileNav />
     </>
   );
 }
