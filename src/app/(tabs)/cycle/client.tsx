@@ -332,17 +332,17 @@ function Highlights({
   if (items.length === 0) return null;
 
   return (
-    <section>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-        Highlights
+    <section className="rounded-[2rem] glass-card p-5">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+        Insights
       </p>
       <div className="grid grid-cols-2 gap-3">
         {items.map((item) => (
           <div
             key={item.label}
-            className="rounded-[1.7rem] glass-card p-4"
+            className="rounded-[1.4rem] bg-white/[0.04] p-4"
           >
-            <p className="text-xs uppercase tracking-[0.14em] text-white/50">{item.label}</p>
+            <p className="text-[11px] uppercase tracking-[0.08em] text-white/50">{item.label}</p>
             <p className="mt-1 truncate text-xl font-bold text-white">{item.value}</p>
             <p className="mt-0.5 text-xs text-white/40">{item.sub}</p>
           </div>
