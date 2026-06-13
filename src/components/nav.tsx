@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/browser";
 import { SweatPactSeal } from "@/components/sweatpact-seal";
+import { NotificationsOverlay } from "@/components/notifications-overlay";
 
 type NavLink = {
   href: string;
@@ -190,6 +191,7 @@ export function TopNav({
   username?: string | null;
 }) {
   const [unread, setUnread] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,9 +238,12 @@ export function TopNav({
         </Link>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/notifications"
-            prefetch={true}
+          <button
+            type="button"
+            onClick={() => {
+              setNotifOpen(true);
+              setUnread(0); // opening marks them read
+            }}
             aria-label={unread > 0 ? `Notifications — ${unread} unread` : "Notifications"}
             className="group relative flex h-11 w-11 items-center justify-center rounded-full text-white/70 transition-colors hover:text-[color:var(--c-action)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
@@ -251,7 +256,7 @@ export function TopNav({
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
-          </Link>
+          </button>
 
           {name ? (
             // modal={false} prevents Radix scroll-lock + pointer-events:none
@@ -293,6 +298,8 @@ export function TopNav({
           ) : null}
         </div>
       </div>
+
+      <NotificationsOverlay open={notifOpen} onClose={() => setNotifOpen(false)} />
     </header>
   );
 }

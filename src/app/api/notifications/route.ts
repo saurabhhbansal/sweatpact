@@ -4,12 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+
+  // The lightweight poll (nav badge) omits ?full; the notifications overlay
+  // passes ?full=1 to also receive the pending sent invitations.
+  const full = new URL(req.url).searchParams.get("full") === "1";
 
   const [{ data }, { data: profile }] = await Promise.all([
     supabase
@@ -22,10 +26,48 @@ export async function GET() {
   ]);
 
   const unreadCount = (data ?? []).filter((n) => !n.read_at).length;
+
+  let sentInvitations:
+    | {
+        id: string;
+        to_user: string;
+        to_username: string | null;
+        to_name: string | null;
+        penalty_cents: number;
+        message: string | null;
+        created_at: string;
+      }[]
+    | undefined;
+  if (full) {
+    const { data: invs } = await supabase
+      .from("challenge_invitations")
+      .select("id, to_user, penalty_cents, message, created_at")
+      .eq("from_user", auth.user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    const toIds = (invs ?? []).map((i) => i.to_user);
+    const { data: targets } = toIds.length
+      ? await supabase.from("profiles").select("id, name, username").in("id", toIds)
+      : { data: [] };
+    sentInvitations = (invs ?? []).map((inv) => {
+      const t = (targets ?? []).find((p) => p.id === inv.to_user);
+      return {
+        id: inv.id,
+        to_user: inv.to_user,
+        to_username: t?.username ?? null,
+        to_name: t?.name ?? null,
+        penalty_cents: inv.penalty_cents,
+        message: inv.message,
+        created_at: inv.created_at,
+      };
+    });
+  }
+
   return NextResponse.json({
     notifications: data ?? [],
     unreadCount,
     gender: profile?.gender ?? null,
+    sentInvitations,
   });
 }
 
