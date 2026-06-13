@@ -40,17 +40,13 @@ export function VisibilityToggle({
   }
 
   return (
-    <div className="rounded-[1.7rem] glass-card p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-white">Profile visibility</p>
-          <p className="mt-0.5 text-xs text-white/55">
-            {value === "public"
-              ? "Anyone can see your stats."
-              : "Only people in your challenges can see your stats."}
-          </p>
-        </div>
-        <div className="flex shrink-0 rounded-full border border-white/15 bg-white/[0.04] p-0.5">
+    <div className="flex items-center justify-between gap-3">
+      <p className="min-w-0 text-xs text-white/55">
+        {value === "public"
+          ? "Anyone can see your stats."
+          : "Only people in your challenges can see your stats."}
+      </p>
+      <div className="flex shrink-0 rounded-full border border-white/15 bg-white/[0.04] p-0.5">
           <button
             type="button"
             onClick={() => set("public")}
@@ -76,7 +72,6 @@ export function VisibilityToggle({
             Private
           </button>
         </div>
-      </div>
     </div>
   );
 }
