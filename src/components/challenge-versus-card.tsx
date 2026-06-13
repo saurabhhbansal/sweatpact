@@ -100,7 +100,7 @@ export function ChallengeVersusCard({
       {/* Footer: stake pill + standing + open affordance */}
       <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
         <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-white/70">
-          {formatCents(stakeCents)}/day
+          {formatCents(stakeCents)}
         </span>
         <div className="flex items-center gap-2">
           {standing ? (
