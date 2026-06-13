@@ -45,6 +45,14 @@ export default function TabsLayout({
       <Suspense fallback={<TopNav />}>
         <TopBar />
       </Suspense>
+      {/* Reserves the fixed header's height in flow (paddingTop safe-area +
+          the 3.5rem bar) so page content starts below it. The header is fixed
+          rather than sticky because the root's overflow-x clip breaks
+          position: sticky on iOS. */}
+      <div
+        aria-hidden="true"
+        style={{ height: "calc(max(env(safe-area-inset-top), 0.75rem) + 3.5rem)" }}
+      />
       {children}
       <Suspense fallback={<MobileNav />}>
         <BottomBar />
