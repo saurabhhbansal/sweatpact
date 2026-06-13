@@ -10,7 +10,8 @@ import { reconcileUserWeek } from "./checkin-reconciliation";
 type Row = Record<string, any>;
 
 type Seed = {
-  weeklyGoal: number;
+  // null models a profile row with no weekly_goal, exercising the `?? 4` default.
+  weeklyGoal: number | null;
   // daily_status rows for the user in the week under test.
   statuses: Array<{ local_day: string; status: string }>;
   // The user's memberships, each with the group relation listUserMemberships reads.
@@ -203,6 +204,18 @@ describe("reconcileUserWeek — weekly penalty & obligation split", () => {
     });
     expect(db.penalties).toHaveLength(1);
     expect(db.obligations).toHaveLength(0);
+  });
+
+  it("defaults the weekly goal to 4 when the profile has none", async () => {
+    const db = await run({
+      weeklyGoal: null, // no goal set → real code uses `?? 4`
+      statuses: [verified("2026-06-08"), verified("2026-06-10"), verified("2026-06-12")], // 3 < 4
+      memberships: [{ group_id: "g1", penalty_cents: 5000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1"] },
+    });
+    // 3 check-ins is short of the defaulted goal of 4 → penalty created.
+    expect(db.penalties).toHaveLength(1);
+    expect(db.obligations.map((o) => o.amount_cents)).toEqual([5000]);
   });
 
   it("falls back to the 5000-cent default stake when neither stake is set", async () => {
