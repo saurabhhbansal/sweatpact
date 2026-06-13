@@ -9,7 +9,7 @@ import { AvatarStack } from "@/components/avatar";
 import { betterStatus } from "@/lib/challenge-view";
 import { GroupManagerMenu, LeaveGroupButton } from "./client";
 import { MemberStatusAvatar, type MemberCheckin } from "./member-status";
-import { LedgerButtons } from "./ledger";
+import { LedgerPanel } from "./ledger";
 import {
   GroupCheckinStrip,
   CalendarLegend,
@@ -406,9 +406,9 @@ export default async function GroupPage({
           </div>
         </section>
 
-        {/* Balances + Recent activity overlays */}
+        {/* Balances / Activity — inline segmented panel */}
         <div className="animate-fade-up-item" style={{ "--stagger": "110ms" } as React.CSSProperties}>
-          <LedgerButtons
+          <LedgerPanel
             balances={balanceRows}
             disputes={disputeRows}
             settlements={settlementRows}
