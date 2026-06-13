@@ -176,49 +176,29 @@ export default async function ProfilePage({
           {/* Stat band — two-up, sharing the icon+label section headers used
               across the rest of the page. */}
           {stats ? (
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center gap-1.5 text-white/45">
-                    <Flame className="h-3.5 w-3.5" aria-hidden="true" />
-                    <p className="text-xs uppercase tracking-[0.18em]">Streak</p>
-                  </div>
-                  <p className="mt-2 text-3xl font-bold leading-none text-white">
-                    {stats.weekStreak}
-                    <span className="ml-1.5 text-sm font-medium text-white/45">
-                      wk{stats.weekStreak === 1 ? "" : "s"}
-                    </span>
-                  </p>
+            <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+              <div>
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <Flame className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">Streak</p>
                 </div>
-
-                <div>
-                  <div className="flex items-center gap-1.5 text-white/45">
-                    <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    <p className="text-xs uppercase tracking-[0.18em]">This week</p>
-                  </div>
-                  <p className="mt-2 text-3xl font-bold leading-none text-white">
-                    {stats.thisWeekCheckins}
-                    <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
-                  </p>
-                </div>
+                <p className="mt-2 text-3xl font-bold leading-none text-white">
+                  {stats.weekStreak}
+                  <span className="ml-1.5 text-sm font-medium text-white/45">
+                    wk{stats.weekStreak === 1 ? "" : "s"}
+                  </span>
+                </p>
               </div>
 
-              {/* Weekly goal progress — full-width footer so the bar doesn't
-                  hang under only one column and unbalance the band. */}
-              <div
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={stats.weeklyGoal}
-                aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
-                aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
-                className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
-              >
-                <div
-                  className="animate-bar-in h-full rounded-full bg-white"
-                  style={{
-                    width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
-                  }}
-                />
+              <div>
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">This week</p>
+                </div>
+                <p className="mt-2 text-3xl font-bold leading-none text-white">
+                  {stats.thisWeekCheckins}
+                  <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
+                </p>
               </div>
             </div>
           ) : null}
