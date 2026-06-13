@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { statusToken, statusRing, TONE_TEXT } from "@/lib/challenge-view";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -22,9 +22,9 @@ export type MemberCheckin = {
   occurredLabel: string;
 };
 
-// A status-ringed avatar. For managers (and non-self members) the avatar is a
-// button that opens a manage overlay: reverse unverified check-ins, change role,
-// remove member. Otherwise it's a plain ringed avatar with a status label.
+// A status-ringed avatar that opens a member preview: avatar, status, today's
+// check-ins, a link to the full profile, and — for managers viewing someone
+// else — reverse-checkin / change-role / remove actions.
 export function MemberStatusAvatar({
   userId,
   member,
@@ -56,32 +56,7 @@ export function MemberStatusAvatar({
   const token = statusToken(status);
   const ring = statusRing(status);
   const manageable = isManager && !isSelf;
-
-  const ringed = (
-    <div className={cn("rounded-full p-0.5", ring)}>
-      <Avatar url={member.avatar_url} name={member.name} username={member.username} size={size} />
-    </div>
-  );
-
-  const label = showLabel ? (
-    <div className="mt-2 text-center">
-      <p className="truncate text-sm font-semibold text-white">
-        {isSelf ? "You" : member.name}
-      </p>
-      <p className={`mt-0.5 text-xs ${TONE_TEXT[token.tone]}`}>
-        {token.icon} {token.label}
-      </p>
-    </div>
-  ) : null;
-
-  if (!manageable) {
-    return (
-      <div className="flex flex-col items-center">
-        {ringed}
-        {label}
-      </div>
-    );
-  }
+  const showManageRow = manageable && role !== "owner" && (isOwner || canRemove);
 
   return (
     <>
@@ -90,24 +65,50 @@ export function MemberStatusAvatar({
         onClick={() => setOpen(true)}
         className="flex flex-col items-center transition hover:opacity-80"
       >
-        {ringed}
-        {label}
+        <div className={cn("rounded-full p-0.5", ring)}>
+          <Avatar url={member.avatar_url} name={member.name} username={member.username} size={size} />
+        </div>
+        {showLabel ? (
+          <div className="mt-2 text-center">
+            <p className="truncate text-sm font-semibold text-white">
+              {isSelf ? "You" : member.name}
+            </p>
+            <p className={`mt-0.5 text-xs ${TONE_TEXT[token.tone]}`}>
+              {token.icon} {token.label}
+            </p>
+          </div>
+        ) : null}
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{member.name}</DialogTitle>
-            <DialogDescription>
-              {token.icon} {token.label} today
-            </DialogDescription>
+            <DialogTitle className="sr-only">{member.name}</DialogTitle>
           </DialogHeader>
 
+          {/* Member header — ringed avatar + identity + today's status */}
+          <div className="flex items-center gap-4">
+            <div className={cn("shrink-0 rounded-full p-0.5", ring)}>
+              <Avatar url={member.avatar_url} name={member.name} username={member.username} size="lg" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-white">
+                {isSelf ? "You" : member.name}
+              </p>
+              {member.username ? (
+                <p className="truncate text-sm text-white/55">@{member.username}</p>
+              ) : null}
+              <p className={`mt-1 text-sm ${TONE_TEXT[token.tone]}`}>
+                {token.icon} {token.label} today
+              </p>
+            </div>
+          </div>
+
           <div className="mt-5 space-y-4">
-            {/* Today's check-ins + reverse */}
+            {/* Today's check-ins + reverse (managers only) */}
             {checkins.length > 0 ? (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.16em] text-white/45">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">
                   Today&apos;s check-ins
                 </p>
                 {checkins.map((c) => {
@@ -121,7 +122,7 @@ export function MemberStatusAvatar({
                         <p className={`text-sm ${TONE_TEXT[ct.tone]}`}>{ct.label}</p>
                         <p className="mt-0.5 text-xs text-white/45">{c.occurredLabel}</p>
                       </div>
-                      {c.status === "unverified" ? (
+                      {manageable && c.status === "unverified" ? (
                         <ReverseCheckinButton
                           groupId={groupId}
                           checkinId={c.id}
@@ -133,11 +134,13 @@ export function MemberStatusAvatar({
                 })}
               </div>
             ) : (
-              <p className="text-sm text-white/55">No check-in from {member.name} today.</p>
+              <p className="text-sm text-white/55">
+                No check-in from {isSelf ? "you" : member.name} today.
+              </p>
             )}
 
-            {/* Role + remove management */}
-            {role !== "owner" && (isOwner || canRemove) ? (
+            {/* Role + remove management (managers only) */}
+            {showManageRow ? (
               <div className="flex flex-wrap items-center gap-4 border-t border-white/10 pt-4">
                 {isOwner ? (
                   <UpdateMemberRoleButton groupId={groupId} userId={userId} role={role} />
@@ -151,9 +154,10 @@ export function MemberStatusAvatar({
             {member.username ? (
               <Link
                 href={`/u/${member.username}`}
-                className="inline-block text-xs text-white/55 underline transition hover:text-white"
+                className="flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] py-2.5 text-sm font-medium text-white transition hover:bg-white/[0.14]"
               >
-                View @{member.username}
+                View full profile
+                <ArrowUpRight className="h-4 w-4" />
               </Link>
             ) : null}
           </div>
