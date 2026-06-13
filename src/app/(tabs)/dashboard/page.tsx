@@ -109,25 +109,16 @@ export default async function Dashboard() {
     const owesPeopleCount = new Set((pendingOwes ?? []).map((o) => o.to_user)).size;
     const owedPeopleCount = new Set((pendingOwed ?? []).map((o) => o.from_user)).size;
 
-    // ── Week dots (current ISO week Mon–Sun) ───────────────────────────────
-    // Day-of-week index for each slot (Mon=1, …, Sat=6, Sun=0)
-    const slotDow = [1, 2, 3, 4, 5, 6, 0];
-    const weekDots = Array.from({ length: 7 }, (_, i) => {
-      const [my, mm, md] = currentWeekMonday.split("-").map(Number);
-      const mondayDate = new Date(Date.UTC(my, mm - 1, md));
-      mondayDate.setUTCDate(mondayDate.getUTCDate() + i);
-      const key = mondayDate.toISOString().slice(0, 10);
-      const label = ["M", "T", "W", "T", "F", "S", "S"][i];
-      const isFuture = key > today;
-      const isRestSlot = restDays.includes(slotDow[i]);
-      const recorded = statusByDay.get(key);
-      const status = recorded ?? (isRestSlot && isFuture ? "rest_day" : "pending");
-      return { key, label, current: key === today, status };
-    });
-
-    const thisWeekCheckins = weekDots.filter((d) =>
-      shouldCountTowardStreak(d.status)
-    ).length;
+    // This week's check-in count toward the weekly goal. Counted directly from
+    // statusByDay (single pass, same approach as computeProfileStats) — only
+    // verified/unverified days in the current ISO week count. No inline status
+    // derivation, so it can't drift from deriveDayStatus.
+    let thisWeekCheckins = 0;
+    for (const [day, status] of statusByDay) {
+      if (shouldCountTowardStreak(status) && isoWeekMonday(day) === currentWeekMonday) {
+        thisWeekCheckins++;
+      }
+    }
 
     return (
       <>
