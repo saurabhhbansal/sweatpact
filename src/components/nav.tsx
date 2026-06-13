@@ -105,7 +105,7 @@ export function MobileNav({ username }: { username?: string }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 px-3"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-black px-3"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
     >
       <div className="container mx-auto flex max-w-md items-center gap-2">
@@ -116,7 +116,7 @@ export function MobileNav({ username }: { username?: string }) {
           <span
             ref={indicatorRef}
             aria-hidden="true"
-            className="glass-pill pointer-events-none absolute bottom-1 left-1 top-1 z-0 rounded-[1.4rem]"
+            className="glass-pill pointer-events-none absolute bottom-1 left-1 top-1 z-0 rounded-[1.65rem]"
             style={{
               width: `calc((100% - 0.5rem) / ${links.length})`,
               translate: `calc(${Math.max(activeIndex, 0)} * 100%) 0`,
@@ -138,7 +138,7 @@ export function MobileNav({ username }: { username?: string }) {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
-                  "group relative z-10 flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.4rem] text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+                  "group relative z-10 flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.65rem] text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                   active ? "text-white" : "text-white/55 hover:text-[color:var(--c-action)]"
                 )}
               >
@@ -223,7 +223,7 @@ export function TopNav({
 
   return (
     <header
-      className="sticky top-0 z-40 px-3"
+      className="sticky top-0 z-40 bg-black px-3"
       style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}
     >
       <div className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]">
