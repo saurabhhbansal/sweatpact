@@ -186,33 +186,55 @@ export default async function Dashboard() {
             />
           </div>
 
-          <div
-            className="animate-fade-up-item shrink-0 grid grid-cols-2 gap-3"
-            style={{ "--stagger": "180ms" } as React.CSSProperties}
-          >
-            <div className={`rounded-[1.7rem] p-3 ${totalOwes > 0 ? "border border-red-500/50 bg-red-500/10" : "glass-card"}`}>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/55">You owe</p>
-              <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
-              <p className="mt-1 text-xs text-white/45">
-                {owesPeopleCount === 0
-                  ? "all clear"
-                  : owesPeopleCount === 1
-                    ? "to 1 person"
-                    : `to ${owesPeopleCount} people`}
+          {totalOwes === 0 && totalOwed === 0 ? (
+            <div
+              className="animate-fade-up-item shrink-0 rounded-[2rem] glass-card p-4 text-center"
+              style={{ "--stagger": "180ms" } as React.CSSProperties}
+            >
+              <p className="text-sm font-semibold text-white">All settled up</p>
+              <p className="mt-1 text-xs text-white/55">
+                No debts in either direction. Keep the streak alive.
               </p>
             </div>
-            <div className="rounded-[1.7rem] glass-card p-3">
-              <p className="text-xs uppercase tracking-[0.18em] text-white/55">Owed to you</p>
-              <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
-              <p className="mt-1 text-xs text-white/45">
-                {owedPeopleCount === 0
-                  ? "all clear"
-                  : owedPeopleCount === 1
-                    ? "from 1 person"
-                    : `from ${owedPeopleCount} people`}
-              </p>
+          ) : (
+            // Single composed ledger — the two owe/owed boxes share one shell,
+            // split by a hairline, each half tappable to the challenges list.
+            <div
+              className="animate-fade-up-item shrink-0 overflow-hidden rounded-[2rem] glass-card"
+              style={{ "--stagger": "180ms" } as React.CSSProperties}
+            >
+              <div className="grid grid-cols-2">
+                <Link
+                  href="/groups"
+                  className={`p-4 transition ${totalOwes > 0 ? "bg-red-500/10 hover:bg-red-500/15" : "hover:bg-white/[0.06]"}`}
+                >
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-white/55">You owe</p>
+                  <p className="mt-1.5 truncate text-xl font-bold text-white">{formatCents(totalOwes)}</p>
+                  <p className="mt-1 text-xs text-white/45">
+                    {owesPeopleCount === 0
+                      ? "all clear"
+                      : owesPeopleCount === 1
+                        ? "to 1 person"
+                        : `to ${owesPeopleCount} people`}
+                  </p>
+                </Link>
+                <Link
+                  href="/groups"
+                  className="border-l border-white/10 p-4 transition hover:bg-white/[0.06]"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-white/55">Owed to you</p>
+                  <p className="mt-1.5 truncate text-xl font-bold text-white">{formatCents(totalOwed)}</p>
+                  <p className="mt-1 text-xs text-white/45">
+                    {owedPeopleCount === 0
+                      ? "all clear"
+                      : owedPeopleCount === 1
+                        ? "from 1 person"
+                        : `from ${owedPeopleCount} people`}
+                  </p>
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
 
         </main>
       </>
