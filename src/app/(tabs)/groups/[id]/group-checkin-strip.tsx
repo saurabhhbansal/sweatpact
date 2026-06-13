@@ -312,8 +312,12 @@ export function GroupCheckinStrip({
                     // Multi-member pie
                     <>
                       {statuses.map((status, mi) => {
-                        const startDeg = -90 + mi * sliceDeg;
-                        const endDeg = -90 + (mi + 1) * sliceDeg;
+                        // Members are ordered current-user-first, and the versus
+                        // hero shows "you" on the left. Start the first wedge at
+                        // the bottom (+90°) so member 0 fills the LEFT half,
+                        // matching the avatar layout instead of mirroring it.
+                        const startDeg = 90 + mi * sliceDeg;
+                        const endDeg = 90 + (mi + 1) * sliceDeg;
                         return (
                           <g key={mi}>
                             <path
