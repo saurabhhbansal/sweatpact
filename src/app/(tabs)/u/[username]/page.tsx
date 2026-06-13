@@ -155,7 +155,7 @@ export default async function ProfilePage({
               )}
             </div>
 
-            {/* Identity + streak + this-week — right */}
+            {/* Identity — right */}
             <div className="min-w-0 flex-1">
               {isOwner ? (
                 <>
@@ -172,41 +172,6 @@ export default async function ProfilePage({
               )}
               <p className="mt-1 text-xs text-white/40">Joined {joinedDate}</p>
 
-              {stats ? (
-                <>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Flame className="h-5 w-5 text-white/45" aria-hidden="true" />
-                    <span className="text-4xl font-bold leading-none text-white">{stats.weekStreak}</span>
-                    <span className="text-sm text-white/55">week streak</span>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="uppercase tracking-[0.16em] text-white/45">This week</span>
-                      <span className="font-semibold text-white">
-                        {stats.thisWeekCheckins}
-                        <span className="font-medium text-white/35">/{stats.weeklyGoal}</span>
-                      </span>
-                    </div>
-                    <div
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={stats.weeklyGoal}
-                      aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
-                      aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
-                      className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
-                    >
-                      <div
-                        className="animate-bar-in h-full rounded-full bg-white"
-                        style={{
-                          width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : null}
-
               {!isOwner && canSeeStats ? (
                 <div className="mt-4">
                   <ChallengeButton
@@ -218,6 +183,41 @@ export default async function ProfilePage({
               ) : null}
             </div>
           </div>
+
+          {/* Streak + this-week on one full-width line, using the empty space
+              under the photo. Streak is just the flame + count. */}
+          {stats ? (
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex shrink-0 items-center gap-2">
+                <Flame className="h-6 w-6 text-white/45" aria-hidden="true" />
+                <span className="text-4xl font-bold leading-none text-white">{stats.weekStreak}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="uppercase tracking-[0.16em] text-white/45">This week</span>
+                  <span className="font-semibold text-white">
+                    {stats.thisWeekCheckins}
+                    <span className="font-medium text-white/35">/{stats.weeklyGoal}</span>
+                  </span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={stats.weeklyGoal}
+                  aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
+                  aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
+                  className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                >
+                  <div
+                    className="animate-bar-in h-full rounded-full bg-white"
+                    style={{
+                      width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
         </section>
 
         {popupStats ? (
