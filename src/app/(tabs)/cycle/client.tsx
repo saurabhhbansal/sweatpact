@@ -124,7 +124,7 @@ function DateStrip({
                   : isPeriod && fs
                     ? `${fs.pill} ${fs.ring} text-white`
                     : isPredicted
-                      ? "border border-dashed border-white/30 text-white/60"
+                      ? "border border-dashed border-rose-400/55 bg-rose-400/[0.06] text-rose-200/85"
                       : isToday
                         ? "border border-white/40 text-white"
                         : "text-white/55"
@@ -135,7 +135,7 @@ function DateStrip({
               {isPeriod && !isSelected && fs ? (
                 <span className={`absolute bottom-1 h-1 w-1 rounded-full ${fs.dot}`} />
               ) : isPredicted ? (
-                <span className="absolute bottom-1 h-1 w-1 rounded-full border border-white/35" />
+                <span className="absolute bottom-1 h-1 w-1 rounded-full border border-rose-400/65" />
               ) : null}
             </div>
           </button>
