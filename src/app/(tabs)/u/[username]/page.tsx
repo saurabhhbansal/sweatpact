@@ -1,7 +1,7 @@
 import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Flame, MapPin, Moon, Target, User } from "lucide-react";
+import { CalendarCheck2, Flame, MapPin, Moon, Target, User } from "lucide-react";
 import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -133,10 +133,10 @@ export default async function ProfilePage({
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <section className="animate-fade-up-item rounded-[2rem] glass-card p-5">
-          <div className="flex items-start gap-4">
-            {/* Photo — left. Fixed to the avatar width so AvatarUpload's
-                status/error text can't widen the column and shove the right
-                column around. */}
+          {/* Identity band — avatar vertically centered against the name block */}
+          <div className="flex items-center gap-4">
+            {/* Fixed to the avatar width so AvatarUpload's status/error text
+                can't widen the column and shove the name around. */}
             <div className="w-20 shrink-0">
               {isOwner ? (
                 <AvatarUpload
@@ -155,7 +155,6 @@ export default async function ProfilePage({
               )}
             </div>
 
-            {/* Identity — right */}
             <div className="min-w-0 flex-1">
               {isOwner ? (
                 <>
@@ -167,46 +166,46 @@ export default async function ProfilePage({
               ) : (
                 <>
                   <h1 className="truncate text-xl font-semibold text-white">{displayName}</h1>
-                  <p className="truncate text-sm text-white/55">@{profile.username}</p>
+                  <p className="mt-0.5 truncate text-sm text-white/55">@{profile.username}</p>
                 </>
               )}
               <p className="mt-1 text-xs text-white/40">Joined {joinedDate}</p>
-
-              {!isOwner && canSeeStats ? (
-                <div className="mt-4">
-                  <ChallengeButton
-                    targetUserId={profile.id}
-                    targetUsername={profile.username!}
-                    targetName={displayName}
-                  />
-                </div>
-              ) : null}
             </div>
           </div>
 
-          {/* Streak + this-week on one full-width line, using the empty space
-              under the photo. Streak is just the flame + count. */}
+          {/* Stat band — two-up, sharing the icon+label section headers used
+              across the rest of the page. */}
           {stats ? (
-            <div className="mt-4 flex items-center gap-4">
-              <div className="flex shrink-0 items-center gap-2">
-                <Flame className="h-6 w-6 text-white/45" aria-hidden="true" />
-                <span className="text-4xl font-bold leading-none text-white">{stats.weekStreak}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="uppercase tracking-[0.16em] text-white/45">This week</span>
-                  <span className="font-semibold text-white">
-                    {stats.thisWeekCheckins}
-                    <span className="font-medium text-white/35">/{stats.weeklyGoal}</span>
-                  </span>
+            <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+              <div>
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <Flame className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">Streak</p>
                 </div>
+                <p className="mt-2 text-3xl font-bold leading-none text-white">
+                  {stats.weekStreak}
+                  <span className="ml-1.5 text-sm font-medium text-white/45">
+                    wk{stats.weekStreak === 1 ? "" : "s"}
+                  </span>
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5 text-white/45">
+                  <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <p className="text-xs uppercase tracking-[0.18em]">This week</p>
+                </div>
+                <p className="mt-2 text-3xl font-bold leading-none text-white">
+                  {stats.thisWeekCheckins}
+                  <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
+                </p>
                 <div
                   role="progressbar"
                   aria-valuemin={0}
                   aria-valuemax={stats.weeklyGoal}
                   aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
                   aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
-                  className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                  className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
                 >
                   <div
                     className="animate-bar-in h-full rounded-full bg-white"
@@ -216,6 +215,16 @@ export default async function ProfilePage({
                   />
                 </div>
               </div>
+            </div>
+          ) : null}
+
+          {!isOwner && canSeeStats ? (
+            <div className="mt-4">
+              <ChallengeButton
+                targetUserId={profile.id}
+                targetUsername={profile.username!}
+                targetName={displayName}
+              />
             </div>
           ) : null}
         </section>
@@ -246,14 +255,17 @@ export default async function ProfilePage({
         ) : stats ? (
           <>
             <section className="animate-fade-up-item rounded-[2rem] glass-card px-4 py-4" style={{ "--stagger": "60ms" } as React.CSSProperties}>
-              <p className="mb-3 text-xs uppercase tracking-[0.2em] text-white/45">Activity</p>
+              <div className="mb-3 flex items-center gap-1.5 text-white/45">
+                <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                <p className="text-xs uppercase tracking-[0.18em]">Activity</p>
+              </div>
               <CheckinStrip
                 today={today}
                 startDay={joinedDay}
                 history={stats.history}
                 restDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
               />
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/[0.08] pt-3 text-xs text-white/55">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 pt-3 text-xs text-white/55">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500/90" aria-hidden="true" />
                   {stats.totalGymDays} gym
