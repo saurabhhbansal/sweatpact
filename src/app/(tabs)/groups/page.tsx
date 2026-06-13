@@ -133,6 +133,14 @@ export default async function ChallengesPage() {
 
   const pendingCount = pendingInvites?.length ?? 0;
 
+  // A challenge only becomes real once someone accepts. The invite flow creates
+  // the group with just the inviter, so a pending (or abandoned) challenge has a
+  // single member — hide those so the list shows only challenges with an actual
+  // opponent. Pending sent invites still live in the notifications overlay.
+  const activeMemberships = memberships.filter(
+    (m) => (membersByGroup.get(m.group_id)?.size ?? 0) >= 2
+  );
+
   return (
     <>
       <main className="container max-w-md space-y-5 pb-28 pt-4">
@@ -157,7 +165,7 @@ export default async function ChallengesPage() {
 
         {/* Challenge versus cards — primary daily view */}
         <div className="space-y-3">
-          {memberships.length === 0 ? (
+          {activeMemberships.length === 0 ? (
             <div
               className="animate-fade-up-item rounded-[2rem] glass-card p-6 text-center"
               style={{ "--stagger": "50ms" } as React.CSSProperties}
@@ -168,7 +176,7 @@ export default async function ChallengesPage() {
               </p>
             </div>
           ) : (
-            memberships.map((membership, index) => {
+            activeMemberships.map((membership, index) => {
               if (!membership.group) return null;
               const memberMap = membersByGroup.get(membership.group_id) ?? new Map();
               const statusMap = statusByGroupUser.get(membership.group_id) ?? new Map();
