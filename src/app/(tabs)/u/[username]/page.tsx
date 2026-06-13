@@ -134,8 +134,10 @@ export default async function ProfilePage({
       <main className="container max-w-md space-y-4 pb-28 pt-4">
         <section className="animate-fade-up-item rounded-[2rem] glass-card p-5">
           <div className="flex items-start gap-4">
-            {/* Photo — left */}
-            <div className="shrink-0">
+            {/* Photo — left. Fixed to the avatar width so AvatarUpload's
+                status/error text can't widen the column and shove the right
+                column around. */}
+            <div className="w-20 shrink-0">
               {isOwner ? (
                 <AvatarUpload
                   userId={profile.id}

@@ -49,10 +49,10 @@ export function NameEditor({ currentName }: { currentName: string }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="group inline-flex items-center gap-2 rounded-md px-2 py-1 text-2xl font-semibold text-white hover:bg-white/[0.06]"
+        className="group inline-flex min-w-0 max-w-full items-center gap-2 rounded-md px-2 py-1 text-2xl font-semibold text-white hover:bg-white/[0.06]"
       >
-        <span>{display}</span>
-        <Pencil className="h-4 w-4 text-white/40 transition group-hover:text-white/70" />
+        <span className="truncate">{display}</span>
+        <Pencil className="h-4 w-4 shrink-0 text-white/40 transition group-hover:text-white/70" />
       </button>
     );
   }
