@@ -75,14 +75,16 @@ describe("computePeriodStats", () => {
     expect(s.cycles[0].cycleLengthDays).toBe(28); // 04-01 → 04-29
   });
 
-  it("does NOT predict from a single measured gap (needs 3 starts)", () => {
+  it("predicts from a single measured gap (2 starts)", () => {
     const records = [...block("2026-04-01", 1), ...block("2026-04-29", 1)];
     const s = computePeriodStats(records, "2026-05-10");
     expect(s.cyclesSampled).toBe(2);
-    expect(s.averageCycleDays).toBeNull();
-    expect(s.nextPredictedStart).toBeNull();
-    expect(s.daysUntilPredicted).toBeNull();
+    expect(s.averageCycleDays).toBe(28); // the one observed gap
+    expect(s.nextPredictedStart).toBe("2026-05-27"); // 04-29 + 28
+    expect(s.daysUntilPredicted).toBe(17); // 05-10 → 05-27
+    // Regularity and spread still need more cycles.
     expect(s.regularity).toBe("unknown");
+    expect(s.cycleLengthSpreadDays).toBeNull();
   });
 
   it("computes average and predicts once there are 3 starts (2 gaps)", () => {

@@ -28,7 +28,7 @@ export type PeriodStats = {
   averageCycleDays: number | null;
   averageDurationDays: number | null;
   cyclesSampled: number;
-  // Prediction: only set when we have ≥2 plausible measured gaps (≥3 starts).
+  // Prediction: set once we have ≥1 plausible measured gap (≥2 starts).
   nextPredictedStart: string | null;
   daysUntilPredicted: number | null;
   // True when the prediction is materially overdue (user likely stopped logging
@@ -205,9 +205,11 @@ export function computePeriodStats(records: PeriodRecord[], today: string): Peri
     .map((c) => c.cycleLengthDays)
     .filter((n): n is number => n != null && n >= MIN_CYCLE && n <= MAX_CYCLE);
 
-  // Require ≥2 valid gaps (≥3 period starts) before claiming an average.
+  // Predict once there is ≥1 plausible measured gap (≥2 period starts). With a
+  // single gap the "average" is that one observed cycle — less certain, but
+  // enough to give an early prediction. Regularity/spread still need more data.
   let averageCycleDays: number | null = null;
-  if (validGaps.length >= 2) {
+  if (validGaps.length >= 1) {
     averageCycleDays = Math.round(validGaps.reduce((a, b) => a + b, 0) / validGaps.length);
   }
 
