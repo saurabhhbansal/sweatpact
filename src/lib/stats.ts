@@ -14,7 +14,6 @@ export type ProfileStats = {
   totalRestDays: number;
   totalExcusedDays: number;
   totalMissedDays: number;
-  challengesActive: number;
   weeklyGoal: number;
   joinedAt: string;
   history: { local_day: string; status: string }[];
@@ -43,7 +42,6 @@ export async function computeProfileStats(
   const [
     { data: dailyHistory },
     { data: checkinHistory },
-    { count: challengesActive },
   ] = await Promise.all([
     supabase
       .from("daily_status")
@@ -59,10 +57,6 @@ export async function computeProfileStats(
       .eq("user_id", userId)
       .neq("status", "rejected")
       .limit(5000),
-    supabase
-      .from("group_members")
-      .select("group_id", { count: "exact", head: true })
-      .eq("user_id", userId),
   ]);
 
   const statusByDay = new Map<string, string>();
@@ -114,7 +108,6 @@ export async function computeProfileStats(
     totalRestDays,
     totalExcusedDays,
     totalMissedDays,
-    challengesActive: challengesActive ?? 0,
     weeklyGoal,
     joinedAt,
     history,

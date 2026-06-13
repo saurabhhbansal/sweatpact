@@ -1,7 +1,7 @@
 import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarCheck2, Flame, MapPin, Moon, Target, User, Users2 } from "lucide-react";
+import { Flame, MapPin, Moon, Target, User } from "lucide-react";
 import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -132,48 +132,92 @@ export default async function ProfilePage({
   return (
     <>
       <main className="container max-w-md space-y-4 pb-28 pt-4">
-        <section className="animate-fade-up-item flex flex-col items-center rounded-[2rem] glass-card p-6 text-center">
-          {isOwner ? (
-            <AvatarUpload
-              userId={profile.id}
-              username={profile.username}
-              name={profile.name}
-              initialUrl={profile.avatar_url}
-            />
-          ) : (
-            <Avatar
-              url={profile.avatar_url}
-              name={profile.name}
-              username={profile.username}
-              size="lg"
-            />
-          )}
-          {isOwner ? (
-            <>
-              <div className="mt-4">
-                <NameEditor currentName={profile.name ?? ""} />
-              </div>
-              <div className="mt-1">
-                <UsernameEditor currentUsername={profile.username!} />
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 className="mt-4 text-2xl font-semibold text-white">{displayName}</h1>
-              <p className="mt-1 text-sm text-white/55">@{profile.username}</p>
-            </>
-          )}
-          <p className="mt-1 text-xs text-white/40">Joined {joinedDate}</p>
-
-          {!isOwner && canSeeStats ? (
-            <div className="mt-4">
-              <ChallengeButton
-                targetUserId={profile.id}
-                targetUsername={profile.username!}
-                targetName={displayName}
-              />
+        <section className="animate-fade-up-item rounded-[2rem] glass-card p-5">
+          <div className="flex items-start gap-4">
+            {/* Photo — left. Fixed to the avatar width so AvatarUpload's
+                status/error text can't widen the column and shove the right
+                column around. */}
+            <div className="w-20 shrink-0">
+              {isOwner ? (
+                <AvatarUpload
+                  userId={profile.id}
+                  username={profile.username}
+                  name={profile.name}
+                  initialUrl={profile.avatar_url}
+                />
+              ) : (
+                <Avatar
+                  url={profile.avatar_url}
+                  name={profile.name}
+                  username={profile.username}
+                  size="lg"
+                />
+              )}
             </div>
-          ) : null}
+
+            {/* Identity + streak + this-week — right */}
+            <div className="min-w-0 flex-1">
+              {isOwner ? (
+                <>
+                  <NameEditor currentName={profile.name ?? ""} />
+                  <div className="mt-0.5">
+                    <UsernameEditor currentUsername={profile.username!} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="truncate text-xl font-semibold text-white">{displayName}</h1>
+                  <p className="truncate text-sm text-white/55">@{profile.username}</p>
+                </>
+              )}
+              <p className="mt-1 text-xs text-white/40">Joined {joinedDate}</p>
+
+              {stats ? (
+                <>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-white/45" aria-hidden="true" />
+                    <span className="text-4xl font-bold leading-none text-white">{stats.weekStreak}</span>
+                    <span className="text-sm text-white/55">week streak</span>
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="uppercase tracking-[0.16em] text-white/45">This week</span>
+                      <span className="font-semibold text-white">
+                        {stats.thisWeekCheckins}
+                        <span className="font-medium text-white/35">/{stats.weeklyGoal}</span>
+                      </span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={stats.weeklyGoal}
+                      aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
+                      aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
+                      className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                    >
+                      <div
+                        className="animate-bar-in h-full rounded-full bg-white"
+                        style={{
+                          width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {!isOwner && canSeeStats ? (
+                <div className="mt-4">
+                  <ChallengeButton
+                    targetUserId={profile.id}
+                    targetUsername={profile.username!}
+                    targetName={displayName}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
         </section>
 
         {popupStats ? (
@@ -201,60 +245,7 @@ export default async function ProfilePage({
           </section>
         ) : stats ? (
           <>
-            <section aria-label="Stats" className="animate-fade-up-item grid grid-cols-2 gap-3" style={{ "--stagger": "60ms" } as React.CSSProperties}>
-              <div className="col-span-2 rounded-[2rem] glass-card p-5">
-                <div className="flex items-center gap-1.5 text-white/45">
-                  <Flame className="h-3.5 w-3.5" aria-hidden="true" />
-                  <p className="text-xs uppercase tracking-[0.18em]">Week streak</p>
-                </div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <p className="text-5xl font-bold text-white">{stats.weekStreak}</p>
-                  <p className="text-sm text-white/55">
-                    consecutive week{stats.weekStreak === 1 ? "" : "s"} hitting goal
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[1.7rem] glass-card p-4">
-                <div className="flex items-center gap-1.5 text-white/45">
-                  <CalendarCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <p className="text-[10px] uppercase tracking-[0.16em]">This week</p>
-                </div>
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {stats.thisWeekCheckins}
-                  <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
-                </p>
-                <div
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={stats.weeklyGoal}
-                  aria-valuenow={Math.min(stats.thisWeekCheckins, stats.weeklyGoal)}
-                  aria-label={`${stats.thisWeekCheckins} of ${stats.weeklyGoal} days this week`}
-                  className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10"
-                >
-                  <div
-                    className="animate-bar-in h-full rounded-full bg-white"
-                    style={{
-                      width: `${Math.min(100, Math.round((stats.thisWeekCheckins / Math.max(1, stats.weeklyGoal)) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <p className="mt-1.5 text-[11px] text-white/45">
-                  {stats.thisWeekCheckins >= stats.weeklyGoal ? "goal met" : "days done"}
-                </p>
-              </div>
-
-              <div className="rounded-[1.7rem] glass-card p-4">
-                <div className="flex items-center gap-1.5 text-white/45">
-                  <Users2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <p className="text-[10px] uppercase tracking-[0.16em]">Challenges</p>
-                </div>
-                <p className="mt-2 text-2xl font-bold text-white">{stats.challengesActive}</p>
-                <p className="mt-1.5 text-[11px] text-white/45">active right now</p>
-              </div>
-            </section>
-
-            <section className="animate-fade-up-item rounded-[2rem] glass-card px-4 py-4" style={{ "--stagger": "120ms" } as React.CSSProperties}>
+            <section className="animate-fade-up-item rounded-[2rem] glass-card px-4 py-4" style={{ "--stagger": "60ms" } as React.CSSProperties}>
               <p className="mb-3 text-xs uppercase tracking-[0.2em] text-white/45">Activity</p>
               <CheckinStrip
                 today={today}
