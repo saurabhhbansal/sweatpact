@@ -15,15 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { rupeesToCents } from "@/lib/money";
+import { cn } from "@/lib/utils";
 
 export function ChallengeButton({
   targetUserId,
   targetUsername,
   targetName,
+  className,
 }: {
   targetUserId: string;
   targetUsername: string;
   targetName: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -80,7 +83,10 @@ export function ChallengeButton({
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="rounded-full px-6 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
+        className={cn(
+          "rounded-full px-6 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none",
+          className
+        )}
       >
         Challenge @{targetUsername}
       </Button>

@@ -209,6 +209,7 @@ export default async function ProfilePage({
                 targetUserId={profile.id}
                 targetUsername={profile.username!}
                 targetName={displayName}
+                className="w-full"
               />
             </div>
           ) : null}
@@ -229,11 +230,12 @@ export default async function ProfilePage({
             <p className="mt-1 text-sm text-white/55">
               This user keeps their stats private. Start a challenge together to see them.
             </p>
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4">
               <ChallengeButton
                 targetUserId={profile.id}
                 targetUsername={profile.username!}
                 targetName={displayName}
+                className="w-full"
               />
             </div>
           </section>
