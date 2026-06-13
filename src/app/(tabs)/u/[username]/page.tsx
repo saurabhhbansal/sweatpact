@@ -1,7 +1,7 @@
 import type React from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarCheck2, Flame, MapPin, Moon, Target, User } from "lucide-react";
+import { CalendarCheck2, Eye, Flame, MapPin, Moon, Target, User } from "lucide-react";
 import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
@@ -287,52 +287,65 @@ export default async function ProfilePage({
               </section>
             ) : null}
 
+            {/* Preferences — one shell, internal divided rows (was four
+                separate cards: goal, rest days, gender, visibility). */}
             {isOwner ? (
-              <>
-                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
-                  <div className="flex items-center gap-1.5 text-white/45">
-                    <Target className="h-3.5 w-3.5" aria-hidden="true" />
-                    <p className="text-xs uppercase tracking-[0.18em]">Weekly goal</p>
+              <section
+                className="animate-fade-up-item rounded-[2rem] glass-card px-5"
+                style={{ "--stagger": "180ms" } as React.CSSProperties}
+              >
+                <div className="divide-y divide-white/10">
+                  <div className="py-5">
+                    <div className="flex items-center gap-1.5 text-white/45">
+                      <Target className="h-3.5 w-3.5" aria-hidden="true" />
+                      <p className="text-xs uppercase tracking-[0.18em]">Weekly goal</p>
+                    </div>
+                    <div className="mt-3">
+                      <WeeklyGoalPicker
+                        initialWeeklyGoal={profile.weekly_goal ?? 4}
+                        restDaysCount={Array.isArray(profile.rest_days) ? profile.rest_days.length : 0}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <WeeklyGoalPicker
-                      initialWeeklyGoal={profile.weekly_goal ?? 4}
-                      restDaysCount={Array.isArray(profile.rest_days) ? profile.rest_days.length : 0}
-                    />
-                  </div>
-                </section>
 
-                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
-                  <div className="flex items-center gap-1.5 text-white/45">
-                    <Moon className="h-3.5 w-3.5" aria-hidden="true" />
-                    <p className="text-xs uppercase tracking-[0.18em]">Rest days</p>
+                  <div className="py-5">
+                    <div className="flex items-center gap-1.5 text-white/45">
+                      <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <p className="text-xs uppercase tracking-[0.18em]">Rest days</p>
+                    </div>
+                    <div className="mt-3">
+                      <RestDaysPicker
+                        initialRestDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
+                        weeklyGoal={profile.weekly_goal ?? 4}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <RestDaysPicker
-                      initialRestDays={Array.isArray(profile.rest_days) ? profile.rest_days : []}
-                      weeklyGoal={profile.weekly_goal ?? 4}
-                    />
-                  </div>
-                </section>
 
-                <section className="animate-fade-up-item rounded-[2rem] glass-card p-5" style={{ "--stagger": "180ms" } as React.CSSProperties}>
-                  <div className="flex items-center gap-1.5 text-white/45">
-                    <User className="h-3.5 w-3.5" aria-hidden="true" />
-                    <p className="text-xs uppercase tracking-[0.18em]">Gender</p>
+                  <div className="py-5">
+                    <div className="flex items-center gap-1.5 text-white/45">
+                      <User className="h-3.5 w-3.5" aria-hidden="true" />
+                      <p className="text-xs uppercase tracking-[0.18em]">Gender</p>
+                    </div>
+                    <div className="mt-3">
+                      <GenderPicker
+                        initialGender={(profile.gender as "male" | "female" | null) ?? null}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <GenderPicker
-                      initialGender={(profile.gender as "male" | "female" | null) ?? null}
-                    />
-                  </div>
-                </section>
-              </>
-            ) : null}
 
-            {isOwner ? (
-              <VisibilityToggle
-                initial={(profile.profile_visibility as "public" | "private") ?? "public"}
-              />
+                  <div className="py-5">
+                    <div className="flex items-center gap-1.5 text-white/45">
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                      <p className="text-xs uppercase tracking-[0.18em]">Visibility</p>
+                    </div>
+                    <div className="mt-3">
+                      <VisibilityToggle
+                        initial={(profile.profile_visibility as "public" | "private") ?? "public"}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
             ) : null}
           </>
         ) : null}
