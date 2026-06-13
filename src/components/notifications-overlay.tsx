@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { NotificationsList, SentInvitations } from "@/app/(tabs)/notifications/client";
@@ -38,6 +38,14 @@ export function NotificationsOverlay({
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
   const [sent, setSent] = useState<SentInvitation[]>([]);
 
+  // Keep the latest onClose in a ref so the open effect can stay keyed on
+  // `open` alone — onClose is an inline arrow at the call site, so depending on
+  // it would re-run the fetch + scroll-lock on every parent render.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
@@ -59,7 +67,7 @@ export function NotificationsOverlay({
       });
 
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     }
     window.addEventListener("keydown", onKey);
 
@@ -68,7 +76,7 @@ export function NotificationsOverlay({
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
