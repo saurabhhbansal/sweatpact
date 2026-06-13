@@ -105,7 +105,7 @@ export function MobileNav({ username }: { username?: string }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-black px-3"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-black/20 px-3 backdrop-blur-2xl"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
     >
       <div className="container mx-auto flex max-w-md items-center gap-2">
@@ -223,7 +223,7 @@ export function TopNav({
 
   return (
     <header
-      className="fixed left-0 right-0 top-0 z-40 bg-black px-3"
+      className="fixed left-0 right-0 top-0 z-40 bg-black/20 px-3 backdrop-blur-2xl"
       style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}
     >
       <div className="container mx-auto flex h-14 max-w-md items-center justify-between rounded-[1.8rem] px-4 glass-liquid bg-white/[0.10]">
