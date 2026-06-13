@@ -190,8 +190,8 @@ export default async function Dashboard() {
             className="animate-fade-up-item shrink-0 grid grid-cols-2 gap-3"
             style={{ "--stagger": "180ms" } as React.CSSProperties}
           >
-            <div className={`rounded-[1.7rem] glass-card p-3 ${totalOwes > 0 ? "bg-red-500/[0.06]" : ""}`}>
-              <p className="text-xs uppercase tracking-[0.14em] text-white/55">You owe</p>
+            <div className={`rounded-[1.7rem] p-3 ${totalOwes > 0 ? "border border-red-500/50 bg-red-500/10" : "glass-card"}`}>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/55">You owe</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwes)}</p>
               <p className="mt-1 text-xs text-white/45">
                 {owesPeopleCount === 0
@@ -202,7 +202,7 @@ export default async function Dashboard() {
               </p>
             </div>
             <div className="rounded-[1.7rem] glass-card p-3">
-              <p className="text-xs uppercase tracking-[0.14em] text-white/55">Owed to you</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/55">Owed to you</p>
               <p className="mt-1 truncate text-lg font-bold text-white">{formatCents(totalOwed)}</p>
               <p className="mt-1 text-xs text-white/45">
                 {owedPeopleCount === 0
