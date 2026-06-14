@@ -3,93 +3,103 @@
 **Defined:** 2026-06-14
 **Core Value:** Make showing up have a consequence — if you skip, you owe your partner.
 
-> **Baseline snapshot.** This file documents the *currently shipped* app as the
-> project baseline. Every requirement below is already implemented and live
-> (status: Complete). New scope is added via `/gsd-new-milestone`.
+> **Current milestone: v1.1 — Guided Onboarding Walkthrough.** Requirements for
+> this milestone are below. The shipped v1.0 baseline is recorded at the bottom
+> for reference. New work is added via `/gsd-new-milestone`.
 
-## v1 Requirements (Shipped Baseline)
+## v1.1 Requirements — Guided Onboarding Walkthrough
 
-### Authentication
+Replace the front-loaded setup wizard with a minimal mandatory start plus a
+contextual coachmark walkthrough that teaches the app and completes optional
+setup in-context. Backed by research in `.planning/research/`.
 
-- [x] **AUTH-01**: User can sign in via email magic-link (Supabase Auth)
-- [x] **AUTH-02**: User session persists and refreshes across requests
-- [x] **AUTH-03**: User gets a per-user webhook secret for iOS Shortcut access
-- [x] **AUTH-04**: User can delete their account
+### Onboarding Entry & Flow
 
-### Onboarding & Profile
+- [ ] **ONB-01**: New user completes a minimal mandatory start (username only) and lands directly in the real app
+- [ ] **ONB-02**: The `(tabs)` redirect gate no longer forces the full setup wizard — only a missing username redirects; optional setup is deferred into the walkthrough
+- [ ] **ONB-03**: Walkthrough supports both entry paths — self-starter (start a challenge) and invited (accept a partner's challenge invite)
+- [ ] **ONB-04**: User can skip the walkthrough at any step without being blocked or nagged, and keep using the app
 
-- [x] **PROF-01**: User completes onboarding (username, gym, schedule, shortcut)
-- [x] **PROF-02**: User can pick a username with availability check
-- [x] **PROF-03**: User can set display name, bio, and avatar (cropped, stored)
-- [x] **PROF-04**: User can view other users' profiles
+### Coachmark Walkthrough Engine
 
-### Check-ins
+- [ ] **TOUR-01**: Contextual coachmarks spotlight live UI elements one at a time, and only show once the target element is actually mounted (no spotlighting empty/streamed space)
+- [ ] **TOUR-02**: The coachmark overlay is click-through (cutout) and coexists with the nav stack, Radix dialogs, and the install gate without trapping input or hiding behind chrome
+- [ ] **TOUR-03**: Coachmarks position correctly within PWA safe-area insets on mobile standalone
+- [ ] **TOUR-04**: Coachmarks are accessible — keyboard advance/skip/dismiss, focus handling, and reduced-motion support
+- [ ] **TOUR-05**: The walkthrough sequences across tabs/routes (navigates, then reveals the next step once its anchor is ready)
 
-- [x] **CHK-01**: User can check in via iOS Shortcut webhook (GPS + secret)
-- [x] **CHK-02**: User can check in manually from the UI
-- [x] **CHK-03**: Check-ins are geo-verified server-side against the gym location
-- [x] **CHK-04**: Day/week status is reconciled idempotently from raw check-in rows
-- [x] **CHK-05**: All period math is timezone-aware (IANA local day)
-- [x] **CHK-06**: Every check-in attempt is audit-logged (IP + User-Agent)
+### Teaching Steps
 
-### Groups & Challenges
+- [ ] **TEACH-01**: The walkthrough teaches and completes gym setup in-context (Google Places)
+- [ ] **TEACH-02**: The walkthrough teaches starting (or accepting) a stakes challenge in-context
+- [ ] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
+- [ ] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
+- [ ] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
+- [ ] **TEACH-06**: The walkthrough is considered complete once all four teaching points (gym, challenge, money, Shortcut) have been presented/done
 
-- [x] **GRP-01**: User can create, join, and leave groups
-- [x] **GRP-02**: User can invite members and manage group settings
-- [x] **GRP-03**: Manager can set member roles and remove members
-- [x] **GRP-04**: Per-member penalty can be configured
-- [x] **GRP-05**: User can run a 1v1 head-to-head challenge (invite/respond/cancel)
-- [x] **GRP-06**: Admin can reverse a check-in (correction path)
+### Setup-as-Action Surfaces
 
-### Enforcement & Money
+- [ ] **SETUP-01**: Gym, schedule, and Shortcut setup UIs are reusable surfaces callable from both the walkthrough and the legacy entry, hitting the existing endpoints (no logic fork)
+- [ ] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
 
-- [x] **ENF-01**: Daily cron closes periods and computes missed-goal penalties
-- [x] **ENF-02**: Weekly stakes / obligations are tracked and settled
-- [x] **ENF-03**: User can raise a dispute; manager can uphold or void it
-- [x] **ENF-04**: User can view period records and settlements
+### Progress & Persistence
 
-### Cycle Tracking
+- [ ] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
+- [ ] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
+- [ ] **PROG-03**: User can replay the walkthrough anytime from Settings
+- [ ] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
 
-- [x] **CYC-01**: User can sync period data from Apple Health via webhook
-- [x] **CYC-02**: Cycle stats / period prediction with rest-day handling
+### Onboarding UX
 
-### Notifications
+- [ ] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
+- [ ] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
+- [ ] **UX-03**: A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion
+- [ ] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
 
-- [x] **NTF-01**: User receives Web Push for check-ins, invites, and reminders
-- [x] **NTF-02**: Push subscriptions are managed with expired-endpoint cleanup
-- [x] **NTF-03**: In-app notification log with user preferences
+## Future Requirements (v1.x / v2)
 
-### Platform & Security
-
-- [x] **PLT-01**: Gym/location search via Google Places (server-proxied key)
-- [x] **PLT-02**: Postgres RLS enforced on all user-facing tables
-- [x] **PLT-03**: Privilege-scoped Supabase clients (browser/server/rsc/admin)
-- [x] **PLT-04**: Zod validation at every API boundary
-- [x] **PLT-05**: Postgres-backed rate limiting on webhook/search endpoints
-- [x] **PLT-06**: Installable PWA (manifest, icons, service worker)
-
-## v2 Requirements
-
-(None tracked yet — add via `/gsd-new-milestone`.)
+- **ANL-01**: Per-step onboarding drop-off analytics
+- **ANL-02**: Re-engagement nudge for users who start onboarding but never create a challenge
+- **TEACH-07**: Money coachmark anchored to the user's own live numbers (post-launch polish)
+- **ONB-05**: Adaptive step ordering refinement by entry path
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Generic fitness/calorie logging | Anti-reference; SweatPact is stakes-and-competition, not a tracker |
-| Brand-athlete / logo-heavy aesthetic | Conflicts with sharp, consequence-first product identity |
-| Corporate SaaS dashboard UX | Zero personality; against design principles |
+| Demo / sandbox / fake-stakes mode (beyond the single labeled practice check-in) | Contradicts the consequence-first brand; only the one labeled practice check-in is allowed |
+| Front-loaded multi-screen setup wizard | This milestone explicitly replaces it |
+| Gamified completion badges for finishing the tutorial | Clashes with brand — the real money scoreboard is the reward |
+| Blocking modal that traps the user until the tour completes | Anti-feature; skip is a hard requirement (ONB-04) |
 
 ## Traceability
 
-Baseline snapshot — all v1 requirements are shipped, not mapped to forward phases.
-Traceability for new work is populated when a milestone roadmap is created.
+Populated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| (filled by roadmapper) | | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Status: all Complete (shipped baseline)
-- Mapped to forward phases: n/a (baseline)
+- v1.1 requirements: 25 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 25 ⚠️
+
+---
+
+## v1.0 Requirements — Shipped Baseline (reference)
+
+All shipped and live (status: Complete). Captured 2026-06-14 from the existing codebase.
+
+- **Authentication:** AUTH-01..04 — magic-link sign-in, session persistence, per-user webhook secret, account deletion
+- **Onboarding & Profile:** PROF-01..04 — setup flow, username availability, display name/bio/avatar, view profiles
+- **Check-ins:** CHK-01..06 — Shortcut webhook, manual, server-side geo-verify, idempotent reconciliation, timezone-aware, audit log
+- **Groups & Challenges:** GRP-01..06 — create/join/leave, invite + settings, roles/remove, per-member penalty, 1v1 challenges, reverse check-in
+- **Enforcement & Money:** ENF-01..04 — daily cron close + penalties, weekly obligations/settlement, dispute uphold/void, period records
+- **Cycle Tracking:** CYC-01..02 — Apple Health period sync, cycle stats/prediction
+- **Notifications:** NTF-01..03 — Web Push, subscription management/cleanup, in-app log
+- **Platform & Security:** PLT-01..06 — Google Places search, RLS, privilege-scoped clients, Zod validation, rate limiting, PWA
 
 ---
 *Requirements defined: 2026-06-14*
-*Last updated: 2026-06-14 after initialization (baseline snapshot)*
+*Last updated: 2026-06-14 after starting milestone v1.1*
