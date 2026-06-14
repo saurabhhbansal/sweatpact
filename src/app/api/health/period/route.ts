@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { safeEqual } from "@/lib/secure-compare";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { listUserMemberships } from "@/lib/groups";
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
     .select("user_id, webhook_secret")
     .eq("user_id", user_id)
     .maybeSingle();
-  if (!secretRow || secretRow.webhook_secret !== secret) {
+  if (!secretRow || !safeEqual(secretRow.webhook_secret, secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
