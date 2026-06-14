@@ -74,16 +74,40 @@ setup in-context. Backed by research in `.planning/research/`.
 
 ## Traceability
 
-Populated during roadmap creation.
+Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (filled by roadmapper) | | Pending |
+| PROG-01 | Phase 1 | Pending |
+| PROG-04 | Phase 1 | Pending |
+| TEACH-06 | Phase 2 | Pending |
+| PROG-02 | Phase 2 | Pending |
+| SETUP-01 | Phase 2 | Pending |
+| ONB-01 | Phase 3 | Pending |
+| ONB-02 | Phase 3 | Pending |
+| ONB-04 | Phase 3 | Pending |
+| TOUR-01 | Phase 4 | Pending |
+| TOUR-02 | Phase 4 | Pending |
+| TOUR-03 | Phase 4 | Pending |
+| TOUR-04 | Phase 4 | Pending |
+| TOUR-05 | Phase 5 | Pending |
+| ONB-03 | Phase 5 | Pending |
+| TEACH-01 | Phase 5 | Pending |
+| TEACH-02 | Phase 5 | Pending |
+| TEACH-03 | Phase 5 | Pending |
+| TEACH-04 | Phase 5 | Pending |
+| TEACH-05 | Phase 5 | Pending |
+| SETUP-02 | Phase 5 | Pending |
+| UX-01 | Phase 5 | Pending |
+| UX-02 | Phase 5 | Pending |
+| UX-04 | Phase 5 | Pending |
+| PROG-03 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 25 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 25 ⚠️
+- Mapped to phases: 25 ✓
+- Unmapped: 0
 
 ---
 
@@ -102,4 +126,4 @@ All shipped and live (status: Complete). Captured 2026-06-14 from the existing c
 
 ---
 *Requirements defined: 2026-06-14*
-*Last updated: 2026-06-14 after starting milestone v1.1*
+*Last updated: 2026-06-14 after roadmap creation for v1.1 (25/25 requirements mapped across 6 phases)*
