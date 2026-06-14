@@ -23,7 +23,3 @@ out
 *.orig
 *.patch
 tsconfig.tsbuildinfo
-
-
-# GSD planning docs (local-only)
-.planning/
