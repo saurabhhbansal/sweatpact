@@ -4,16 +4,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * Fixed-window rate limit backed by the Postgres `check_rate_limit` function.
  * Returns true when the request is allowed. Fails OPEN: if the limiter itself
  * errors we don't lock out legitimate traffic — this is best-effort abuse
- * mitigation, not an authorization control. Call with the service-role/admin
- * client (the function is the only writer to the internal rate_limits table).
+ * mitigation, not an authorization control. Works with either the admin or a
+ * user client: `check_rate_limit` is SECURITY DEFINER and is the only writer to
+ * the internal (deny-all RLS) rate_limits table, so callers never touch it
+ * directly.
  */
 export async function rateLimit(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   key: string,
   max: number,
   windowSeconds: number
 ): Promise<boolean> {
-  const { data, error } = await admin.rpc("check_rate_limit", {
+  const { data, error } = await client.rpc("check_rate_limit", {
     p_key: key,
     p_max: max,
     p_window_seconds: windowSeconds,
