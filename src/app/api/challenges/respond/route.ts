@@ -58,14 +58,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Only clean up the group if this was the initial 2-person invite
-    // (i.e. the group has just the inviter and no other members).
-    const { count } = await admin
-      .from("group_members")
-      .select("user_id", { count: "exact", head: true })
-      .eq("group_id", invitation.group_id);
-    if ((count ?? 0) <= 1) {
-      await admin.from("groups").delete().eq("id", invitation.group_id);
+    // New invitations have no group yet (it's created on accept), so there's
+    // nothing to clean up. Legacy invitations created before deferral still
+    // carry a group — remove it if it's just the inviter.
+    if (invitation.group_id) {
+      const { count } = await admin
+        .from("group_members")
+        .select("user_id", { count: "exact", head: true })
+        .eq("group_id", invitation.group_id);
+      if ((count ?? 0) <= 1) {
+        await admin.from("groups").delete().eq("id", invitation.group_id);
+      }
     }
 
     await admin.from("notifications").insert({
@@ -91,76 +94,141 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, action: "declined" });
   }
 
-  // Accept: add recipient as member of the group.
+  // Atomically claim the invitation: flip pending → accepted only if it's still
+  // pending. A double-tap (or concurrent request) finds it already accepted and
+  // bails, so we never create two groups for one invitation.
+  const { data: claimed } = await admin
+    .from("challenge_invitations")
+    .update({ status: "accepted", responded_at: new Date().toISOString() })
+    .eq("id", invitation_id)
+    .eq("status", "pending")
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    return NextResponse.json({ error: "already_responded" }, { status: 409 });
+  }
+
+  // If anything below fails, release the claim so the recipient can retry.
+  async function releaseAndFail(detail?: string) {
+    await admin
+      .from("challenge_invitations")
+      .update({ status: "pending", responded_at: null })
+      .eq("id", invitation_id);
+    return NextResponse.json({ error: "db_error", detail }, { status: 500 });
+  }
+
+  // The group is created now (deferred from invite time) unless this is a legacy
+  // invitation that already has one. Both users join here.
+  const isNewGroup = !invitation.group_id;
+  let groupId = invitation.group_id;
+  if (isNewGroup) {
+    const { data: parties } = await admin
+      .from("profiles")
+      .select("id, name, username")
+      .in("id", [invitation.from_user, invitation.to_user]);
+    const fromP = parties?.find((p) => p.id === invitation.from_user);
+    const toP = parties?.find((p) => p.id === invitation.to_user);
+    const groupName = `${fromP?.name?.trim() || fromP?.username || "Challenger"} vs ${toP?.name?.trim() || toP?.username || "Opponent"}`;
+
+    const { data: group, error: groupErr } = await admin
+      .from("groups")
+      .insert({
+        name: groupName,
+        owner_id: invitation.from_user,
+        default_penalty_cents: invitation.penalty_cents,
+      })
+      .select("id")
+      .single();
+    if (groupErr || !group) {
+      return releaseAndFail(groupErr?.message);
+    }
+    groupId = group.id;
+
+    // Inviter joins as owner.
+    const { error: ownerErr } = await admin.from("group_members").insert({
+      group_id: groupId,
+      user_id: invitation.from_user,
+      role: "owner",
+    });
+    if (ownerErr) {
+      await admin.from("groups").delete().eq("id", groupId);
+      return releaseAndFail(ownerErr.message);
+    }
+  }
+
+  // Recipient joins as member.
   const { error: memberError } = await admin.from("group_members").insert({
-    group_id: invitation.group_id,
+    group_id: groupId,
     user_id: auth.user.id,
     role: "member",
     penalty_cents: invitation.penalty_cents,
   });
   if (memberError) {
-    return NextResponse.json(
-      { error: "db_error", detail: memberError.message },
-      { status: 500 }
-    );
+    // Roll back the just-created group (cascade removes the owner row) so we
+    // don't leak a 1-member group, then release the claim.
+    if (isNewGroup) await admin.from("groups").delete().eq("id", groupId);
+    return releaseAndFail(memberError.message);
   }
 
-  // Backfill: if the recipient has already checked in today, attach those
-  // submissions to the new group so its "Today's check-ins" view sees them.
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("timezone")
-    .eq("id", auth.user.id)
-    .single();
-  const tz = normalizeTimeZone(profile?.timezone);
-  const today = localDay(new Date(), tz);
+  // Backfill each member's check-ins from their own "today" so the group's
+  // "Today's check-ins" view is correct immediately. Only backfill the inviter
+  // in the new-group path — in the legacy path they were already a member at
+  // invite time, so their rows are already attached (re-inserting would dupe).
+  const backfillUsers = isNewGroup
+    ? [invitation.from_user, auth.user.id]
+    : [auth.user.id];
+  for (const userId of backfillUsers) {
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("timezone")
+      .eq("id", userId)
+      .single();
+    const today = localDay(new Date(), normalizeTimeZone(prof?.timezone));
 
-  const { data: todaysCheckins } = await admin
-    .from("checkin_events")
-    .select(
-      "submission_id, status, occurred_at, latitude, longitude, distance_m, source, local_day, ip, user_agent"
-    )
-    .eq("user_id", auth.user.id)
-    .eq("local_day", today)
-    .neq("status", "rejected");
+    const { data: todaysCheckins } = await admin
+      .from("checkin_events")
+      .select(
+        "submission_id, status, occurred_at, latitude, longitude, distance_m, source, local_day, ip, user_agent"
+      )
+      .eq("user_id", userId)
+      .eq("local_day", today)
+      .neq("status", "rejected");
 
-  if (todaysCheckins && todaysCheckins.length > 0) {
-    // Dedupe by submission_id — one row per submission, regardless of how
-    // many other groups it was already attached to.
-    const seen = new Set<string>();
-    const rowsToInsert: Array<Record<string, unknown>> = [];
-    for (const row of todaysCheckins) {
-      if (seen.has(row.submission_id)) continue;
-      seen.add(row.submission_id);
-      rowsToInsert.push({
-        user_id: auth.user.id,
-        group_id: invitation.group_id,
-        submission_id: row.submission_id,
-        status: row.status,
-        occurred_at: row.occurred_at,
-        local_day: row.local_day,
-        latitude: row.latitude,
-        longitude: row.longitude,
-        distance_m: row.distance_m,
-        source: row.source,
-        ip: row.ip,
-        user_agent: row.user_agent,
-      });
-    }
-    if (rowsToInsert.length > 0) {
-      await admin.from("checkin_events").insert(rowsToInsert);
+    if (todaysCheckins && todaysCheckins.length > 0) {
+      // Dedupe by submission_id — one row per submission, regardless of how
+      // many other groups it was already attached to.
+      const seen = new Set<string>();
+      const rowsToInsert: Array<Record<string, unknown>> = [];
+      for (const row of todaysCheckins) {
+        if (seen.has(row.submission_id)) continue;
+        seen.add(row.submission_id);
+        rowsToInsert.push({
+          user_id: userId,
+          group_id: groupId,
+          submission_id: row.submission_id,
+          status: row.status,
+          occurred_at: row.occurred_at,
+          local_day: row.local_day,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          distance_m: row.distance_m,
+          source: row.source,
+          ip: row.ip,
+          user_agent: row.user_agent,
+        });
+      }
+      if (rowsToInsert.length > 0) {
+        await admin.from("checkin_events").insert(rowsToInsert);
+      }
     }
   }
 
-  const { error: acceptErr } = await admin
-    .from("challenge_invitations")
-    .update({ status: "accepted", responded_at: new Date().toISOString() })
-    .eq("id", invitation_id);
-  if (acceptErr) {
-    return NextResponse.json(
-      { error: "db_error", detail: acceptErr.message },
-      { status: 500 }
-    );
+  // Link the (new) group to the now-accepted invitation. The status was already
+  // set by the claim; a no-op for legacy invitations that already point here.
+  if (isNewGroup) {
+    await admin
+      .from("challenge_invitations")
+      .update({ group_id: groupId })
+      .eq("id", invitation_id);
   }
 
   await admin.from("notifications").insert({
@@ -168,7 +236,7 @@ export async function POST(req: NextRequest) {
     type: "challenge_accepted",
     payload: {
       invitation_id,
-      group_id: invitation.group_id,
+      group_id: groupId,
       by_user: auth.user.id,
     },
   });
@@ -184,13 +252,13 @@ export async function POST(req: NextRequest) {
   await sendPushToUser(admin, invitation.from_user, {
     title: "Challenge accepted",
     body: `${accepterDisplay} accepted. Stakes are live.`,
-    url: `/groups/${invitation.group_id}`,
+    url: `/groups/${groupId}`,
     tag: `challenge-accepted-${invitation_id}`,
   });
 
   return NextResponse.json({
     ok: true,
     action: "accepted",
-    group_id: invitation.group_id,
+    group_id: groupId,
   });
 }
