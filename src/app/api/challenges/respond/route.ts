@@ -94,10 +94,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, action: "declined" });
   }
 
-  // Accept: the group is created now (deferred from invite time) unless this is
-  // a legacy invitation that already has one. Both users join here.
+  // Atomically claim the invitation: flip pending → accepted only if it's still
+  // pending. A double-tap (or concurrent request) finds it already accepted and
+  // bails, so we never create two groups for one invitation.
+  const { data: claimed } = await admin
+    .from("challenge_invitations")
+    .update({ status: "accepted", responded_at: new Date().toISOString() })
+    .eq("id", invitation_id)
+    .eq("status", "pending")
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    return NextResponse.json({ error: "already_responded" }, { status: 409 });
+  }
+
+  // If anything below fails, release the claim so the recipient can retry.
+  async function releaseAndFail(detail?: string) {
+    await admin
+      .from("challenge_invitations")
+      .update({ status: "pending", responded_at: null })
+      .eq("id", invitation_id);
+    return NextResponse.json({ error: "db_error", detail }, { status: 500 });
+  }
+
+  // The group is created now (deferred from invite time) unless this is a legacy
+  // invitation that already has one. Both users join here.
+  const isNewGroup = !invitation.group_id;
   let groupId = invitation.group_id;
-  if (!groupId) {
+  if (isNewGroup) {
     const { data: parties } = await admin
       .from("profiles")
       .select("id, name, username")
@@ -116,10 +139,7 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single();
     if (groupErr || !group) {
-      return NextResponse.json(
-        { error: "db_error", detail: groupErr?.message },
-        { status: 500 }
-      );
+      return releaseAndFail(groupErr?.message);
     }
     groupId = group.id;
 
@@ -131,10 +151,7 @@ export async function POST(req: NextRequest) {
     });
     if (ownerErr) {
       await admin.from("groups").delete().eq("id", groupId);
-      return NextResponse.json(
-        { error: "db_error", detail: ownerErr.message },
-        { status: 500 }
-      );
+      return releaseAndFail(ownerErr.message);
     }
   }
 
@@ -146,16 +163,20 @@ export async function POST(req: NextRequest) {
     penalty_cents: invitation.penalty_cents,
   });
   if (memberError) {
-    return NextResponse.json(
-      { error: "db_error", detail: memberError.message },
-      { status: 500 }
-    );
+    // Roll back the just-created group (cascade removes the owner row) so we
+    // don't leak a 1-member group, then release the claim.
+    if (isNewGroup) await admin.from("groups").delete().eq("id", groupId);
+    return releaseAndFail(memberError.message);
   }
 
-  // Backfill: attach each member's check-ins from their own "today" to the new
-  // group so its "Today's check-ins" view is correct immediately. Both users
-  // join at accept time, so both may already have checked in today.
-  for (const userId of [invitation.from_user, auth.user.id]) {
+  // Backfill each member's check-ins from their own "today" so the group's
+  // "Today's check-ins" view is correct immediately. Only backfill the inviter
+  // in the new-group path — in the legacy path they were already a member at
+  // invite time, so their rows are already attached (re-inserting would dupe).
+  const backfillUsers = isNewGroup
+    ? [invitation.from_user, auth.user.id]
+    : [auth.user.id];
+  for (const userId of backfillUsers) {
     const { data: prof } = await admin
       .from("profiles")
       .select("timezone")
@@ -201,15 +222,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { error: acceptErr } = await admin
-    .from("challenge_invitations")
-    .update({ status: "accepted", group_id: groupId, responded_at: new Date().toISOString() })
-    .eq("id", invitation_id);
-  if (acceptErr) {
-    return NextResponse.json(
-      { error: "db_error", detail: acceptErr.message },
-      { status: 500 }
-    );
+  // Link the (new) group to the now-accepted invitation. The status was already
+  // set by the claim; a no-op for legacy invitations that already point here.
+  if (isNewGroup) {
+    await admin
+      .from("challenge_invitations")
+      .update({ group_id: groupId })
+      .eq("id", invitation_id);
   }
 
   await admin.from("notifications").insert({
