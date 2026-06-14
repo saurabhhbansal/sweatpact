@@ -21,7 +21,6 @@ export const dynamic = "force-dynamic";
 type MemberProfile = {
   id: string;
   name: string;
-  email: string;
   username: string | null;
   avatar_url: string | null;
 };
@@ -72,7 +71,7 @@ export default async function GroupPage({
   ] = await Promise.all([
     supabase
       .from("group_members")
-      .select("user_id, role, penalty_cents, profiles:user_id(id, name, email, username, avatar_url, rest_days)")
+      .select("user_id, role, penalty_cents, profiles:user_id(id, name, username, avatar_url, rest_days)")
       .eq("group_id", group.id)
       .order("joined_at", { ascending: true }),
     supabase
@@ -134,7 +133,6 @@ export default async function GroupPage({
     const name =
       profileRow?.name?.trim() ||
       (profileRow?.username ? `@${profileRow.username}` : null) ||
-      profileRow?.email ||
       "Unknown member";
     const username = profileRow?.username ?? null;
     const avatar_url = profileRow?.avatar_url ?? null;
@@ -183,7 +181,6 @@ export default async function GroupPage({
     return (
       record?.name?.trim() ||
       (record?.username ? `@${record.username}` : null) ||
-      record?.email ||
       "Unknown member"
     );
   }

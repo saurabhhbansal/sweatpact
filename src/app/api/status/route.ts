@@ -18,7 +18,12 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  // Own profile read goes through the service-role client: sensitive columns
+  // (email, gym_*, period_*) are no longer SELECT-able by the authenticated
+  // role after the profile-column lockdown (migration 0029). Scoped to the
+  // authenticated user's own id.
+  const admin = createAdminClient();
+  const { data: profile } = await admin
     .from("profiles")
     .select("*")
     .eq("id", auth.user.id)
@@ -78,7 +83,7 @@ export async function GET() {
   if (groupIds.length > 0) {
     const { data: members } = await supabase
       .from("group_members")
-      .select("user_id, role, penalty_cents, group_id, profiles:user_id(id, name, email)")
+      .select("user_id, role, penalty_cents, group_id, profiles:user_id(id, name, username)")
       .in("group_id", groupIds)
       .order("joined_at", { ascending: true })
       .limit(1_000);
