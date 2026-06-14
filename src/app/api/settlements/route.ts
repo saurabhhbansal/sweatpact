@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,11 @@ export async function POST(req: NextRequest) {
   }
   const { obligation_id, amount_cents, note } = parsed.data;
 
-  const { data: oblig } = await supabase
+  // obligations / settlements are RLS read-only for users; the writes below run
+  // through the admin client, gated by the explicit ownership check.
+  const admin = createAdminClient();
+
+  const { data: oblig } = await admin
     .from("obligations")
     .select("id, from_user, to_user, amount_cents, status, group_id")
     .eq("id", obligation_id)
@@ -44,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   const amt = amount_cents ?? oblig.amount_cents;
-  const { data: settleRow, error: settleErr } = await supabase
+  const { data: settleRow, error: settleErr } = await admin
     .from("settlements")
     .insert({
       obligation_id,
@@ -60,13 +65,13 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-  const { error: updateErr } = await supabase
+  const { error: updateErr } = await admin
     .from("obligations")
     .update({ status: "settled" })
     .eq("id", obligation_id);
   if (updateErr) {
     // Best-effort rollback: remove the orphaned settlement row.
-    await supabase.from("settlements").delete().eq("id", settleRow.id);
+    await admin.from("settlements").delete().eq("id", settleRow.id);
     return NextResponse.json(
       { error: "db_error", detail: updateErr.message },
       { status: 500 }
