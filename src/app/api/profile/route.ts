@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidTimeZone } from "@/lib/time";
 
 export const runtime = "nodejs";
@@ -94,7 +95,11 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const { data, error } = await supabase
+  // The update + `select("*")` return runs through the service-role client:
+  // RETURNING the full row now needs SELECT on the locked columns (email,
+  // gym_*, period_*) after migration 0029. Still scoped to the caller's own id.
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("profiles")
     .update(update)
     .eq("id", auth.user.id)

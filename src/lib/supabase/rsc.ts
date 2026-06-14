@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "./server";
+import { createAdminClient } from "./admin";
 
 // Per-request memoized Supabase access for Server Components. The (tabs)
 // layout and the page it wraps render in the same request; without this each
@@ -20,7 +21,11 @@ export const getAuthUser = cache(async () => {
 export const getViewerProfile = cache(async () => {
   const user = await getAuthUser();
   if (!user) return null;
-  const { data } = await getSupabaseRSC()
+  // Read the viewer's own row through the service-role client: `email` (and the
+  // other sensitive columns) are no longer SELECT-able by the authenticated
+  // role after the profile-column lockdown (migration 0029). We're strictly
+  // scoped to the authenticated user's own id, so this is safe.
+  const { data } = await createAdminClient()
     .from("profiles")
     .select(
       "id, username, name, email, gender, timezone, created_at, weekly_goal, rest_days, onboarding_complete, avatar_url, notify_unverified_checkin, notify_rest_day, notify_cycle_share"
