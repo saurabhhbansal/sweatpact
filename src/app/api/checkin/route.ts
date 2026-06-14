@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { safeEqual } from "@/lib/secure-compare";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { reconcileUserDay, reconcileWeekForDayIfClosed } from "@/lib/checkin-reconciliation";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { notifyGroupCheckin } from "@/lib/checkin-notify";
@@ -61,6 +62,10 @@ export async function POST(req: NextRequest) {
 
   const body = parsed.data;
   const admin = createAdminClient();
+
+  if (!(await rateLimit(admin, `checkin:${clientIp(req)}`, 20, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   let userId: string | null = null;
   if (body.user_id && body.secret) {

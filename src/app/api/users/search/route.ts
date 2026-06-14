@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +10,10 @@ export async function GET(req: NextRequest) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  if (!(await rateLimit(supabase, `user-search:${auth.user.id}`, 30, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const raw = req.nextUrl.searchParams.get("q")?.trim() ?? "";
