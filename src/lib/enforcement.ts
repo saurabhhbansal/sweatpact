@@ -7,6 +7,7 @@ type EnforcementResult = {
   penalized: number;
   skipped: number;
   weeklyChecked: number;
+  errors: number;
 };
 
 // Returns day-of-week for a YYYY-MM-DD string: 0=Sun, 1=Mon, …, 6=Sat
@@ -19,7 +20,7 @@ export async function runEnforcement(
   admin: SupabaseClient,
   now: Date = new Date()
 ): Promise<EnforcementResult> {
-  const result: EnforcementResult = { scanned: 0, penalized: 0, skipped: 0, weeklyChecked: 0 };
+  const result: EnforcementResult = { scanned: 0, penalized: 0, skipped: 0, weeklyChecked: 0, errors: 0 };
 
   const { data: profiles, error } = await admin
     .from("profiles")
@@ -64,9 +65,21 @@ export async function runEnforcement(
           now,
         });
       }
-    } catch {
-      result.skipped += 1;
+    } catch (err) {
+      // A money-cron failure must not be invisible: log it with context and
+      // count it so the cron response surfaces a non-zero error total.
+      result.errors += 1;
+      console.error(
+        `[enforcement] failed for user ${profile.id}:`,
+        err instanceof Error ? err.message : err
+      );
     }
+  }
+
+  if (result.errors > 0) {
+    console.error(
+      `[enforcement] completed with ${result.errors} error(s) of ${result.scanned} scanned`
+    );
   }
 
   return result;
