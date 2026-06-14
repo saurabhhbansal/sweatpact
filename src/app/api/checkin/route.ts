@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { safeEqual } from "@/lib/secure-compare";
-import { reconcileUserDay } from "@/lib/checkin-reconciliation";
+import { reconcileUserDay, reconcileWeekForDayIfClosed } from "@/lib/checkin-reconciliation";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { notifyGroupCheckin } from "@/lib/checkin-notify";
 import { listUserMemberships } from "@/lib/groups";
@@ -272,10 +272,19 @@ export async function POST(req: NextRequest) {
 
   affectedRows = (refreshedRows ?? []) as CheckinRow[];
 
+  const reconcileNow = new Date();
   await reconcileUserDay(admin, {
     userId: profile.id,
     localDay: day,
-    now: new Date(),
+    now: reconcileNow,
+  });
+  // A back-dated check-in (yesterday) that pushes the user over their weekly
+  // goal should reverse a penalty already applied for that closed week.
+  await reconcileWeekForDayIfClosed(admin, {
+    userId: profile.id,
+    day,
+    today,
+    now: reconcileNow,
   });
 
   await admin.from("audit_log").insert({

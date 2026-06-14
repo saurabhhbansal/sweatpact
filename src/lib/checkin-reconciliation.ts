@@ -328,6 +328,68 @@ export async function reconcileUserDay(
 // weekly enforcement and the displayed streak can never use different weeks.
 const weekMonday = isoWeekMonday;
 
+function addDaysStr(day: string, n: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return dt.toISOString().slice(0, 10);
+}
+
+// Reverse a weekly penalty (and its obligations) for one group/week when the
+// user later meets the goal — e.g. a back-dated check-in lands after Sunday
+// enforcement already ran. Never reverses a debt that has been settled (the
+// money already moved).
+async function clearWeeklyPenaltyForGroup(
+  admin: SupabaseClient,
+  userId: string,
+  groupId: string,
+  weekEndDay: string
+): Promise<void> {
+  const { data: penalties, error } = await admin
+    .from("penalty_events")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("group_id", groupId)
+    .eq("local_day", weekEndDay)
+    .eq("reason", "missed_weekly_goal");
+  if (error) throw error;
+  const penaltyIds = (penalties ?? []).map((p) => p.id);
+  if (penaltyIds.length === 0) return;
+
+  const { data: obls, error: oblErr } = await admin
+    .from("obligations")
+    .select("id, status")
+    .in("penalty_event_id", penaltyIds);
+  if (oblErr) throw oblErr;
+  if ((obls ?? []).some((o) => o.status === "settled")) return;
+  const obligationIds = (obls ?? []).map((o) => o.id);
+
+  if (obligationIds.length > 0) {
+    const { error: disputeErr } = await admin
+      .from("disputes")
+      .delete()
+      .eq("target_type", "obligation")
+      .in("target_id", obligationIds);
+    if (disputeErr) throw disputeErr;
+    const { error: oblDelErr } = await admin
+      .from("obligations")
+      .delete()
+      .in("id", obligationIds);
+    if (oblDelErr) throw oblDelErr;
+  }
+  const { error: penDisputeErr } = await admin
+    .from("disputes")
+    .delete()
+    .eq("target_type", "penalty_event")
+    .in("target_id", penaltyIds);
+  if (penDisputeErr) throw penDisputeErr;
+  const { error: penDelErr } = await admin
+    .from("penalty_events")
+    .delete()
+    .in("id", penaltyIds);
+  if (penDelErr) throw penDelErr;
+}
+
 // Called once per week (after Sunday ends) to create obligations if the weekly
 // goal was not met. Uses weekEndDay (Sunday) as the anchor date.
 export async function reconcileUserWeek(
@@ -365,11 +427,17 @@ export async function reconcileUserWeek(
     (s) => s.status === "verified" || s.status === "unverified"
   ).length;
 
-  if (checkinDays >= weeklyGoal) return; // Goal met — no penalty
-
+  const goalMet = checkinDays >= weeklyGoal;
   const memberships = await listUserMemberships(admin, userId);
 
   for (const membership of memberships) {
+    if (goalMet) {
+      // Goal met — reverse any weekly penalty for this group/week. This makes
+      // the weekly check self-correcting: a back-dated check-in that pushes the
+      // user over goal after Sunday enforcement clears the (unsettled) debt.
+      await clearWeeklyPenaltyForGroup(admin, userId, membership.group_id, weekEndDay);
+      continue;
+    }
     const group = normalizeRelation(membership.group);
     // Flat weekly stake: missing the goal at all costs the full stake, no
     // matter how many days short.
@@ -383,6 +451,23 @@ export async function reconcileUserWeek(
       reason: "missed_weekly_goal",
     });
   }
+}
+
+// Re-run the weekly check for the ISO week containing `day`, but only once that
+// week has fully closed (its Sunday is before the user's local today). Lets the
+// back-dated check-in and reversal paths create or reverse a past week's penalty
+// without ever penalizing the current, still-in-progress week.
+export async function reconcileWeekForDayIfClosed(
+  admin: SupabaseClient,
+  params: { userId: string; day: string; today: string; now: Date }
+): Promise<void> {
+  const weekEndDay = addDaysStr(weekMonday(params.day), 6);
+  if (weekEndDay >= params.today) return; // current/future week — not closed yet
+  await reconcileUserWeek(admin, {
+    userId: params.userId,
+    weekEndDay,
+    now: params.now,
+  });
 }
 
 export function isActiveCheckinStatus(status: string) {
