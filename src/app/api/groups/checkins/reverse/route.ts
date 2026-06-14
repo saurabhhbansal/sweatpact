@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { reconcileUserDay } from "@/lib/checkin-reconciliation";
+import { reconcileUserDay, reconcileWeekForDayIfClosed } from "@/lib/checkin-reconciliation";
 import { getMembership, isManagerRole } from "@/lib/groups";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { localDay, normalizeTimeZone } from "@/lib/time";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,10 +60,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  const reconcileNow = new Date();
   await reconcileUserDay(admin, {
     userId: checkin.user_id,
     localDay: checkin.local_day,
-    now: new Date(),
+    now: reconcileNow,
+  });
+  // Reversing a check-in can drop the user below their weekly goal for an
+  // already-closed week — re-run the weekly check so the penalty is applied.
+  const { data: reversedProfile } = await admin
+    .from("profiles")
+    .select("timezone")
+    .eq("id", checkin.user_id)
+    .single();
+  const reversedToday = localDay(reconcileNow, normalizeTimeZone(reversedProfile?.timezone));
+  await reconcileWeekForDayIfClosed(admin, {
+    userId: checkin.user_id,
+    day: checkin.local_day,
+    today: reversedToday,
+    now: reconcileNow,
   });
 
   await admin.from("audit_log").insert({

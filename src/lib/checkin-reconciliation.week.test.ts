@@ -26,8 +26,10 @@ type Seed = {
 
 class FakeDb {
   penaltySeq = 0;
+  obligationSeq = 0;
   penalties: Row[] = [];
   obligations: Row[] = [];
+  disputes: Row[] = [];
   constructor(public userId: string, public seed: Seed) {}
   from(table: string) {
     return new FakeQuery(this, table);
@@ -35,7 +37,7 @@ class FakeDb {
 }
 
 class FakeQuery {
-  private op: "select" | "insert" | "upsert" = "select";
+  private op: "select" | "insert" | "upsert" | "delete" = "select";
   private cols = "*";
   private wantSingle = false;
   private payload: any = null;
@@ -46,10 +48,12 @@ class FakeQuery {
   select(cols: string) { this.cols = cols; return this; }
   insert(rows: Row[] | Row) { this.op = "insert"; this.payload = rows; return this; }
   upsert(row: Row) { this.op = "upsert"; this.payload = row; return this; }
+  delete() { this.op = "delete"; return this; }
   eq(col: string, val: any) { this.filters.push({ op: "eq", col, val }); return this; }
   neq(col: string, val: any) { this.filters.push({ op: "neq", col, val }); return this; }
   gte(col: string, val: any) { this.filters.push({ op: "gte", col, val }); return this; }
   lte(col: string, val: any) { this.filters.push({ op: "lte", col, val }); return this; }
+  in(col: string, vals: any[]) { this.filters.push({ op: "in", col, val: vals }); return this; }
   order() { return this; }
   single() { this.wantSingle = true; return this; }
   maybeSingle() { this.wantSingle = true; return this; }
@@ -58,11 +62,30 @@ class FakeQuery {
     return this.filters.find((f) => f.op === "eq" && f.col === col)?.val;
   }
 
+  private matches(row: Row): boolean {
+    return this.filters.every((f) => {
+      if (f.op === "eq") return row[f.col] === f.val;
+      if (f.op === "neq") return row[f.col] !== f.val;
+      if (f.op === "in") return (f.val as any[]).includes(row[f.col]);
+      if (f.op === "gte") return row[f.col] >= f.val;
+      if (f.op === "lte") return row[f.col] <= f.val;
+      return true;
+    });
+  }
+
   private compute(): { data: any; error: null } {
     const d = this.db;
+    if (this.op === "delete") {
+      if (this.table === "obligations") d.obligations = d.obligations.filter((r) => !this.matches(r));
+      else if (this.table === "penalty_events") d.penalties = d.penalties.filter((r) => !this.matches(r));
+      else if (this.table === "disputes") d.disputes = d.disputes.filter((r) => !this.matches(r));
+      return { data: null, error: null };
+    }
     if (this.op === "insert") {
       const rows = Array.isArray(this.payload) ? this.payload : [this.payload];
-      if (this.table === "obligations") d.obligations.push(...rows);
+      if (this.table === "obligations") {
+        d.obligations.push(...rows.map((r) => ({ id: `obl-${++d.obligationSeq}`, ...r })));
+      }
       return { data: rows, error: null };
     }
     if (this.op === "upsert") {
@@ -90,7 +113,7 @@ class FakeQuery {
           const exists = d.obligations.some(
             (o) => o.penalty_event_id === row.penalty_event_id && o.to_user === row.to_user
           );
-          if (!exists) d.obligations.push(row);
+          if (!exists) d.obligations.push({ id: `obl-${++d.obligationSeq}`, ...row });
         }
         return { data: rows, error: null };
       }
@@ -107,6 +130,15 @@ class FakeQuery {
         (s) => (!start || s.local_day >= start) && (!end || s.local_day <= end)
       );
       return { data: rows, error: null };
+    }
+    if (this.table === "penalty_events") {
+      return { data: d.penalties.filter((r) => this.matches(r)).map((r) => ({ id: r.id })), error: null };
+    }
+    if (this.table === "obligations") {
+      return {
+        data: d.obligations.filter((r) => this.matches(r)).map((r) => ({ id: r.id, status: r.status })),
+        error: null,
+      };
     }
     if (this.table === "group_members") {
       if (this.cols.includes("groups(")) {
@@ -271,5 +303,50 @@ describe("reconcileUserWeek — weekly penalty & obligation split", () => {
     expect(db.penalties).toHaveLength(1); // penalty upsert returns the same row
     expect(db.obligations).toHaveLength(3); // not 6 — obligations upsert dedupes
     expect(db.obligations.map((o) => o.amount_cents)).toEqual([3000, 3000, 3000]);
+  });
+
+  const metGoal = [
+    verified("2026-06-08"),
+    verified("2026-06-09"),
+    verified("2026-06-10"),
+    verified("2026-06-11"),
+  ];
+
+  it("reverses an unsettled weekly penalty when the goal is later met", async () => {
+    const seed: Seed = {
+      weeklyGoal: 4,
+      statuses: [], // missed at enforcement time
+      memberships: [{ group_id: "g1", penalty_cents: 9000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1", "p2", "p3"] },
+    };
+    const db = new FakeDb("u-self", seed);
+    const opts = { userId: "u-self", weekEndDay: "2026-06-14", now: new Date("2026-06-15T00:00:00Z") };
+    await reconcileUserWeek(db as any, opts);
+    expect(db.penalties).toHaveLength(1);
+    expect(db.obligations).toHaveLength(3);
+
+    // Back-dated check-ins push the user over goal → re-running clears the debt.
+    db.seed.statuses = metGoal;
+    await reconcileUserWeek(db as any, opts);
+    expect(db.penalties).toHaveLength(0);
+    expect(db.obligations).toHaveLength(0);
+  });
+
+  it("does NOT reverse a weekly penalty once an obligation has been settled", async () => {
+    const seed: Seed = {
+      weeklyGoal: 4,
+      statuses: [],
+      memberships: [{ group_id: "g1", penalty_cents: 9000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1", "p2", "p3"] },
+    };
+    const db = new FakeDb("u-self", seed);
+    const opts = { userId: "u-self", weekEndDay: "2026-06-14", now: new Date("2026-06-15T00:00:00Z") };
+    await reconcileUserWeek(db as any, opts);
+    db.obligations[0].status = "settled"; // money already moved
+
+    db.seed.statuses = metGoal;
+    await reconcileUserWeek(db as any, opts);
+    expect(db.penalties).toHaveLength(1); // kept — a settled debt is never reversed
+    expect(db.obligations).toHaveLength(3);
   });
 });
