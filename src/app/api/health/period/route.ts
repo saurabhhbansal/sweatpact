@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { safeEqual } from "@/lib/secure-compare";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { listUserMemberships } from "@/lib/groups";
@@ -55,6 +56,10 @@ export async function POST(req: NextRequest) {
 
   const { user_id, secret, dates } = parsed.data;
   const admin = createAdminClient();
+
+  if (!(await rateLimit(admin, `period-sync:${clientIp(req)}`, 10, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   // Auth via webhook secret (same pattern as /api/checkin).
   const { data: secretRow } = await admin

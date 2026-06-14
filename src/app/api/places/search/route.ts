@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +10,11 @@ export async function GET(req: NextRequest) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // This proxies the billed Google Places API — cap per-user request volume.
+  if (!(await rateLimit(supabase, `places-search:${auth.user.id}`, 20, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const q = req.nextUrl.searchParams.get("q")?.trim();
