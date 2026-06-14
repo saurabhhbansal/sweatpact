@@ -4,6 +4,7 @@ import { useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCents } from "@/lib/money";
 import { ObligationActions } from "./obligation-actions";
+import { DisputeResolveActions, FileDisputeButton } from "./dispute-actions";
 
 export type BalanceRow = {
   fromName: string;
@@ -11,9 +12,10 @@ export type BalanceRow = {
   totalCents: number;
   obligationIds: string[];
   isMine: boolean;
+  iOwe: boolean;
   weeks: number;
 };
-export type DisputeRow = { raisedByName: string; targetType: string; reason: string };
+export type DisputeRow = { id: string; raisedByName: string; targetType: string; reason: string };
 export type SettlementRow = { markedByName: string; amountLabel: string; dateLabel: string };
 export type ActivityRow = {
   id: string;
@@ -38,11 +40,13 @@ export function LedgerPanel({
   disputes,
   settlements,
   activity,
+  canResolveDisputes,
 }: {
   balances: BalanceRow[];
   disputes: DisputeRow[];
   settlements: SettlementRow[];
   activity: ActivityRow[];
+  canResolveDisputes: boolean;
 }) {
   const [tab, setTab] = useState<"balances" | "activity">("balances");
 
@@ -78,18 +82,24 @@ export function LedgerPanel({
                     <ObligationActions obligationIds={b.obligationIds} />
                   </div>
                 ) : null}
+                {b.iOwe && b.obligationIds.length > 0 ? (
+                  <div className="mt-2">
+                    <FileDisputeButton obligationId={b.obligationIds[0]} />
+                  </div>
+                ) : null}
               </div>
             ))
           )}
 
           {disputes.length > 0 ? (
             <div className="space-y-2 border-t border-white/10 pt-3">
-              {disputes.map((d, i) => (
-                <div key={i} className="rounded-[1.4rem] bg-white/[0.04] px-4 py-3">
+              {disputes.map((d) => (
+                <div key={d.id} className="rounded-[1.4rem] bg-white/[0.04] px-4 py-3">
                   <p className="text-sm text-white">
                     {d.raisedByName} · {d.targetType}
                   </p>
                   <p className="truncate text-xs text-white/45">{d.reason}</p>
+                  {canResolveDisputes ? <DisputeResolveActions disputeId={d.id} /> : null}
                 </div>
               ))}
             </div>

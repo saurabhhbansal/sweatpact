@@ -270,9 +270,11 @@ export default async function GroupPage({
     totalCents: agg.total_cents,
     obligationIds: agg.obligation_ids,
     isMine: agg.from_user === profile.id || agg.to_user === profile.id,
+    iOwe: agg.from_user === profile.id,
     weeks: agg.obligation_ids.length,
   }));
   const disputeRows = activeDisputes.map((d) => ({
+    id: d.id,
     raisedByName: nameFor(d.raised_by),
     targetType: d.target_type,
     reason: d.reason,
@@ -413,6 +415,7 @@ export default async function GroupPage({
             disputes={disputeRows}
             settlements={settlementRows}
             activity={activityRows}
+            canResolveDisputes={isManager}
           />
         </div>
 
