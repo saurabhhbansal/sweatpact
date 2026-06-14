@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { safeEqual } from "@/lib/secure-compare";
 import { reconcileUserDay } from "@/lib/checkin-reconciliation";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { notifyGroupCheckin } from "@/lib/checkin-notify";
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     if (secretError) {
       return NextResponse.json({ error: "db_error", detail: secretError.message }, { status: 500 });
     }
-    if (!secretRow || secretRow.webhook_secret !== body.secret) {
+    if (!secretRow || !safeEqual(secretRow.webhook_secret, body.secret)) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
