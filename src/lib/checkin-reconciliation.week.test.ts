@@ -67,9 +67,32 @@ class FakeQuery {
     }
     if (this.op === "upsert") {
       if (this.table === "penalty_events") {
+        // Model the real (user_id, local_day, reason) unique upsert: a re-run
+        // returns the existing penalty id rather than creating a new one.
+        const p = this.payload;
+        const existing = d.penalties.find(
+          (e) =>
+            e.user_id === p.user_id &&
+            e.local_day === p.local_day &&
+            e.reason === p.reason &&
+            e.group_id === p.group_id
+        );
+        if (existing) return { data: { id: existing.id }, error: null };
         const id = `pen-${++d.penaltySeq}`;
-        d.penalties.push({ id, ...this.payload });
+        d.penalties.push({ id, ...p });
         return { data: { id }, error: null };
+      }
+      if (this.table === "obligations") {
+        const rows = Array.isArray(this.payload) ? this.payload : [this.payload];
+        // Mirror the real (penalty_event_id, to_user) unique key so a re-run is
+        // idempotent, matching ignoreDuplicates.
+        for (const row of rows) {
+          const exists = d.obligations.some(
+            (o) => o.penalty_event_id === row.penalty_event_id && o.to_user === row.to_user
+          );
+          if (!exists) d.obligations.push(row);
+        }
+        return { data: rows, error: null };
       }
       return { data: this.payload, error: null };
     }
@@ -227,5 +250,26 @@ describe("reconcileUserWeek — weekly penalty & obligation split", () => {
     });
     expect(db.penalties[0].amount_cents).toBe(5000);
     expect(db.obligations.map((o) => o.amount_cents)).toEqual([2500, 2500]);
+  });
+
+  it("is idempotent — a second (raced/doubled) run does not double the debt", async () => {
+    const seed: Seed = {
+      weeklyGoal: 4,
+      statuses: [],
+      memberships: [{ group_id: "g1", penalty_cents: 9000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1", "p2", "p3"] },
+    };
+    const db = new FakeDb("u-self", seed);
+    const opts = {
+      userId: "u-self",
+      weekEndDay: "2026-06-14",
+      now: new Date("2026-06-15T00:00:00Z"),
+    };
+    await reconcileUserWeek(db as any, opts);
+    await reconcileUserWeek(db as any, opts);
+
+    expect(db.penalties).toHaveLength(1); // penalty upsert returns the same row
+    expect(db.obligations).toHaveLength(3); // not 6 — obligations upsert dedupes
+    expect(db.obligations.map((o) => o.amount_cents)).toEqual([3000, 3000, 3000]);
   });
 });

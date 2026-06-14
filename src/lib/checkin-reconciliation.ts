@@ -192,7 +192,12 @@ async function ensurePenaltyForGroup(
     status: "pending" as const,
   }));
 
-  const { error: obligationInsertError } = await admin.from("obligations").insert(rows);
+  // Idempotent: a re-run (or a raced/doubled enforcement pass) finds the same
+  // penalty.id and skips the already-created obligations via the
+  // (penalty_event_id, to_user) unique key, so the debtor is never charged twice.
+  const { error: obligationInsertError } = await admin
+    .from("obligations")
+    .upsert(rows, { onConflict: "penalty_event_id,to_user", ignoreDuplicates: true });
   if (obligationInsertError) throw obligationInsertError;
 
   return penalty.id;
