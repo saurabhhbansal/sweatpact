@@ -8,6 +8,18 @@ SweatPact is a full-stack Next.js PWA that pairs two people in a gym-accountabil
 
 Make showing up have a consequence: if you skip, you owe your partner — the head-to-head financial stake is the one thing that must work.
 
+## Current Milestone: v1.1 Guided Onboarding Walkthrough
+
+**Goal:** Replace the front-loaded setup flow with a minimal mandatory start plus a contextual coachmark walkthrough that teaches the app AND completes the optional setup steps in-context — so a new user is using the real app immediately and never stuck in a tutorial.
+
+**Target features:**
+- Minimal mandatory start (bare identity) to enter the app fast
+- Optional setup (gym, schedule/weekly goal, iOS Shortcut) deferred into the walkthrough, each done as a real in-context action
+- Contextual coachmarks (spotlight tooltips) anchored to live `(tabs)` UI, per screen
+- Teaching points landed: set gym, start a stakes challenge, understand the money (earned/owed/penalties/settlement), iOS Shortcut integration
+- Resumable + replayable: progress persisted server-side; resume if interrupted, replay from settings; skippable anytime
+- Gracefully skip coachmark steps for setup already completed
+
 ## Requirements
 
 ### Validated
@@ -67,9 +79,14 @@ Make showing up have a consequence: if you skip, you owe your partner — the he
 
 ### Active
 
-<!-- No active scope. This document is a baseline snapshot of the current app. -->
+<!-- v1.1 Guided Onboarding Walkthrough. Hypotheses until shipped and validated. -->
 
-(None — baseline snapshot only. Add via `/gsd-new-milestone` when starting new work.)
+- [ ] Minimal mandatory start gets a new user into the app fast
+- [ ] Optional setup (gym, schedule, iOS Shortcut) deferred into the walkthrough as real in-context actions
+- [ ] Contextual coachmarks anchored to live UI, shown per screen
+- [ ] Walkthrough lands the four teaching points (gym, stakes challenge, money model, Shortcut)
+- [ ] Onboarding/walkthrough progress persisted server-side (resume + replay)
+- [ ] Walkthrough skippable anytime and skips already-completed steps
 
 ### Out of Scope
 
@@ -127,4 +144,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-14 after initialization (baseline snapshot of existing app)*
+*Last updated: 2026-06-14 after starting milestone v1.1 (Guided Onboarding Walkthrough)*
