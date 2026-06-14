@@ -71,39 +71,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "already_pending" }, { status: 409 });
   }
 
-  const groupName = `${fromProfile?.name?.trim() || fromProfile?.username || "Challenger"} vs ${target.name?.trim() || target.username}`;
-
-  const { data: group, error: groupError } = await admin
-    .from("groups")
-    .insert({
-      name: groupName,
-      owner_id: auth.user.id,
-      default_penalty_cents: penalty_cents,
-    })
-    .select("id")
-    .single();
-  if (groupError || !group) {
-    return NextResponse.json(
-      { error: "db_error", detail: groupError?.message },
-      { status: 500 }
-    );
-  }
-
-  // Add inviter as owner of the group immediately.
-  const { error: ownerError } = await admin.from("group_members").insert({
-    group_id: group.id,
-    user_id: auth.user.id,
-    role: "owner",
-  });
-  if (ownerError) {
-    await admin.from("groups").delete().eq("id", group.id);
-    return NextResponse.json({ error: "db_error", detail: ownerError.message }, { status: 500 });
-  }
-
+  // The group is NOT created here — only once the recipient accepts (see the
+  // respond route). A pending invitation has no group, so it never shows up as
+  // an empty challenge card. Everything needed to build the group on accept
+  // (the two users + the stake) lives on the invitation row.
   const { data: invitation, error: invError } = await admin
     .from("challenge_invitations")
     .insert({
-      group_id: group.id,
+      group_id: null,
       from_user: auth.user.id,
       to_user,
       penalty_cents,
@@ -112,7 +87,6 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
   if (invError || !invitation) {
-    await admin.from("groups").delete().eq("id", group.id);
     return NextResponse.json(
       { error: "db_error", detail: invError?.message },
       { status: 500 }
@@ -125,7 +99,6 @@ export async function POST(req: NextRequest) {
     type: "challenge_invite_received",
     payload: {
       invitation_id: invitation.id,
-      group_id: group.id,
       from_user: auth.user.id,
       from_username: fromProfile?.username ?? null,
       from_name: fromProfile?.name ?? null,
