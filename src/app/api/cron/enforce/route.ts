@@ -24,9 +24,23 @@ async function handle(req: NextRequest) {
   }
   const admin = createAdminClient();
   const now = new Date();
-  const result = await runEnforcement(admin, now);
-  await sendPeriodReminders(admin, now);
-  return NextResponse.json({ ok: true, ...result });
+  try {
+    const result = await runEnforcement(admin, now);
+    // Period reminders are non-critical — a failure here must not abort the run
+    // or mask the enforcement result.
+    try {
+      await sendPeriodReminders(admin, now);
+    } catch (err) {
+      console.error("[cron] period reminders failed:", err instanceof Error ? err.message : err);
+    }
+    return NextResponse.json({ ok: result.errors === 0, ...result });
+  } catch (err) {
+    console.error("[cron] enforcement run failed:", err instanceof Error ? err.stack ?? err.message : err);
+    return NextResponse.json(
+      { error: "enforcement_failed", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(req: NextRequest) {
