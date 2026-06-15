@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 status: verifying
-stopped_at: Completed 01-02-PLAN.md (Phase 01 all plans done)
-last_updated: "2026-06-15T07:46:07.890Z"
+stopped_at: Phase 2 context gathered
+last_updated: "2026-06-15T09:03:52.823Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 6
@@ -93,6 +93,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:17:00.000Z
-Stopped at: Completed 01-02-PLAN.md (Phase 01 all plans done)
-Resume file: None
+Last session: 2026-06-15T09:03:52.812Z
+Stopped at: Phase 2 context gathered
+Resume file: .planning/phases/02-step-logic-shared-setup-surfaces/02-CONTEXT.md
