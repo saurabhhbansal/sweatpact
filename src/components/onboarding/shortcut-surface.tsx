@@ -12,14 +12,19 @@ export function ShortcutSurface({ onComplete }: { onComplete: () => void }) {
     // write path (D-05). This surface does NOT flip onboarding_complete — that
     // legacy concern lives in the legacy shell's onComplete so a future
     // walkthrough mount cannot prematurely end onboarding.
-    const res = await fetch("/api/onboarding-progress", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ complete_step: "shortcut_viewed" }),
-    });
-    // Best-effort: parse-and-fallback, but do not block completion on it.
-    await res.json().catch(() => ({}));
-    setBusy(false);
+    try {
+      const res = await fetch("/api/onboarding-progress", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ complete_step: "shortcut_viewed" }),
+      });
+      // Best-effort: parse-and-fallback, but do not block completion on it.
+      await res.json().catch(() => ({}));
+    } catch {
+      // best-effort: swallow network error, still proceed to onComplete
+    } finally {
+      setBusy(false);
+    }
     onComplete();
   }
 
