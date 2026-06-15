@@ -1,7 +1,9 @@
 ---
 phase: 2
 slug: step-logic-shared-setup-surfaces
-status: draft
+status: approved
+verified: 2026-06-15
+dimensions_passed: 6/6
 shadcn_initialized: true
 preset: none (established shadcn/Radix system — manual, pre-existing)
 created: 2026-06-15
@@ -44,6 +46,11 @@ and the `onComplete` / skip wiring — never restyling.
 
 ## Spacing Scale
 
+> **Parity-lock preamble (read first).** This is a parity-lock contract, not a new design. Every
+> value listed under Exceptions below already exists VERBATIM in the shipping source and is being
+> **PRESERVED, not introduced**. No new off-grid spacing is permitted in this phase. The 8-point
+> grid governs any NEW spacing decision — but this phase makes none; it only reproduces what ships.
+
 The codebase uses Tailwind's default 4px-based scale. The three surfaces use this subset today;
 extraction must preserve it.
 
@@ -55,10 +62,11 @@ extraction must preserve it.
 | 4 | 16px | `space-y-4` — gym surface section rhythm |
 | 5 | 20px | `space-y-5` — schedule surface section rhythm |
 
-Exceptions (load-bearing, preserve verbatim):
+Exceptions (PRESERVATION MANDATE — these values ship today and must be reproduced exactly; none are
+new design choices, so the off-grid value below is not a grid violation introduced by this phase):
 - `h-9 w-9` (36px) circular goal/rest-day toggle buttons (schedule surface) — fixed hit target, do not change.
 - `h-11` (44px) Input height (`@/components/ui/input`) and `h-10` (40px) default Button height — primitive-owned, do not override.
-- `gap-1.5` (6px) between picker chips — intentional dense cluster, off the 8px grid by design; preserve.
+- `gap-1.5` (6px) between picker chips — **pre-existing styling decision in `src/app/onboarding/schedule/client.tsx`** (the day/goal picker-chip clusters, lines 67 and 90: `flex flex-wrap gap-1.5`). This is an intentional dense cluster that ships today and is OFF the 8px grid. The extractor must reproduce it **exactly** — it is preserved, not introduced. NO new off-grid spacing may be added anywhere in this phase; this single value is grandfathered solely because it already ships.
 
 > Parity rule: the `space-y-*` rhythm of each surface is part of its identity. When the surface is
 > mounted inside the walkthrough vs. the legacy route, its OWN internal spacing is identical — only
@@ -69,21 +77,51 @@ Exceptions (load-bearing, preserve verbatim):
 ## Typography
 
 The app ships no custom type scale; sizes come from Tailwind utilities (`text-xs`, `text-sm`,
-`text-base`) and weights from `font-medium` / `font-semibold`. The three surfaces use exactly the
-roles below — extraction must not alter any size/weight.
+`text-base`). **This phase authors exactly two weights** (the type-scale decisions it owns):
+400 for body and 600 for a direct Button label. The three surfaces use exactly the roles below —
+extraction must not alter any size/weight.
 
-| Role | Size | Weight | Line Height | Where used |
-|------|------|--------|-------------|------------|
-| Body / control | 14px (`text-sm`) | 400 (`font-normal`, default) | 1.5 (global `body`) | Input text, result `main_text`, primary status line |
-| Label | 14px (`text-sm`) | 500/600 (`font-medium` on inline, `Label` primitive is `font-medium`) | 1.5 | `<Label>` weekly goal / rest days; "X gyms added." status |
-| Helper / caption | 12px (`text-xs`) | 400–500 | ~1.4 | "Searching…", "N days per week.", validation + error lines, result `secondary_text` |
-| Button label | 14px (`text-sm`) | 600 (`font-semibold`, Button primitive) | 1 (`inline-flex` centered) | "Continue", "Done", "Use my current location" |
+**Surface-authored weights (the only weight decisions this phase makes):**
+
+| Role | Size | Weight (authored) | Line Height | Where used |
+|------|------|-------------------|-------------|------------|
+| Body / control / helper | 14px (`text-sm`) / 12px (`text-xs`) | **400** (`font-normal`, default) | 1.5 body / ~1.4 caption | Input text, result `main_text`, primary status line, "Searching…", "N days per week.", validation + error lines, result `secondary_text` |
+| Direct Button label | 14px (`text-sm`) | **600** (authored on/with the Button) | 1 (`inline-flex` centered) | "Continue", "Done", "Use my current location" |
+
+> **This phase authors two weights only: 400 (body) and 600 (direct Button label). The 500 weight
+> appears solely via the shadcn `<Label>` primitive's built-in contract and is not a scale decision
+> here. Do not introduce any additional weight.**
+
+**Primitive-owned weights (NOT authored by this phase — inherited from `@/components/ui/` contracts):**
+
+These weights are baked into the existing shadcn/Radix primitives and arrive automatically when the
+primitive is reused. They are primitive contracts, not type-scale choices of this phase, and must be
+neither overridden nor counted as authored weights:
+
+| Weight | Origin | Where it appears |
+|--------|--------|------------------|
+| 500 (`font-medium`) | `<Label>` primitive's built-in class; same class also on the picker-chip buttons | `<Label>` weekly goal / rest days; day/goal picker chips |
+| 600 (`font-semibold`) | `@/components/ui/button` primitive's built-in default class | All `Button` default-variant labels (when the label is not separately authored at 600) |
 
 Notes:
 - Body line-height is globally `1.5` (set on `html, body` in `globals.css`). Headings n/a — these
   surfaces render no heading element of their own; the page/route shell owns any title above them.
-- Two weights only in active use across these surfaces: regular (400) and semibold (600), with
-  `font-medium` (500) reserved for `<Label>` and picker-chip text. Do not introduce a third display weight.
+- Net effect: the phase's own type scale is two weights (400 / 600). Any other weight you observe in
+  the rendered output (e.g. 500) originates from a reused primitive's contract — preserve it, do not
+  add to it, and do not treat it as a third authored display weight.
+
+---
+
+## Visuals
+
+Each surface has ONE dominant visual anchor: the single solid-white primary CTA, which is the only
+solid-white fill on an otherwise dark translucent-glass surface, drawing the eye to the one next action.
+- **Gym surface** — anchor: the solid-white `Continue` button (against the dark glass search/results panel).
+- **Schedule surface** — anchor: the solid-white `Continue` button (against the dark glass picker-chip clusters).
+- **Shortcut surface** — anchor: the solid-white `Done` button (against the dark glass instruction panel).
+
+Everything else (skip link, secondary actions, chips, helper text) stays in white-opacity ramps so the
+primary CTA reads as the singular focal point in each surface. Preserve this hierarchy on extraction.
 
 ---
 
