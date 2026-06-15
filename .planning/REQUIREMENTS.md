@@ -35,7 +35,7 @@ setup in-context. Backed by research in `.planning/research/`.
 - [ ] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
 - [ ] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
 - [ ] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
-- [ ] **TEACH-06**: The walkthrough is considered complete once all four teaching points (gym, challenge, money, Shortcut) have been presented/done
+- [x] **TEACH-06**: The walkthrough is considered complete once all four teaching points (gym, challenge, money, Shortcut) have been presented/done
 
 ### Setup-as-Action Surfaces
 
@@ -45,7 +45,7 @@ setup in-context. Backed by research in `.planning/research/`.
 ### Progress & Persistence
 
 - [x] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
-- [ ] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
+- [x] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
 - [ ] **PROG-03**: User can replay the walkthrough anytime from Settings
 - [x] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
 
@@ -80,8 +80,8 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 |-------------|-------|--------|
 | PROG-01 | Phase 1 | Complete |
 | PROG-04 | Phase 1 | Complete |
-| TEACH-06 | Phase 2 | Pending |
-| PROG-02 | Phase 2 | Pending |
+| TEACH-06 | Phase 2 | Complete |
+| PROG-02 | Phase 2 | Complete |
 | SETUP-01 | Phase 2 | Pending |
 | ONB-01 | Phase 3 | Pending |
 | ONB-02 | Phase 3 | Pending |

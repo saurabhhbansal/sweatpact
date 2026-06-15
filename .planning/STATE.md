@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-06-15T10:13:11.240Z"
-last_activity: 2026-06-15 -- Phase 02 planning complete
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-06-15T14:38:50.435Z"
+last_activity: 2026-06-15 -- Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 17
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 01 — onboarding-data-foundation
+**Current focus:** Phase 02 — step-logic-shared-setup-surfaces
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (step-logic-shared-setup-surfaces) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 02 planning complete
+Last activity: 2026-06-15 -- Phase 02 execution started
 
 Progress: [██░░░░░░░░] 17%
 
@@ -54,6 +54,7 @@ Progress: [██░░░░░░░░] 17%
 *Updated after each plan completion*
 | Phase 01 P01 | 5min | 2 tasks | 1 files |
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
+| Phase 02 P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: D-03: onboarding_progress is the runtime source of truth for tour state; profiles.onboarding_complete read only at backfill to seed it (Plan 01-01)
 - [Phase 01]: D-04: PATCH /api/onboarding-progress accepts a single semantic complete_step key (dedupe-appended server-side), never a client full completed_steps array; replay is a no-op (Plan 01-02)
 - [Phase 01]: onboarding-progress route uses non-admin createClient() only; owner RLS is the enforcement boundary, never service-role (Plan 01-02)
+- [Phase ?]: [Phase 02]: D-04 step registry — TOUR_VERSION=1, ordered STEPS [schedule,gym,challenge,money,shortcut_viewed]; schedule is setup-bearing but NOT a completion-gating teaching key (Plan 02-01)
+- [Phase ?]: [Phase 02]: completion probes derive from real state (gymCount, rest_days non-empty, completed_steps), no duplicate flag; isTourComplete reuses TEACHING_KEYS (Plan 02-01)
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T09:55:17.111Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-step-logic-shared-setup-surfaces/02-UI-SPEC.md
+Last session: 2026-06-15T14:38:50.424Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
