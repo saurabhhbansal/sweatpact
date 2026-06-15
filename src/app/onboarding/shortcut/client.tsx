@@ -1,46 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ShortcutSurface } from "@/components/onboarding/shortcut-surface";
 
 export function FinishOnboardingButtons() {
   const router = useRouter();
-  const [, startTransition] = useTransition();
-  const [busy, setBusy] = useState(false);
 
-  async function finish() {
-    setBusy(true);
+  async function handleComplete() {
+    // Legacy linear-wizard concern: flip onboarding_complete so the legacy
+    // route ends onboarding. Kept in the shell (not the surface) per D-05 so a
+    // future walkthrough mount of ShortcutSurface does NOT prematurely end
+    // onboarding. This is the ONLY place onboarding_complete is written now.
     await fetch("/api/profile", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ onboarding_complete: true }),
-    });
-    setBusy(false);
-    startTransition(() => {
-      router.push("/dashboard");
-      router.refresh();
-    });
+    }).catch(() => ({}));
+    router.push("/dashboard");
+    router.refresh();
   }
 
-  return (
-    <div className="flex items-center gap-3 pt-2">
-      <button
-        type="button"
-        onClick={finish}
-        disabled={busy}
-        className="text-sm text-white/55 underline-offset-4 hover:text-white hover:underline disabled:opacity-50"
-      >
-        Skip for now
-      </button>
-      <Button
-        type="button"
-        onClick={finish}
-        disabled={busy}
-        className="ml-auto rounded-full"
-      >
-        {busy ? "Saving…" : "Done"}
-      </Button>
-    </div>
-  );
+  return <ShortcutSurface onComplete={handleComplete} />;
 }
