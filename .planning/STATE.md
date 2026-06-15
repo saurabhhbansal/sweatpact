@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-06-15T07:12:49.701Z"
-last_activity: 2026-06-15 -- Phase 01 execution started
+stopped_at: Completed 01-02-PLAN.md (Phase 01 all plans done)
+last_updated: "2026-06-15T07:17:00.000Z"
+last_activity: 2026-06-15 -- Completed Phase 01 Plan 02 (onboarding-progress API)
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 0
+  completed_plans: 2
+  percent: 17
 ---
 
 # Project State: SweatPact
@@ -25,12 +25,12 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 ## Current Position
 
-Phase: 01 (onboarding-data-foundation) — EXECUTING
-Plan: 2 of 2
-Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 01 execution started
+Phase: 01 (onboarding-data-foundation) — COMPLETE
+Plan: 2 of 2 (all plans done)
+Status: Phase complete — ready for verification / next phase
+Last activity: 2026-06-15 -- Completed Phase 01 Plan 02 (onboarding-progress API)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 5min | 2 tasks | 1 files |
+| Phase 01 P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work (locked for v1.1):
 - Skip-already-done is derived from real app state (gym set, weekly goal set, Shortcut viewed), not a duplicate flag — Phases 2 & 6.
 - Coachmark engine library NOT yet picked (react-joyride v3 vs Onborda/NextStep) — spike required before Phase 4 planning.
 - [Phase ?]: D-03: onboarding_progress is the runtime source of truth for tour state; profiles.onboarding_complete read only at backfill to seed it (Plan 01-01)
+- [Phase 01]: D-04: PATCH /api/onboarding-progress accepts a single semantic complete_step key (dedupe-appended server-side), never a client full completed_steps array; replay is a no-op (Plan 01-02)
+- [Phase 01]: onboarding-progress route uses non-admin createClient() only; owner RLS is the enforcement boundary, never service-role (Plan 01-02)
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:12:38.194Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-onboarding-data-foundation/01-CONTEXT.md
+Last session: 2026-06-15T07:17:00.000Z
+Stopped at: Completed 01-02-PLAN.md (Phase 01 all plans done)
+Resume file: None

@@ -30,7 +30,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Onboarding Data Foundation** - Server-side progress persistence (table, RLS, API)
+- [x] **Phase 1: Onboarding Data Foundation** - Server-side progress persistence (table, RLS, API)
 - [ ] **Phase 2: Step Logic & Shared Setup Surfaces** - Pure step registry, completion probes, extracted gym/schedule/shortcut UIs
 - [ ] **Phase 3: Minimal Start & TourProvider Wiring** - Username-only gate, provider mount, resume/replay plumbing (no coachmarks)
 - [ ] **Phase 4: Coachmark Engine (single-route)** - Spotlight, click-through overlay, z-index, safe-area, a11y
@@ -57,7 +57,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — pure merge/validation helper (+ Vitest) and `GET/PATCH /api/onboarding-progress` route
+- [x] 01-02-PLAN.md — pure merge/validation helper (+ Vitest) and `GET/PATCH /api/onboarding-progress` route
 
 ### Phase 2: Step Logic & Shared Setup Surfaces
 
