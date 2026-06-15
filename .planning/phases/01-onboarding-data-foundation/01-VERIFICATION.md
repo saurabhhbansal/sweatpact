@@ -1,7 +1,8 @@
 ---
 phase: 01-onboarding-data-foundation
 verified: 2026-06-15T12:54:30Z
-status: human_needed
+status: passed
+human_verification_resolved: 2026-06-15T07:40:00Z via 01-UAT.md (both items pass — live DB MCP-confirmed; CR-01 race accepted as risk, see 01-SECURITY.md AR-01)
 score: 4/4 must-haves verified
 overrides_applied: 0
 human_verification:
