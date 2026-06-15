@@ -47,7 +47,9 @@ including one clearly-labeled practice check-in that never affects real stakes.
   2. `GET /api/onboarding-progress` returns the caller's current progress; `PATCH` records advancement and is idempotent on additive `completed_steps` appends (replaying the same write is a no-op).
   3. All writes are Zod-validated and reject malformed step keys or unknown fields.
   4. The persisted `tour_version` is present so a later replay can detect stale versions without breaking.
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 01-01-PLAN.md — `0030_onboarding_progress` migration (table + owner-only RLS + D-02 backfill + new-profile trigger) and apply to live DB
+- [ ] 01-02-PLAN.md — pure merge/validation helper (+ Vitest) and `GET/PATCH /api/onboarding-progress` route
 
 ### Phase 2: Step Logic & Shared Setup Surfaces
 **Goal**: The walkthrough's "what to teach next" and "what's already done" decisions live in pure, unit-tested logic, and the gym/schedule/Shortcut UIs are reusable surfaces both the walkthrough and the legacy entry can mount with no logic fork.
@@ -118,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Onboarding Data Foundation | v1.1 | 0/TBD | Not started | - |
+| 1. Onboarding Data Foundation | v1.1 | 0/2 | Not started | - |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 0/TBD | Not started | - |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 0/TBD | Not started | - |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
