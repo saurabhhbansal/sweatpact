@@ -39,7 +39,7 @@ setup in-context. Backed by research in `.planning/research/`.
 
 ### Setup-as-Action Surfaces
 
-- [ ] **SETUP-01**: Gym, schedule, and Shortcut setup UIs are reusable surfaces callable from both the walkthrough and the legacy entry, hitting the existing endpoints (no logic fork)
+- [x] **SETUP-01**: Gym, schedule, and Shortcut setup UIs are reusable surfaces callable from both the walkthrough and the legacy entry, hitting the existing endpoints (no logic fork)
 - [ ] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
 
 ### Progress & Persistence
@@ -82,7 +82,7 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | PROG-04 | Phase 1 | Complete |
 | TEACH-06 | Phase 2 | Complete |
 | PROG-02 | Phase 2 | Complete |
-| SETUP-01 | Phase 2 | Pending |
+| SETUP-01 | Phase 2 | Complete |
 | ONB-01 | Phase 3 | Pending |
 | ONB-02 | Phase 3 | Pending |
 | ONB-04 | Phase 3 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-06-15T14:38:50.435Z"
-last_activity: 2026-06-15 -- Phase 02 execution started
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-06-15T15:10:00.000Z"
+last_activity: 2026-06-15 -- Phase 02 plan 02 complete (shared setup surfaces)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 17
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State: SweatPact
@@ -27,16 +27,16 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 Phase: 02 (step-logic-shared-setup-surfaces) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 02 execution started
+Status: All plans complete — phase ready for verification
+Last activity: 2026-06-15 -- Phase 02 plan 02 complete (shared setup surfaces)
 
-Progress: [██░░░░░░░░] 17%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
+- Total plans completed: 4
 - Average duration: —
 - Total execution time: —
 
@@ -55,6 +55,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01 P01 | 5min | 2 tasks | 1 files |
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
 | Phase 02 P01 | 3min | 2 tasks | 4 files |
+| Phase 02 P02 | 25min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase 01]: onboarding-progress route uses non-admin createClient() only; owner RLS is the enforcement boundary, never service-role (Plan 01-02)
 - [Phase ?]: [Phase 02]: D-04 step registry — TOUR_VERSION=1, ordered STEPS [schedule,gym,challenge,money,shortcut_viewed]; schedule is setup-bearing but NOT a completion-gating teaching key (Plan 02-01)
 - [Phase ?]: [Phase 02]: completion probes derive from real state (gymCount, rest_days non-empty, completed_steps), no duplicate flag; isTourComplete reuses TEACHING_KEYS (Plan 02-01)
+- [Phase 02]: setup surfaces (gym/schedule/shortcut) are onComplete-driven and own their own fetch+save against existing endpoints — no logic fork; same surface serves legacy wizard and Phase 3+ walkthrough (D-03 "not dummy", SETUP-01) (Plan 02-02)
+- [Phase 02]: write-authority decouple — ShortcutSurface writes only shortcut_viewed; the onboarding_complete:true flip is confined to the legacy shell so a walkthrough mount cannot prematurely end onboarding (Phase-1 D-05) (Plan 02-02)
 
 ### Pending Todos
 
@@ -96,6 +99,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T14:38:50.424Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-06-15T15:10:00.000Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

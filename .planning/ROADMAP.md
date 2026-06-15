@@ -80,7 +80,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — extract gym/schedule/Shortcut into shared `onComplete`-driven surfaces and rewire the legacy `/onboarding/*` routes as thin shells (same existing endpoints)
+- [x] 02-02-PLAN.md — extract gym/schedule/Shortcut into shared `onComplete`-driven surfaces and rewire the legacy `/onboarding/*` routes as thin shells (same existing endpoints)
 
 ### Phase 3: Minimal Start & TourProvider Wiring
 
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
-| 2. Step Logic & Shared Setup Surfaces | v1.1 | 1/2 | In Progress|  |
+| 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Plans Complete | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 0/TBD | Not started | - |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
