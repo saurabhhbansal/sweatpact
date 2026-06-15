@@ -1,7 +1,9 @@
 ---
 phase: 3
 slug: minimal-start-tourprovider-wiring
-status: draft
+status: approved
+verified: 2026-06-15
+dimensions_passed: 6/6
 shadcn_initialized: true
 preset: none (established shadcn/Radix system — manual, pre-existing)
 created: 2026-06-15
