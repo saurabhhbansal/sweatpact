@@ -4,13 +4,13 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-06-15T07:01:43.790Z"
-last_activity: 2026-06-14 — Roadmap created (6 phases, 25/25 v1.1 requirements mapped)
+last_updated: "2026-06-15T07:12:49.701Z"
+last_activity: 2026-06-15 -- Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Milestone v1.1 — Guided Onboarding Walkthrough. Phase 1: Onboarding Data Foundation.
+**Current focus:** Phase 01 — onboarding-data-foundation
 
 ## Current Position
 
-Phase: 1 of 6 (Onboarding Data Foundation)
-Plan: — (not yet planned)
+Phase: 01 (onboarding-data-foundation) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-06-14 — Roadmap created (6 phases, 25/25 v1.1 requirements mapped)
+Last activity: 2026-06-15 -- Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P01 | 5min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,7 @@ Recent decisions affecting current work (locked for v1.1):
 - First walkthrough check-in is a labeled PRACTICE check-in — never a real check-in, never affects stakes/penalties/stats — Phase 5.
 - Skip-already-done is derived from real app state (gym set, weekly goal set, Shortcut viewed), not a duplicate flag — Phases 2 & 6.
 - Coachmark engine library NOT yet picked (react-joyride v3 vs Onborda/NextStep) — spike required before Phase 4 planning.
+- [Phase ?]: D-03: onboarding_progress is the runtime source of truth for tour state; profiles.onboarding_complete read only at backfill to seed it (Plan 01-01)
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T06:24:21.966Z
+Last session: 2026-06-15T07:12:38.194Z
 Stopped at: Phase 1 context gathered
 Resume file: .planning/phases/01-onboarding-data-foundation/01-CONTEXT.md

@@ -53,7 +53,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — `0030_onboarding_progress` migration (table + owner-only RLS + D-02 backfill + new-profile trigger) and apply to live DB
+- [x] 01-01-PLAN.md — `0030_onboarding_progress` migration (table + owner-only RLS + D-02 backfill + new-profile trigger) and apply to live DB
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Onboarding Data Foundation | v1.1 | 0/2 | Not started | - |
+| 1. Onboarding Data Foundation | v1.1 | 1/2 | In Progress|  |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 0/TBD | Not started | - |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 0/TBD | Not started | - |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |

@@ -44,10 +44,10 @@ setup in-context. Backed by research in `.planning/research/`.
 
 ### Progress & Persistence
 
-- [ ] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
+- [x] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
 - [ ] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
 - [ ] **PROG-03**: User can replay the walkthrough anytime from Settings
-- [ ] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
+- [x] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
 
 ### Onboarding UX
 
@@ -78,8 +78,8 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROG-01 | Phase 1 | Pending |
-| PROG-04 | Phase 1 | Pending |
+| PROG-01 | Phase 1 | Complete |
+| PROG-04 | Phase 1 | Complete |
 | TEACH-06 | Phase 2 | Pending |
 | PROG-02 | Phase 2 | Pending |
 | SETUP-01 | Phase 2 | Pending |
@@ -105,6 +105,7 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | UX-03 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1.1 requirements: 25 total
 - Mapped to phases: 25 ✓
 - Unmapped: 0
