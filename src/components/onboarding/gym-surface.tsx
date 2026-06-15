@@ -31,6 +31,7 @@ export function GymSurface({
     if (q.length < 2) {
       setResults([]);
       setSearchErr(null);
+      setSearching(false);
       return;
     }
     setSearching(true);
@@ -66,7 +67,7 @@ export function GymSurface({
     setErr(null);
     try {
       const detailsRes = await fetch(`/api/places/details?place_id=${p.place_id}`);
-      const details = await detailsRes.json();
+      const details = detailsRes.ok ? await detailsRes.json() : {};
       const name = (details.name as string | undefined) || p.main_text;
       const address = (details.address as string | undefined) || p.secondary_text || null;
       const addRes = await fetch("/api/gyms", {
@@ -96,23 +97,28 @@ export function GymSurface({
     setErr(null);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const addRes = await fetch("/api/gyms", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            name: "My gym",
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            radius_m: 150,
-          }),
-        });
-        const data = await addRes.json().catch(() => ({}));
-        setBusy(false);
-        if (!addRes.ok) {
-          setErr(data.error ?? "Failed to add gym.");
-          return;
+        try {
+          const addRes = await fetch("/api/gyms", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              name: "My gym",
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              radius_m: 150,
+            }),
+          });
+          const data = await addRes.json().catch(() => ({}));
+          if (!addRes.ok) {
+            setErr(data.error ?? "Failed to add gym.");
+            return;
+          }
+          setCount((c) => c + 1);
+        } catch {
+          setErr("Network error. Try again.");
+        } finally {
+          setBusy(false);
         }
-        setCount((c) => c + 1);
       },
       (e) => {
         setBusy(false);
