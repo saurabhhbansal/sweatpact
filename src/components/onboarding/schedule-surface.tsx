@@ -41,18 +41,23 @@ export function ScheduleSurface({
     }
     setBusy(true);
     setErr(null);
-    const res = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ weekly_goal: goal, rest_days: restDays }),
-    });
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setErr(data.error ?? "Failed");
-      return;
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ weekly_goal: goal, rest_days: restDays }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErr(data.error ?? "Failed");
+        return;
+      }
+      onComplete();
+    } catch {
+      setErr("Network error. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    onComplete();
   }
 
   function skip() {
