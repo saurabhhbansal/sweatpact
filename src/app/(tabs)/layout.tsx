@@ -1,10 +1,17 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getViewerProfile } from "@/lib/supabase/rsc";
+import { getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
 import { RefreshOnFocus } from "@/components/refresh-on-focus";
+import { TourProvider } from "@/components/tour-provider";
 
 export const dynamic = "force-dynamic";
+
+// Copied from src/app/onboarding/username/page.tsx — one definition, one regex.
+// D-01: the layout gate is the ONLY username redirect going forward.
+function isAutoUsername(u: string | null) {
+  return !u || /^user_[a-f0-9]{8}$/.test(u);
+}
 
 // getViewerProfile is request-cached, so the two nav slots and the page all
 // share one auth round trip and one profiles select.
@@ -34,11 +41,31 @@ async function BottomBar() {
 // nav's sliding indicator actually glides between tabs. The navs are streamed
 // behind Suspense with prop-less navs as the instant fallback, so the shell
 // paints on hard loads without waiting for the profile fetch.
-export default function TabsLayout({
+//
+// Gate: redirects to /onboarding/username when the profile is missing or the
+// username is auto-generated (D-01, ONB-02). NO onboarding_complete check (D-02).
+// This is the ONLY username redirect gate going forward; per-page redirects have
+// been removed (D-03).
+//
+// Hydration: getOnboardingProgress() is request-cached and reads the progress row
+// server-side — no client-side refetch, no flash (D-04, RESEARCH Pitfall 1).
+// On null (new user / fetch failure) TourProvider uses defaultProgress() (D-06).
+export default async function TabsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Username-only gate (D-01, ONB-02). Runs before JSX so nav never flashes.
+  const profile = await getViewerProfile();
+  if (!profile) redirect("/login");
+  if (isAutoUsername(profile.username)) redirect("/onboarding/username");
+  // NO onboarding_complete check here (D-02 — wizard bounce removed).
+
+  // Server-side hydration read — direct request-cached DB read, NOT a self-fetch
+  // of /api/onboarding-progress (RESEARCH Pitfall 1: no absolute URL needed,
+  // no cookie forwarding, no extra round trip).
+  const initialProgress = await getOnboardingProgress();
+
   return (
     <>
       <RefreshOnFocus />
@@ -53,7 +80,7 @@ export default function TabsLayout({
         aria-hidden="true"
         style={{ height: "calc(max(env(safe-area-inset-top), 0.75rem) + 3.5rem)" }}
       />
-      {children}
+      <TourProvider initialProgress={initialProgress}>{children}</TourProvider>
       <Suspense fallback={<MobileNav />}>
         <BottomBar />
       </Suspense>
