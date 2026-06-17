@@ -43,13 +43,6 @@ export default async function ProfilePage({
 
   if (!viewerProfile) redirect("/login");
 
-  if (!viewerProfile.username || /^user_[a-f0-9]{8}$/.test(viewerProfile.username)) {
-    redirect("/onboarding/username");
-  }
-  if (!viewerProfile.onboarding_complete) {
-    redirect("/onboarding/schedule");
-  }
-
   if (!profile) notFound();
 
   const isOwner = profile.id === viewerProfile.id;
