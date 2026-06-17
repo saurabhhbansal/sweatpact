@@ -25,13 +25,6 @@ export default async function Dashboard() {
 
     if (!profile) redirect("/login");
 
-    if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-      redirect("/onboarding/username");
-    }
-    if (!profile.onboarding_complete) {
-      redirect("/onboarding/schedule");
-    }
-
     const timezone = normalizeTimeZone(
       typeof profile.timezone === "string" ? profile.timezone : undefined
     );
