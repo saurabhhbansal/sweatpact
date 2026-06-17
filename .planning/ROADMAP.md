@@ -165,7 +165,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|-----------|----------------|--------|-----------|
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
-| 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete   | 2026-06-17 |
+| 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
