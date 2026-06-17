@@ -18,7 +18,7 @@ setup in-context. Backed by research in `.planning/research/`.
 - [ ] **ONB-01**: New user completes a minimal mandatory start (username only) and lands directly in the real app
 - [ ] **ONB-02**: The `(tabs)` redirect gate no longer forces the full setup wizard — only a missing username redirects; optional setup is deferred into the walkthrough
 - [ ] **ONB-03**: Walkthrough supports both entry paths — self-starter (start a challenge) and invited (accept a partner's challenge invite)
-- [ ] **ONB-04**: User can skip the walkthrough at any step without being blocked or nagged, and keep using the app
+- [x] **ONB-04**: User can skip the walkthrough at any step without being blocked or nagged, and keep using the app
 
 ### Coachmark Walkthrough Engine
 
@@ -85,7 +85,7 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | SETUP-01 | Phase 2 | Complete |
 | ONB-01 | Phase 3 | Pending |
 | ONB-02 | Phase 3 | Pending |
-| ONB-04 | Phase 3 | Pending |
+| ONB-04 | Phase 3 | Complete |
 | TOUR-01 | Phase 4 | Pending |
 | TOUR-02 | Phase 4 | Pending |
 | TOUR-03 | Phase 4 | Pending |

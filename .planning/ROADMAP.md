@@ -94,12 +94,12 @@ including one clearly-labeled practice check-in that never affects real stakes.
   3. The `TourProvider` mounts in the `(tabs)` layout, hydrates from a server-side progress fetch on first paint (no client refetch flash), and persists advancement; reloading mid-walkthrough resumes at the same point.
   4. The user can skip/dismiss at any time and keep using the app, with the skip persisted so they are not re-prompted or nagged.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 **UI hint**: yes
 
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — `getOnboardingProgress()` request-cached reader + pure `deriveCurrentStep()` helper (+ co-located Vitest, ONB-04 seam)
+- [x] 03-01-PLAN.md — `getOnboardingProgress()` request-cached reader + pure `deriveCurrentStep()` helper (+ co-located Vitest, ONB-04 seam)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -165,7 +165,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|-----------|----------------|--------|-----------|
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
-| 3. Minimal Start & TourProvider Wiring | v1.1 | 0/3 | Not started | - |
+| 3. Minimal Start & TourProvider Wiring | v1.1 | 1/3 | In Progress|  |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |

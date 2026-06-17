@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-status: verifying
-stopped_at: Phase 3 context gathered
-last_updated: "2026-06-15T16:46:42.684Z"
-last_activity: 2026-06-15 -- Phase 02 plan 02 complete (shared setup surfaces)
+current_phase: 03
+current_phase_name: minimal-start-tourprovider-wiring
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-06-17T16:58:26.067Z"
+last_activity: 2026-06-17
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
   percent: 33
 ---
 
@@ -21,14 +24,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 02 — step-logic-shared-setup-surfaces
+**Current focus:** Phase 03 — minimal-start-tourprovider-wiring
 
 ## Current Position
 
-Phase: 02 (step-logic-shared-setup-surfaces) — EXECUTING
-Plan: 2 of 2
-Status: All plans complete — phase ready for verification
-Last activity: 2026-06-15 -- Phase 02 plan 02 complete (shared setup surfaces)
+Phase: 03 (minimal-start-tourprovider-wiring) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-17 — Phase 03 execution started
 
 Progress: [███░░░░░░░] 33%
 
@@ -56,6 +59,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
 | Phase 02 P01 | 3min | 2 tasks | 4 files |
 | Phase 02 P02 | 25min | 3 tasks | 6 files |
+| Phase 03 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -76,6 +80,8 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: [Phase 02]: completion probes derive from real state (gymCount, rest_days non-empty, completed_steps), no duplicate flag; isTourComplete reuses TEACHING_KEYS (Plan 02-01)
 - [Phase 02]: setup surfaces (gym/schedule/shortcut) are onComplete-driven and own their own fetch+save against existing endpoints — no logic fork; same surface serves legacy wizard and Phase 3+ walkthrough (D-03 "not dummy", SETUP-01) (Plan 02-02)
 - [Phase 02]: write-authority decouple — ShortcutSurface writes only shortcut_viewed; the onboarding_complete:true flip is confined to the legacy shell so a walkthrough mount cannot prematurely end onboarding (Phase-1 D-05) (Plan 02-02)
+- [Phase ?]: deriveCurrentStep extracted as pure .ts not inlined in provider .tsx so ONB-04 resume/dismiss is unit-covered by Vitest (plan 03-01)
+- [Phase ?]: getOnboardingProgress uses admin client with strict .eq(user_id, user.id) filter as sole access-control boundary post-0029 column lockdown (T-03-IDOR) (plan 03-01)
 
 ### Pending Todos
 
@@ -99,6 +105,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-15T16:46:42.674Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-minimal-start-tourprovider-wiring/03-CONTEXT.md
+Last session: 2026-06-17T16:58:26.057Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
