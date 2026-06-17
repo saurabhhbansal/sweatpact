@@ -32,7 +32,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 - [x] **Phase 1: Onboarding Data Foundation** - Server-side progress persistence (table, RLS, API)
 - [x] **Phase 2: Step Logic & Shared Setup Surfaces** - Pure step registry, completion probes, extracted gym/schedule/shortcut UIs (completed 2026-06-15)
-- [ ] **Phase 3: Minimal Start & TourProvider Wiring** - Username-only gate, provider mount, resume/replay plumbing (no coachmarks)
+- [x] **Phase 3: Minimal Start & TourProvider Wiring** - Username-only gate, provider mount, resume/replay plumbing (no coachmarks) (completed 2026-06-17)
 - [ ] **Phase 4: Coachmark Engine (single-route)** - Spotlight, click-through overlay, z-index, safe-area, a11y
 - [ ] **Phase 5: Cross-Route Walkthrough & Teaching Content** - Navigate-then-reveal sequencing + the four teaching steps end-to-end
 - [ ] **Phase 6: Skip-on-Complete, Replay & Completion Hardening** - Derived skip-already-done, replay from settings, version-drift safety, "pact is live" moment
@@ -94,7 +94,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
   3. The `TourProvider` mounts in the `(tabs)` layout, hydrates from a server-side progress fetch on first paint (no client refetch flash), and persists advancement; reloading mid-walkthrough resumes at the same point.
   4. The user can skip/dismiss at any time and keep using the app, with the skip persisted so they are not re-prompted or nagged.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **UI hint**: yes
 
 **Wave 1**
@@ -107,7 +107,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03-PLAN.md — delete per-page username/`onboarding_complete` redirects from all 8 tab pages (preserve cycle gender, u/me, groups membership redirects)
+- [x] 03-03-PLAN.md — delete per-page username/`onboarding_complete` redirects from all 8 tab pages (preserve cycle gender, u/me, groups membership redirects)
 
 ### Phase 4: Coachmark Engine (single-route)
 
@@ -165,7 +165,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|-----------|----------------|--------|-----------|
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
-| 3. Minimal Start & TourProvider Wiring | v1.1 | 2/3 | In Progress|  |
+| 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete   | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |

@@ -4,17 +4,17 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 03
 current_phase_name: minimal-start-tourprovider-wiring
-status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-06-17T17:03:24.352Z"
+status: verifying
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-06-17T17:08:50.097Z"
 last_activity: 2026-06-17
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
-  percent: 33
+  completed_plans: 7
+  percent: 50
 ---
 
 # Project State: SweatPact
@@ -30,7 +30,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 Phase: 03 (minimal-start-tourprovider-wiring) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-17 — Phase 03 execution started
 
 Progress: [███░░░░░░░] 33%
@@ -61,6 +61,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 02 P02 | 25min | 3 tasks | 6 files |
 | Phase 03 P01 | 2min | 2 tasks | 3 files |
 | Phase 03 P02 | 3min | 2 tasks | 2 files |
+| Phase 03 P03 | 2min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase 02]: write-authority decouple — ShortcutSurface writes only shortcut_viewed; the onboarding_complete:true flip is confined to the legacy shell so a walkthrough mount cannot prematurely end onboarding (Phase-1 D-05) (Plan 02-02)
 - [Phase ?]: deriveCurrentStep extracted as pure .ts not inlined in provider .tsx so ONB-04 resume/dismiss is unit-covered by Vitest (plan 03-01)
 - [Phase ?]: getOnboardingProgress uses admin client with strict .eq(user_id, user.id) filter as sole access-control boundary post-0029 column lockdown (T-03-IDOR) (plan 03-01)
+- [Phase ?]: D-03 enforced: per-page username + onboarding_complete redirects removed from all 8 (tabs) pages; layout gate is single source of truth (plan 03-03)
 
 ### Pending Todos
 
@@ -106,6 +108,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-17T17:03:24.341Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-06-17T17:08:50.086Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
