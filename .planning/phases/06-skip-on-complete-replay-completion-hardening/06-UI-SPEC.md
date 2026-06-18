@@ -1,7 +1,8 @@
 ---
 phase: 6
 slug: skip-on-complete-replay-completion-hardening
-status: draft
+status: approved
+reviewed_at: 2026-06-18
 shadcn_initialized: false
 preset: none
 created: 2026-06-18
