@@ -1,5 +1,5 @@
 ---
-phase: 06-skip-on-complete-replay-completion-hardening
+phase: "06"
 reviewed: 2026-06-19T00:00:00Z
 depth: standard
 files_reviewed: 12
@@ -17,14 +17,14 @@ files_reviewed_list:
   - src/app/onboarding/username/client.tsx
   - src/app/onboarding/username/page.tsx
 findings:
-  critical: 2
-  warning: 4
+  critical: 1
+  warning: 3
   info: 2
-  total: 8
+  total: 6
 status: issues_found
 ---
 
-# Phase 06: Code Review Report
+# Code Review: Phase 06
 
 **Reviewed:** 2026-06-19T00:00:00Z
 **Depth:** standard
@@ -33,171 +33,170 @@ status: issues_found
 
 ## Summary
 
-This phase wires skip-on-complete probe data (gym count, rest days) server-side into `TourProvider`, adds a `replay` signal to the PATCH schema, and introduces the "Pact is live" one-shot completion overlay. The domain logic and schema validation are solid; test coverage for the pure functions is thorough. However, two blockers were found: a race condition in `PactLiveOverlay` that causes a flash of the full-screen overlay before it should be visible (due to a two-useEffect mount sequence), and a `window.setTimeout` reference that crashes on non-browser SSR. Four warnings cover a missing try-catch around the PATCH body parse in the route, a leaked `window.setTimeout` timer if the password change dialog unmounts during the 2-second auto-close, a redundant early-return guard inside the overlay, and an unsafe `as any[]` cast widening query results in the groups page. Two informational items note a duplicated `isAutoUsername` function and an unguarded optional on `user_gyms` that silently swallows DB errors.
+Reviewed 12 files covering skip-on-complete probe wiring, the `replay` signal,
+replay-from-settings, and the "Pact is live" one-shot overlay. The domain logic
+(`onboarding-progress.ts`, `current-step.ts`, `completion.ts`, `pact-live.ts`) is
+clean and well-tested; the Zod schema is correctly strict. One critical bug found:
+`ReplayTourButton.replay()` permanently locks the button in a disabled state on any
+network error because `setBusy(false)` is never reached when `fetch()` throws.
+Three warnings cover a timer leak in the password-change dialog, a post-dismiss
+rendering inconsistency in `PactLiveOverlay`, and a silently swallowed Supabase
+error that degrades the skip-on-complete experience. Two info items call out a
+duplicated `isAutoUsername` function and a missing test for a documented
+`replay`+`dismissed` precedence edge case.
 
 ---
 
 ## Critical Issues
 
-### CR-01: `PactLiveOverlay` flashes open on first mount before suppression check settles
+### CR-001: `ReplayTourButton.replay()` permanently locks busy state on network error
 
-**File:** `src/components/pact-live-overlay.tsx:34-44`
+**Severity:** Critical
+**File:** `src/app/(tabs)/settings/client.tsx:164-180`
 
-**Issue:** The `open` state is initialized to `false`, then a second `useEffect` sets it to the predicate result. Both `mounted` and `open` are driven by separate effects that fire after render, so the sequence is:
+**Issue:** `setBusy(true)` is set at line 167 before the bare `await fetch(...)` at
+line 168. If `fetch()` throws (network down, DNS failure, connection refused),
+execution jumps out of the function without ever reaching `setBusy(false)` at line
+173. The Replay Tour button is permanently stuck `disabled` for the rest of the
+session. The only recovery is a full page reload.
 
-1. Render 1: `mounted=false`, `open=false` → `shouldShowPactLive` returns `false` → the guard at line 67 prevents rendering the portal, which is correct.
-2. `useEffect` for `setMounted(true)` fires.
-3. Render 2: `mounted=true`, `open=false` → **the guard at line 67 now returns `true`** (mounted + hasActiveChallenge + not seen), so the portal JSX is returned. But `open` is still `false` because the second `useEffect` has not fired yet in this render cycle.
-4. `useEffect` for `setOpen(...)` fires — sets `open=true`.
-5. Render 3: `open=true`, portal is open.
+The `NotifyToggle` and `PeriodReminderToggle` functions in the same file handle
+this correctly via optimistic revert on `!res.ok` but also lack try/catch —
+however those functions would equally lock `busy` on a throw. The `ReplayTourButton`
+is the most user-visible instance because the error state from the throw is also
+not surfaced to the user (no `setErr` call in the throw path).
 
-The problem is step 3: between renders 2 and 3, the `DialogPrimitive.Root` is rendered with `open={false}`. Radix Dialog in uncontrolled-to-controlled transition or `open=false` starting state still instantiates the portal DOM node. Depending on Radix Dialog's internal animation state machine, this can cause a brief flash or incorrect animation entry. More critically, the guard at line 67 returning `null` on render 1 but the full portal on render 2 with `open=false` means the Dialog overlay DOM is added and immediately opened in the next render — triggering the entry animation at an unexpected time. If the user has already dismissed (pact_live_seen in completedSteps), the guard returns `null` correctly, but on the happy path a React double-invocation in Strict Mode will trigger two mount sequences, making this race more visible.
+**Fix:** Wrap the fetch in try/finally to guarantee `setBusy` is always cleared:
 
-The root cause is that the "should render" guard (line 67) re-evaluates `shouldShowPactLive` synchronously while `open` is still stale from the prior render. The two pieces of state (`mounted` and `open`) are not in sync across the same render.
-
-**Fix:** Merge both effects into one and gate on `mounted` directly; initialize `open` from the predicate within a single effect so the portal only renders when the state is settled:
-
-```tsx
-const [ready, setReady] = useState(false);
-
-useEffect(() => {
-  setReady(shouldShowPactLive({ mounted: true, hasActiveChallenge, completedSteps }));
-}, [hasActiveChallenge, completedSteps]);
-
-if (!ready) return null;
-
-return (
-  <DialogPrimitive.Root
-    open={ready}
-    onOpenChange={(next) => {
-      if (!next) { setReady(false); persistSeen(); }
-    }}
-  >
-    ...
-  </DialogPrimitive.Root>
-);
+```ts
+async function replay() {
+  if (busy) return;
+  setErr(null);
+  setBusy(true);
+  try {
+    const res = await fetch("/api/onboarding-progress", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ replay: true }),
+    });
+    if (!res.ok) {
+      setErr("Couldn't restart the tour. Try again.");
+      return;
+    }
+    startTransition(() => router.refresh());
+  } catch {
+    setErr("Couldn't restart the tour. Try again.");
+  } finally {
+    setBusy(false);
+  }
+}
 ```
-
-This eliminates the `mounted` flag entirely (the effect itself is the client-mount guard), collapses to a single boolean state, and avoids the stale-`open`/ready-guard mismatch. The portal renders exactly once when the predicate first settles to `true`.
-
----
-
-### CR-02: `window.setTimeout` called in a component that can render server-side
-
-**File:** `src/app/(tabs)/settings/client.tsx:254`
-
-**Issue:** `window.setTimeout(close, 2000)` is called inside the `submit` async handler of `ChangePasswordButton`. The file has `"use client"` at line 1, which means the component is a Client Component and Next.js will SSR it to generate the initial HTML. During SSR, `window` is `undefined`, and `window.setTimeout` will throw `ReferenceError: window is not defined` if `submit` is somehow invoked server-side, OR (more practically) if Next.js statically analyses the reference and rejects the module in Node.js contexts.
-
-In Next.js 14 App Router with React 18, `"use client"` components are server-rendered for the initial HTML shell. The `submit` handler itself only runs client-side (it is an event handler), so this particular call path will not execute during SSR. However, referencing `window` at module or render level (not inside an event handler or `useEffect`) would throw. In this specific case it is inside an async event handler, so it is safe in practice — but it is a fragile pattern that violates the project convention and will break the moment the reference moves outside the handler (e.g., if `close` is called during an effect). The safe, conventional fix is to use the global `setTimeout` (no `window.` prefix) which is available in both environments.
-
-**Fix:**
-```tsx
-// Line 254 — replace:
-window.setTimeout(close, 2000);
-// with:
-setTimeout(close, 2000);
-```
-
-`setTimeout` without the `window.` prefix is available in Node.js (as a global) and in browsers, making the code portable and eliminating the SSR risk entirely.
 
 ---
 
 ## Warnings
 
-### WR-01: Timer from `window.setTimeout` is never cleared — leak if dialog unmounts before 2 s
+### WR-001: `ChangePasswordButton` timer not cancelled on unmount — state update after unmount
 
+**Severity:** Warning
 **File:** `src/app/(tabs)/settings/client.tsx:254`
 
-**Issue:** The 2-second auto-close timer is fire-and-forget. If the user navigates away (or the component unmounts via a parent conditional) within the 2-second window, the `close` callback fires against an already-unmounted component, calling `setOpen(false)` and `reset()` on stale state. React will log a warning ("Can't perform a React state update on an unmounted component") in development and may trigger no-op updates in production, but it can also cause subtle state corruption if the component re-mounts quickly (e.g. back-navigation).
-
-**Fix:** Capture the timer ID and clear it in a cleanup effect or in the `close`/`reset` path:
-
-```tsx
-const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-// In submit(), after setSuccess(true):
-autoCloseRef.current = setTimeout(close, 2000);
-
-// In close() or reset():
-if (autoCloseRef.current) {
-  clearTimeout(autoCloseRef.current);
-  autoCloseRef.current = null;
-}
-```
-
----
-
-### WR-02: Redundant synchronous guard makes `PactLiveOverlay` control flow confusing and fragile
-
-**File:** `src/components/pact-live-overlay.tsx:67-69`
-
-**Issue:** Lines 67-69 contain an early-return guard that re-evaluates `shouldShowPactLive` synchronously after the `useState`/`useEffect` block. This guard and the `open` state driven by the effect are not the same thing: the guard controls whether the portal JSX exists in the tree, while `open` controls whether the Radix Dialog is open. They can diverge (as described in CR-01), and the redundant guard adds a third evaluation of the same predicate in the same render, making the control flow non-obvious and error-prone.
-
-When `mounted=true` and `hasActiveChallenge=true` and `pact_live_seen` is NOT in `completedSteps`: the guard returns the portal (correct). When `mounted=false`: the guard correctly returns `null`. But when the user dismisses (sets `open=false`), the `open` state changes but `shouldShowPactLive` still returns `true` until props update — so the guard continues returning the portal JSX with `open=false`. This forces an unnecessary extra render cycle and keeps the Dialog DOM node alive after dismissal until the parent re-fetches `completedSteps`.
-
-**Fix:** Remove the duplicate guard and rely solely on the `open` state for conditional rendering. The portal with `open={false}` renders nothing visible (Radix Dialog with `open={false}` does not add DOM nodes in portal mode by default). If an early-return is desired for clarity, base it on the `open` state alone, not on re-evaluating the predicate:
-
-```tsx
-if (!open) return null;
-```
-
----
-
-### WR-03: `req.json()` parse failure swallowed by `.catch(() => null)` — `null` reaches `PatchBody.safeParse` and produces a misleading error response
-
-**File:** `src/app/api/onboarding-progress/route.ts:47`
-
-**Issue:** The PATCH handler calls `await req.json().catch(() => null)`. When the request body is invalid JSON, `catch` returns `null`, which is then passed to `PatchBody.safeParse(null)`. The Zod schema (a `.strict()` object) will reject `null` with a `validation_failed` response, but the `issues` payload will describe "expected object, received null" rather than a body-parse error. While not a security issue (the 400 response is still returned), this misattributes the error origin and makes debugging harder for callers.
+**Issue:** After a successful password update, `window.setTimeout(close, 2000)` is
+scheduled with no cleanup. If the user navigates away from Settings within those
+2 seconds the timer fires against an unmounted component, calling `setOpen`,
+`setNewPassword`, `setConfirm`, `setErr`, `setSuccess`, and `setBusy` on stale
+state. React 18 no longer throws on unmounted updates, but it produces dev-mode
+warnings and is a real resource leak. Additionally, using `window.setTimeout` when
+`setTimeout` (the global, available in both Node.js and browsers) is sufficient is
+unnecessary.
 
 **Fix:**
 
 ```ts
-let body: unknown;
-try {
-  body = await req.json();
-} catch {
-  return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+// Add inside ChangePasswordButton:
+const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+useEffect(() => {
+  return () => {
+    if (autoCloseRef.current !== null) clearTimeout(autoCloseRef.current);
+  };
+}, []);
+
+// In close() / reset(), cancel the timer:
+function reset() {
+  if (autoCloseRef.current !== null) {
+    clearTimeout(autoCloseRef.current);
+    autoCloseRef.current = null;
+  }
+  setNewPassword("");
+  setConfirm("");
+  setErr(null);
+  setSuccess(false);
+  setBusy(false);
 }
-const parsed = PatchBody.safeParse(body);
+
+// In submit(), replace window.setTimeout:
+autoCloseRef.current = setTimeout(close, 2000);
 ```
 
 ---
 
-### WR-04: `as any[]` casts on all four parallel Supabase query results lose type safety in `ChallengesPage`
+### WR-002: `PactLiveOverlay` post-dismiss rendering inconsistency — Dialog remains in tree with `open=false` indefinitely
 
-**File:** `src/app/(tabs)/groups/page.tsx:52-53, 57-58, 76, 85`
+**Severity:** Warning
+**File:** `src/components/pact-live-overlay.tsx:39-68`
 
-**Issue:** All four destructured query results are typed as `any[]` via explicit casts (`as any[]`). The downstream code then does unchecked property access on these rows (`row.profiles`, `row.group_id`, `row.user_id`, `row.status`, `obl.from_user`, etc.). A schema change (renamed column, changed relation name) will silently produce `undefined` values at runtime with no compile-time signal. This is a wide type-safety gap across the primary financial display logic.
+**Issue:** After `dismiss()` calls `setOpen(false)` and fires the fetch, the
+early-return guard at line 67 re-evaluates `shouldShowPactLive(...)`. Because the
+server-side `completedSteps` prop has not been updated (the fetch is fire-and-forget
+with no `router.refresh()`), `shouldShowPactLive` still returns `true`. The
+component does NOT return `null` — the `DialogPrimitive.Root` stays in the React
+tree with `open={false}`.
 
-This is especially relevant for `memberRows` where `row.profiles` is accessed (line 77) — if the query relation name ever changes or the select columns shift, `normalizeRelation<MemberProfileRow>(row.profiles)` silently receives `undefined` and the `membersByGroup` map is never populated, causing all challenges to show no opponent names.
+Practical consequence: Radix Dialog continues listening for keyboard events
+(Escape) and calling `onOpenChange(false)` → `dismiss()` → `persistedRef` guards
+the double-write, but the state calls (`setOpen(false)`) run again unnecessarily.
+If the parent ever re-renders with the same props (e.g. from `RefreshOnFocus`),
+the `useEffect` at line 40-44 will re-evaluate and set `open=true` again, briefly
+re-opening the already-dismissed overlay because `completedSteps` still does not
+contain `pact_live_seen`.
 
-**Fix:** Define typed row shapes matching the Supabase select projection and narrow each destructured result:
+**Fix:** Introduce a local `seenLocally` flag that gates both the effect and the
+guard immediately on dismiss, without waiting for a server round trip:
 
-```ts
-type MemberRow = { group_id: string; user_id: string; profiles: MemberProfileRow | MemberProfileRow[] | null };
-// ... then cast once at the destructure site instead of using any[]
-const memberRows = (rawMemberRows ?? []) as MemberRow[];
+```tsx
+const [seenLocally, setSeenLocally] = useState(false);
+
+function dismiss() {
+  setOpen(false);
+  setSeenLocally(true);
+  persistSeen();
+}
+
+useEffect(() => {
+  if (seenLocally) return;
+  setOpen(shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps }));
+}, [mounted, hasActiveChallenge, completedSteps, seenLocally]);
+
+// Guard:
+if (seenLocally || !shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })) {
+  return null;
+}
 ```
 
 ---
 
-## Info
+### WR-003: Supabase `user_gyms` error silently swallowed — DB failure degrades skip-on-complete with no log
 
-### IN-01: `isAutoUsername` is duplicated across two files
-
-**File:** `src/app/(tabs)/layout.tsx:13-15` and `src/app/onboarding/username/page.tsx:10-12`
-
-**Issue:** The `isAutoUsername` helper function with the identical regex `/^user_[a-f0-9]{8}$/` appears verbatim in both files. The comment in `layout.tsx` at line 11 acknowledges the duplication ("Copied from ...") and claims the layout gate is the sole gate going forward, but the function also remains in `username/page.tsx`. If the auto-username pattern ever changes (e.g., a migration changes the generated format), one copy will be missed.
-
-**Fix:** Extract `isAutoUsername` to a shared module, e.g., `src/lib/onboarding/username.ts`, and import it in both files. One definition, one regex, as the comment already states as the goal.
-
----
-
-### IN-02: Supabase `user_gyms` query error is silently discarded in layout — DB failures produce `gymCount=0` rather than surfacing the error
-
+**Severity:** Warning
 **File:** `src/app/(tabs)/layout.tsx:76-80`
 
-**Issue:** The `user_gyms` query at lines 76-80 destructures only `{ data: gyms }` and ignores the `error` field. If the query fails (network partition, RLS misconfiguration, etc.), `gyms` is `null`, `gymCount` defaults to `0`, and `isGymDone` returns `false`. This means the gym step will NOT be auto-skipped for a user who has set up a gym, causing the tour to open on the gym step and ask the user to add a gym they already added. The user sees a regression-like experience with no server-side error logged.
+**Issue:** The `user_gyms` count query destructures only `{ data: gyms }` and drops
+the `error` field. If the query fails, `gyms` is `null`, `gymCount` becomes `0`,
+and `isGymDone` returns `false`. The gym step is NOT auto-skipped for a user who
+has already set up a gym — the tour incorrectly opens on the gym step and prompts
+the user to add a gym they already added. There is no server log for the failure,
+making this invisible to operators.
 
 **Fix:**
 
@@ -212,7 +211,65 @@ if (gymsError) {
 const gymCount = gyms?.length ?? 0;
 ```
 
-This preserves the graceful fallback (`gymCount=0`) while at least logging the failure for observability.
+The graceful fallback (`gymCount=0`) is preserved; the error is now observable.
+
+---
+
+## Info
+
+### IN-001: `isAutoUsername` duplicated across two files — one edit, one miss
+
+**Severity:** Info
+**File:** `src/app/(tabs)/layout.tsx:13-15` and `src/app/onboarding/username/page.tsx:10-12`
+
+**Issue:** `isAutoUsername` and its regex `/^user_[a-f0-9]{8}$/` are defined
+identically in both files. The comment in `layout.tsx` line 11 acknowledges this
+is a copy and states "one definition, one regex" as the goal — but two definitions
+exist. If the auto-username format changes (e.g., longer hex, different prefix),
+one copy will be missed, causing the layout gate and the page gate to disagree:
+the layout could admit a still-auto user while the page-level check catches them
+(or vice versa), breaking the single-gate invariant described in the D-01/D-03
+comments.
+
+**Fix:** Extract to a shared module:
+
+```ts
+// src/lib/onboarding/username.ts
+export const AUTO_USERNAME_RE = /^user_[a-f0-9]{8}$/;
+export function isAutoUsername(u: string | null): boolean {
+  return !u || AUTO_USERNAME_RE.test(u);
+}
+```
+
+Import from both `layout.tsx` and `username/page.tsx`.
+
+---
+
+### IN-002: No test for `replay: true` + `dismissed: true` combination in the same patch
+
+**Severity:** Info
+**File:** `src/lib/onboarding-progress.test.ts` (gap) / `src/lib/onboarding-progress.ts:90-94`
+
+**Issue:** `mergeProgress` documents that `replay` takes precedence over an explicit
+`dismissed` field in the same patch ("Replay takes precedence over an explicit
+`dismissed` in the same patch"). The `PatchBody` schema permits `{ replay: true,
+dismissed: true }` (the test at line 100 covers `{ replay: true, complete_step }`,
+not `{ replay: true, dismissed: true }`). The precedence rule is therefore
+implemented but not tested — a future refactor of the ternary at lines 90-94 could
+silently break the contract.
+
+**Fix:** Add one test case to `onboarding-progress.test.ts`:
+
+```ts
+it("replay wins over explicit dismissed:true in the same patch (D-04)", () => {
+  const merged = mergeProgress(
+    blankRow({ dismissed: false }),
+    { replay: true, dismissed: true }
+  );
+  // replay forces false; explicit dismissed:true is ignored
+  expect(merged.dismissed).toBe(false);
+});
+```
 
 ---
 
