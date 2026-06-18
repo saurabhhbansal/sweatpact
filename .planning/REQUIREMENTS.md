@@ -26,11 +26,11 @@ setup in-context. Backed by research in `.planning/research/`.
 - [ ] **TOUR-02**: The coachmark overlay is click-through (cutout) and coexists with the nav stack, Radix dialogs, and the install gate without trapping input or hiding behind chrome
 - [ ] **TOUR-03**: Coachmarks position correctly within PWA safe-area insets on mobile standalone
 - [ ] **TOUR-04**: Coachmarks are accessible — keyboard advance/skip/dismiss, focus handling, and reduced-motion support
-- [ ] **TOUR-05**: The walkthrough sequences across tabs/routes (navigates, then reveals the next step once its anchor is ready)
+- [x] **TOUR-05**: The walkthrough sequences across tabs/routes (navigates, then reveals the next step once its anchor is ready)
 
 ### Teaching Steps
 
-- [ ] **TEACH-01**: The walkthrough teaches and completes gym setup in-context (Google Places)
+- [x] **TEACH-01**: The walkthrough teaches and completes gym setup in-context (Google Places)
 - [ ] **TEACH-02**: The walkthrough teaches starting (or accepting) a stakes challenge in-context
 - [ ] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
 - [ ] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
@@ -40,7 +40,7 @@ setup in-context. Backed by research in `.planning/research/`.
 ### Setup-as-Action Surfaces
 
 - [x] **SETUP-01**: Gym, schedule, and Shortcut setup UIs are reusable surfaces callable from both the walkthrough and the legacy entry, hitting the existing endpoints (no logic fork)
-- [ ] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
+- [x] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
 
 ### Progress & Persistence
 
@@ -54,7 +54,7 @@ setup in-context. Backed by research in `.planning/research/`.
 - [ ] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
 - [ ] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
 - [ ] **UX-03**: A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion
-- [ ] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
+- [x] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
 
 ## Future Requirements (v1.x / v2)
 
@@ -90,17 +90,17 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | TOUR-02 | Phase 4 | Pending |
 | TOUR-03 | Phase 4 | Pending |
 | TOUR-04 | Phase 4 | Pending |
-| TOUR-05 | Phase 5 | Pending |
+| TOUR-05 | Phase 5 | Complete |
 | ONB-03 | Phase 5 | Pending |
-| TEACH-01 | Phase 5 | Pending |
+| TEACH-01 | Phase 5 | Complete |
 | TEACH-02 | Phase 5 | Pending |
 | TEACH-03 | Phase 5 | Pending |
 | TEACH-04 | Phase 5 | Pending |
 | TEACH-05 | Phase 5 | Pending |
-| SETUP-02 | Phase 5 | Pending |
+| SETUP-02 | Phase 5 | Complete |
 | UX-01 | Phase 5 | Pending |
 | UX-02 | Phase 5 | Pending |
-| UX-04 | Phase 5 | Pending |
+| UX-04 | Phase 5 | Complete |
 | PROG-03 | Phase 6 | Pending |
 | UX-03 | Phase 6 | Pending |
 

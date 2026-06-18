@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-current_phase: 04
-current_phase_name: coachmark-engine-single-route
-status: "Phase 04 shipped — PR #78"
+current_phase: 05
+current_phase_name: cross-route-walkthrough-teaching-content
+status: executing
 stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-06-18T13:08:13.538Z"
+last_updated: "2026-06-18T13:16:59.273Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 05 planning complete
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 14
+  completed_plans: 11
   percent: 67
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 04 — coachmark-engine-single-route
+**Current focus:** Phase 05 — cross-route-walkthrough-teaching-content
 
 ## Current Position
 
-Phase: 04 (coachmark-engine-single-route) — EXECUTING
-Plan: 1 of 3
-Status: Phase 04 shipped — PR #78
-Last activity: 2026-06-18 — Phase 05 planning complete
+Phase: 05 (cross-route-walkthrough-teaching-content) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-18 — Phase 05 execution started
 
 Progress: [███░░░░░░░] 33%
 
@@ -63,6 +63,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 03 P01 | 2min | 2 tasks | 3 files |
 | Phase 03 P02 | 3min | 2 tasks | 2 files |
 | Phase 03 P03 | 2min | 3 tasks | 8 files |
+| Phase 05 P01 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: deriveCurrentStep extracted as pure .ts not inlined in provider .tsx so ONB-04 resume/dismiss is unit-covered by Vitest (plan 03-01)
 - [Phase ?]: getOnboardingProgress uses admin client with strict .eq(user_id, user.id) filter as sole access-control boundary post-0029 column lockdown (T-03-IDOR) (plan 03-01)
 - [Phase ?]: D-03 enforced: per-page username + onboarding_complete redirects removed from all 8 (tabs) pages; layout gate is single source of truth (plan 03-03)
+- [Phase ?]: Phase 5 Plan 01: TOUR_VERSION stays 1 — adding optional route field is not an add/remove/reorder/rename
+- [Phase ?]: Phase 5 Plan 01: challenge route stays /groups in registry; invited /notifications swap resolved at runtime in renderer (D-09/D-10)
+- [Phase ?]: Phase 5 Plan 01: CoachmarkCard widens to w-[360px] only when a surface is present; remains pure prop-driven (no tour import)
 
 ### Pending Todos
 
@@ -109,6 +113,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T08:59:17.398Z
+Last session: 2026-06-18T13:16:14.608Z
 Stopped at: Phase 5 UI-SPEC approved
 Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-UI-SPEC.md
