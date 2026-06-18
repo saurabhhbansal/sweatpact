@@ -33,7 +33,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 - [x] **Phase 1: Onboarding Data Foundation** - Server-side progress persistence (table, RLS, API)
 - [x] **Phase 2: Step Logic & Shared Setup Surfaces** - Pure step registry, completion probes, extracted gym/schedule/shortcut UIs (completed 2026-06-15)
 - [x] **Phase 3: Minimal Start & TourProvider Wiring** - Username-only gate, provider mount, resume/replay plumbing (no coachmarks) (completed 2026-06-17)
-- [ ] **Phase 4: Coachmark Engine (single-route)** - Spotlight, click-through overlay, z-index, safe-area, a11y
+- [x] **Phase 4: Coachmark Engine (single-route)** - Spotlight, click-through overlay, z-index, safe-area, a11y (completed 2026-06-18)
 - [ ] **Phase 5: Cross-Route Walkthrough & Teaching Content** - Navigate-then-reveal sequencing + the four teaching steps end-to-end
 - [ ] **Phase 6: Skip-on-Complete, Replay & Completion Hardening** - Derived skip-already-done, replay from settings, version-drift safety, "pact is live" moment
 
@@ -121,7 +121,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
   3. Coachmarks position correctly within PWA safe-area insets, verified on a notched device in standalone mode.
   4. Coachmarks are keyboard-operable (advance / skip / dismiss), manage focus correctly, honor reduced-motion, and announce via aria-live.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **UI hint**: yes
 **Research**: resolved in 04-CONTEXT.md — D-01 picked react-joyride v3.1; Radix-dialog anchoring resolved via D-04 pause/hide (portal-within-portal deferred beyond Phase 5).
 
@@ -132,7 +132,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-03-PLAN.md — `CoachmarkRenderer` (joyride wiring, click-through overlay, z-index, Radix pause, a11y, safe-area) via `next/dynamic` ssr:false, mounted in `(tabs)` layout, + human verification
+- [x] 04-03-PLAN.md — `CoachmarkRenderer` (joyride wiring, click-through overlay, z-index, Radix pause, a11y, safe-area) via `next/dynamic` ssr:false, mounted in `(tabs)` layout, + human verification
 
 ### Phase 5: Cross-Route Walkthrough & Teaching Content
 
@@ -175,7 +175,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
-| 4. Coachmark Engine (single-route) | v1.1 | 2/3 | In Progress|  |
+| 4. Coachmark Engine (single-route) | v1.1 | 3/3 | Complete   | 2026-06-18 |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
 
