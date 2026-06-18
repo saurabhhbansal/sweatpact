@@ -15,14 +15,6 @@ import { ScheduleSurface } from "@/components/onboarding/schedule-surface";
 import { STEPS } from "@/lib/onboarding/steps";
 import { useTour } from "@/components/tour-provider";
 
-/**
- * Placeholder body copy (UI-SPEC §Copywriting "Placeholder step body (POC)").
- * Replaced in Task 2 by per-step STEP_COPY; retained transiently so Task 1's
- * navigation change keeps the renderer typechecking.
- */
-const PLACEHOLDER_BODY =
-  "Coachmarks will spotlight each part of SweatPact, one at a time. Real lessons land in the next phase.";
-
 /** z-index ABOVE InstallGate (z-[100]); see UI-SPEC §Z-index (TOUR-02). */
 const COACHMARK_Z_INDEX = 110;
 
@@ -243,10 +235,25 @@ export function CoachmarkRenderer() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [showing, handleAdvance, handleDismiss]);
 
-  const stepTitle = useMemo(() => {
+  // Resolve the brand-voiced per-step copy (UX-04). Prefer STEP_COPY over the
+  // terse registry titles; swap the challenge step to the invited variant when
+  // the /groups page reports a pending invite (data-pending-count > 0, D-10).
+  // Recompute when the step changes or a Radix dialog toggles (the latter is a
+  // cheap proxy for DOM churn so the invited swap re-reads on re-render).
+  const stepCopy = useMemo(() => {
+    if (!currentStepId) return { title: "", body: "" };
+    if (currentStepId === "challenge" && readPendingCount() > 0) {
+      return CHALLENGE_INVITED_COPY;
+    }
+    const copy = STEP_COPY[currentStepId];
+    if (copy) return copy;
     const step = STEPS.find((s) => s.id === currentStepId);
-    return step?.title ?? "";
-  }, [currentStepId]);
+    return { title: step?.title ?? "", body: "" };
+    // dialogOpen is included so the invited-variant DOM read re-evaluates when
+    // navigation/anchor churn flips it; currentStepId is the primary key.
+  }, [currentStepId, dialogOpen]);
+  const stepTitle = stepCopy.title;
+  const stepBody = stepCopy.body;
 
   // Move focus to the card's primary "Next →" button when a step appears
   // (TOUR-04). The card is portaled by joyride into #tour-root; we query its
@@ -274,8 +281,36 @@ export function CoachmarkRenderer() {
     };
   }, [showing, currentStepId]);
 
+  // Build the embedded surface for the current step (D-01/D-03). Surface-bearing
+  // steps (schedule/gym/shortcut_viewed) mount their real Phase-2 surface inline
+  // with onComplete=handleAdvance, which advances the tour and triggers the
+  // navigation effect above. Teaching-only steps (challenge/money) get NO
+  // surface — the card keeps its "Next →" button (D-03). Neutral initial values
+  // are passed (auto-skip-from-real-state is deferred to Phase 6, CONTEXT line 150).
+  const surfaceNode = useMemo<React.ReactNode>(() => {
+    switch (currentStepId) {
+      case "schedule":
+        return (
+          <ScheduleSurface
+            initialGoal={4}
+            initialRestDays={[]}
+            onComplete={handleAdvance}
+          />
+        );
+      case "gym":
+        return <GymSurface initialGymCount={0} onComplete={handleAdvance} />;
+      case "shortcut_viewed":
+        // The practice check-in UI is wired in Task 3 (same step's surface slot).
+        return undefined;
+      default:
+        // challenge / money are teaching-only — no surface, keep "Next →".
+        return undefined;
+    }
+  }, [currentStepId, handleAdvance]);
+
   // Custom tooltip adapter — renders CoachmarkCard (D-02 owns all visual UI).
-  // The step's `title` comes from STEPS; body is the placeholder.
+  // Title + body come from the resolved STEP_COPY; surface-bearing steps embed
+  // their real surface in the card's surface slot (Plan 01 hides "Next →" then).
   const TooltipAdapter = useCallback(
     (_props: TooltipRenderProps) => (
       // Safe-area wrapper (TOUR-03): pad edges with max(16px, env(safe-area-inset-*))
@@ -291,13 +326,14 @@ export function CoachmarkRenderer() {
         <CoachmarkCard
           stepId={currentStepId}
           title={stepTitle}
-          body={PLACEHOLDER_BODY}
+          body={stepBody}
+          surface={surfaceNode}
           onAdvance={handleAdvance}
           onDismiss={handleDismiss}
         />
       </div>
     ),
-    [currentStepId, stepTitle, handleAdvance, handleDismiss]
+    [currentStepId, stepTitle, stepBody, surfaceNode, handleAdvance, handleDismiss]
   );
 
   // MOUNT GATE: render nothing when inactive, anchor missing, or a dialog is
@@ -311,7 +347,7 @@ export function CoachmarkRenderer() {
   const steps: Step[] = [
     {
       target: selector,
-      content: PLACEHOLDER_BODY,
+      content: stepBody,
       title: stepTitle,
       placement: "auto",
     },
@@ -366,7 +402,7 @@ export function CoachmarkRenderer() {
     },
   };
 
-  const announce = `${stepTitle}. ${PLACEHOLDER_BODY}`;
+  const announce = `${stepTitle}. ${stepBody}`;
 
   return (
     <>
