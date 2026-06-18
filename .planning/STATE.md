@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-current_phase: 05
-current_phase_name: cross-route-walkthrough-teaching-content
-status: executing
-stopped_at: Phase 5 Plan 04 complete (Task 4 human-verify deferred to production)
-last_updated: "2026-06-18T14:00:00.000Z"
+current_phase: 6
+current_phase_name: Skip-on-Complete, Replay & Completion Hardening
+status: verifying
+stopped_at: Phase 6 context gathered
+last_updated: "2026-06-18T14:27:28.079Z"
 last_activity: 2026-06-18
-last_activity_desc: Completed 05-04-PLAN.md — cross-route teaching engine
+last_activity_desc: Phase 05 complete, transitioned to Phase 6
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 14
   completed_plans: 14
-  percent: 71
+  percent: 83
 ---
 
 # Project State: SweatPact
@@ -28,10 +28,10 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 ## Current Position
 
-Phase: 05 (cross-route-walkthrough-teaching-content) — COMPLETE (4/4 plans)
-Plan: 4 of 4 — complete
+Phase: 6 — Skip-on-Complete, Replay & Completion Hardening
+Plan: Not started
 Status: Phase 05 complete; Task 4 human-verify deferred to production deployment
-Last activity: 2026-06-18 — Completed 05-04-PLAN.md (cross-route teaching engine)
+Last activity: 2026-06-18 — Phase 05 complete, transitioned to Phase 6
 
 Progress: [████████░░] 83% (5/6 phases)
 
@@ -39,7 +39,7 @@ Progress: [████████░░] 83% (5/6 phases)
 
 **Velocity:**
 
-- Total plans completed: 7
+- Total plans completed: 11
 - Average duration: —
 - Total execution time: —
 
@@ -49,6 +49,7 @@ Progress: [████████░░] 83% (5/6 phases)
 |-------|-------|-------|----------|
 | 01 | 2 | - | - |
 | 03 | 3 | - | - |
+| 05 | 4 | - | - |
 
 **Recent Trend:**
 
@@ -123,6 +124,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T14:00:00.000Z
-Stopped at: Phase 5 Plan 04 complete — phase 5 done (Task 4 human-verify deferred to production)
-Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-04-SUMMARY.md
+Last session: 2026-06-18T14:27:28.067Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-skip-on-complete-replay-completion-hardening/06-CONTEXT.md
