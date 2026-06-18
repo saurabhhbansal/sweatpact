@@ -5,16 +5,16 @@ milestone_name: Guided Onboarding Walkthrough
 current_phase: 05
 current_phase_name: cross-route-walkthrough-teaching-content
 status: executing
-stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-06-18T13:27:13.058Z"
+stopped_at: Phase 5 Plan 04 complete (Task 4 human-verify deferred to production)
+last_updated: "2026-06-18T14:00:00.000Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 05 execution started
+last_activity_desc: Completed 05-04-PLAN.md — cross-route teaching engine
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 13
-  percent: 67
+  completed_plans: 14
+  percent: 71
 ---
 
 # Project State: SweatPact
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 ## Current Position
 
-Phase: 05 (cross-route-walkthrough-teaching-content) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
-Last activity: 2026-06-18 — Phase 05 execution started
+Phase: 05 (cross-route-walkthrough-teaching-content) — COMPLETE (4/4 plans)
+Plan: 4 of 4 — complete
+Status: Phase 05 complete; Task 4 human-verify deferred to production deployment
+Last activity: 2026-06-18 — Completed 05-04-PLAN.md (cross-route teaching engine)
 
-Progress: [███░░░░░░░] 33%
+Progress: [████████░░] 83% (5/6 phases)
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 05 P01 | 8min | 2 tasks | 3 files |
 | Phase 05 P02 | 3min | 3 tasks | 3 files |
 | Phase 05 P03 | 4min | 3 tasks | 3 files |
+| Phase 05 P04 | 25min | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: [Phase 05]: Plan 02 — pending-invite count surfaced as data-pending-count DOM attribute (D-09 zero-latency); challenge anchored to the unconditional search section, never the conditional empty-state card
 - [Phase ?]: [Phase 05]: Plan 03 — Open Decision resolved via option 1: dashboard RSC reads completed_steps from request-cached getOnboardingProgress() and passes completedSteps as a prop; TourValue stays frozen (D-08), no extra client fetch/round trip
 - [Phase ?]: [Phase 05]: Plan 03 — challengeCount derived from group_members head-count; EmptyStatePactCTA gated on challengeCount===0; data-tour=gym on always-mounted TodayActionCard wrapper
+- [Phase 05]: Plan 04 — navigate-then-reveal driven by a currentStepId-keyed effect (router.push guarded by route≠pathname); reveal reuses the single Phase-4 anchor-gate observer (no second observer); TourValue not extended (D-08), TOUR_VERSION not bumped
+- [Phase 05]: Plan 04 — practice check-in is cosmetic only (TEACH-05/D-05): zero fetch, zero /api/checkin, zero geo/submission_id; only side effect is handleAdvance() routing through TourProvider's existing complete_step PATCH; HARD SAFETY grep gate (api/checkin=0 in executable code) holds the financial boundary at the source
+- [Phase 05]: Plan 04 — Task 4 human-verify checkpoint deferred to production deployment by user (runtime Network-tab confirmation of zero /api/checkin requests still outstanding)
 
 ### Pending Todos
 
@@ -119,6 +123,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T13:26:28.982Z
-Stopped at: Phase 5 UI-SPEC approved
-Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-UI-SPEC.md
+Last session: 2026-06-18T14:00:00.000Z
+Stopped at: Phase 5 Plan 04 complete — phase 5 done (Task 4 human-verify deferred to production)
+Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-04-SUMMARY.md

@@ -34,7 +34,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 - [x] **Phase 2: Step Logic & Shared Setup Surfaces** - Pure step registry, completion probes, extracted gym/schedule/shortcut UIs (completed 2026-06-15)
 - [x] **Phase 3: Minimal Start & TourProvider Wiring** - Username-only gate, provider mount, resume/replay plumbing (no coachmarks) (completed 2026-06-17)
 - [x] **Phase 4: Coachmark Engine (single-route)** - Spotlight, click-through overlay, z-index, safe-area, a11y (completed 2026-06-18)
-- [ ] **Phase 5: Cross-Route Walkthrough & Teaching Content** - Navigate-then-reveal sequencing + the four teaching steps end-to-end
+- [x] **Phase 5: Cross-Route Walkthrough & Teaching Content** - Navigate-then-reveal sequencing + the four teaching steps end-to-end (completed 2026-06-18; Task 4 human-verify deferred to production)
 - [ ] **Phase 6: Skip-on-Complete, Replay & Completion Hardening** - Derived skip-already-done, replay from settings, version-drift safety, "pact is live" moment
 
 ## Phase Details
@@ -147,7 +147,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
   4. The first walkthrough check-in is clearly labeled as a practice check-in and does NOT register as a real check-in or affect stakes, penalties, or stats.
   5. A 4-item "getting started" checklist reflects progress as real actions complete; the dashboard shows a "Start your first pact" empty-state CTA fallback for users who skip; copy is outcome-framed and brand-voiced.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans complete
 **UI hint**: yes
 
 **Wave 1** *(parallel — no file overlap)*
@@ -158,7 +158,7 @@ including one clearly-labeled practice check-in that never affects real stakes.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 05-04-PLAN.md — `CoachmarkRenderer` navigate-then-reveal + surface embedding + invited-path swap + pure-UI practice check-in (TEACH-05) + brand-voiced copy + human verification
+- [x] 05-04-PLAN.md — `CoachmarkRenderer` navigate-then-reveal + surface embedding + invited-path swap + pure-UI practice check-in (TEACH-05) + brand-voiced copy (Task 4 human verification deferred to production)
 
 ### Phase 6: Skip-on-Complete, Replay & Completion Hardening
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 3/3 | Complete   | 2026-06-18 |
-| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 3/4 | In Progress|  |
+| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 4/4 | Complete   | 2026-06-18 |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
 
 ---

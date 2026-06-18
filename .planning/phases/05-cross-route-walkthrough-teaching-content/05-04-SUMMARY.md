@@ -130,6 +130,12 @@ None — implementation tasks executed as planned.
 - The full cross-route walkthrough engine is in place; Phase 6 (skip-on-complete, replay, completion hardening) can build on it.
 - **Outstanding:** the Task 4 production runtime verification (cross-route flow, both entry paths, and the zero-`/api/checkin` Network-tab confirmation) should be completed once the app is live.
 
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/05-cross-route-walkthrough-teaching-content/05-04-SUMMARY.md`
+- FOUND: `src/components/tour/coachmark-renderer.tsx`
+- Commits verified: `0332420`, `eb6785a`, `ecbbdd1`, `463d934`
+
 ---
 *Phase: 05-cross-route-walkthrough-teaching-content*
 *Completed: 2026-06-18*
