@@ -15,12 +15,6 @@ export default async function CyclePage() {
     const profile = await getViewerProfile();
     if (!profile) redirect("/login");
 
-    if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-      redirect("/onboarding/username");
-    }
-    if (!profile.onboarding_complete) {
-      redirect("/onboarding/schedule");
-    }
     if (profile.gender !== "female") {
       redirect("/dashboard");
     }

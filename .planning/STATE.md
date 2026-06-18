@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-status: planning
-last_updated: "2026-06-14T18:10:00.000Z"
-last_activity: 2026-06-14
+current_phase: 4
+current_phase_name: single-route
+status: "Phase 3 shipped — PR #77"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-06-18T06:32:19.368Z"
+last_activity: 2026-06-18
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 50
 ---
 
 # Project State: SweatPact
@@ -20,21 +23,22 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Milestone v1.1 — Guided Onboarding Walkthrough. Phase 1: Onboarding Data Foundation.
+**Current focus:** Phase 03 — minimal-start-tourprovider-wiring
 
 ## Current Position
 
-Phase: 1 of 6 (Onboarding Data Foundation)
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-06-14 — Roadmap created (6 phases, 25/25 v1.1 requirements mapped)
+Phase: 4 — Coachmark Engine (single-route)
+Plan: Not started
+Status: Phase 3 shipped — PR #77
+Last activity: 2026-06-18
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
+
+- Total plans completed: 7
 - Average duration: —
 - Total execution time: —
 
@@ -42,13 +46,22 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01 | 2 | - | - |
+| 03 | 3 | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P01 | 5min | 2 tasks | 1 files |
+| Phase 01 P02 | 2min | 2 tasks | 3 files |
+| Phase 02 P01 | 3min | 2 tasks | 4 files |
+| Phase 02 P02 | 25min | 3 tasks | 6 files |
+| Phase 03 P01 | 2min | 2 tasks | 3 files |
+| Phase 03 P02 | 3min | 2 tasks | 2 files |
+| Phase 03 P03 | 2min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -62,6 +75,16 @@ Recent decisions affecting current work (locked for v1.1):
 - First walkthrough check-in is a labeled PRACTICE check-in — never a real check-in, never affects stakes/penalties/stats — Phase 5.
 - Skip-already-done is derived from real app state (gym set, weekly goal set, Shortcut viewed), not a duplicate flag — Phases 2 & 6.
 - Coachmark engine library NOT yet picked (react-joyride v3 vs Onborda/NextStep) — spike required before Phase 4 planning.
+- [Phase ?]: D-03: onboarding_progress is the runtime source of truth for tour state; profiles.onboarding_complete read only at backfill to seed it (Plan 01-01)
+- [Phase 01]: D-04: PATCH /api/onboarding-progress accepts a single semantic complete_step key (dedupe-appended server-side), never a client full completed_steps array; replay is a no-op (Plan 01-02)
+- [Phase 01]: onboarding-progress route uses non-admin createClient() only; owner RLS is the enforcement boundary, never service-role (Plan 01-02)
+- [Phase ?]: [Phase 02]: D-04 step registry — TOUR_VERSION=1, ordered STEPS [schedule,gym,challenge,money,shortcut_viewed]; schedule is setup-bearing but NOT a completion-gating teaching key (Plan 02-01)
+- [Phase ?]: [Phase 02]: completion probes derive from real state (gymCount, rest_days non-empty, completed_steps), no duplicate flag; isTourComplete reuses TEACHING_KEYS (Plan 02-01)
+- [Phase 02]: setup surfaces (gym/schedule/shortcut) are onComplete-driven and own their own fetch+save against existing endpoints — no logic fork; same surface serves legacy wizard and Phase 3+ walkthrough (D-03 "not dummy", SETUP-01) (Plan 02-02)
+- [Phase 02]: write-authority decouple — ShortcutSurface writes only shortcut_viewed; the onboarding_complete:true flip is confined to the legacy shell so a walkthrough mount cannot prematurely end onboarding (Phase-1 D-05) (Plan 02-02)
+- [Phase ?]: deriveCurrentStep extracted as pure .ts not inlined in provider .tsx so ONB-04 resume/dismiss is unit-covered by Vitest (plan 03-01)
+- [Phase ?]: getOnboardingProgress uses admin client with strict .eq(user_id, user.id) filter as sole access-control boundary post-0029 column lockdown (T-03-IDOR) (plan 03-01)
+- [Phase ?]: D-03 enforced: per-page username + onboarding_complete redirects removed from all 8 (tabs) pages; layout gate is single source of truth (plan 03-03)
 
 ### Pending Todos
 
@@ -85,6 +108,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-14
-Stopped at: ROADMAP.md and STATE.md written for v1.1; REQUIREMENTS.md traceability populated (25/25 mapped).
-Resume file: None — next step is `/gsd-plan-phase 1`.
+Last session: 2026-06-17T17:08:50.086Z
+Stopped at: Completed 03-03-PLAN.md
+Resume file: None

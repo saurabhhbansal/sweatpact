@@ -25,21 +25,14 @@ export default async function Dashboard() {
 
     if (!profile) redirect("/login");
 
-    if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-      redirect("/onboarding/username");
-    }
-    if (!profile.onboarding_complete) {
-      redirect("/onboarding/schedule");
-    }
-
     const timezone = normalizeTimeZone(
       typeof profile.timezone === "string" ? profile.timezone : undefined
     );
     const today = localDay(new Date(), timezone);
     const joinedDay = localDay(new Date(profile.created_at), timezone);
-    const weeklyGoal: number = (profile as any).weekly_goal ?? 4;
-    const restDays: number[] = Array.isArray((profile as any).rest_days)
-      ? (profile as any).rest_days
+    const weeklyGoal: number = profile.weekly_goal ?? 4;
+    const restDays: number[] = Array.isArray(profile.rest_days)
+      ? profile.rest_days
       : [];
     const todayDow = (() => {
       const [ty, tm, td] = today.split("-").map(Number);

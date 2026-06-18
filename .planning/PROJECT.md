@@ -144,4 +144,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-14 after starting milestone v1.1 (Guided Onboarding Walkthrough)*
+*Last updated: 2026-06-17 after Phase 03 complete — TourProvider wired, username-only gate active, per-page onboarding bounces removed (ONB-01, ONB-02, ONB-04 validated)*

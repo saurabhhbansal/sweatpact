@@ -43,14 +43,8 @@ export default async function ProfilePage({
 
   if (!viewerProfile) redirect("/login");
 
-  if (!viewerProfile.username || /^user_[a-f0-9]{8}$/.test(viewerProfile.username)) {
-    redirect("/onboarding/username");
-  }
-  if (!viewerProfile.onboarding_complete) {
-    redirect("/onboarding/schedule");
-  }
-
   if (!profile) notFound();
+  if (!profile.username) notFound();
 
   const isOwner = profile.id === viewerProfile.id;
   const isPrivate = profile.profile_visibility === "private";
@@ -160,7 +154,7 @@ export default async function ProfilePage({
                 <>
                   <NameEditor currentName={profile.name ?? ""} />
                   <div className="mt-0.5">
-                    <UsernameEditor currentUsername={profile.username!} />
+                    <UsernameEditor currentUsername={profile.username} />
                   </div>
                 </>
               ) : (
@@ -207,7 +201,7 @@ export default async function ProfilePage({
             <div className="mt-4">
               <ChallengeButton
                 targetUserId={profile.id}
-                targetUsername={profile.username!}
+                targetUsername={profile.username}
                 targetName={displayName}
                 className="w-full"
               />
@@ -233,7 +227,7 @@ export default async function ProfilePage({
             <div className="mt-4">
               <ChallengeButton
                 targetUserId={profile.id}
-                targetUsername={profile.username!}
+                targetUsername={profile.username}
                 targetName={displayName}
                 className="w-full"
               />

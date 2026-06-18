@@ -9,12 +9,6 @@ export default async function SettingsPage() {
 
   const profile = await getViewerProfile();
   if (!profile) redirect("/login");
-  if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-    redirect("/onboarding/username");
-  }
-  if (!profile.onboarding_complete) {
-    redirect("/onboarding/schedule");
-  }
 
   const { data: gyms } = await supabase
     .from("user_gyms")

@@ -32,12 +32,6 @@ export default async function ChallengesPage() {
   const profile = await getViewerProfile();
 
   if (!profile) redirect("/login");
-  if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-    redirect("/onboarding/username");
-  }
-  if (!profile.onboarding_complete) {
-    redirect("/onboarding/schedule");
-  }
 
   const today = localDay(new Date(), normalizeTimeZone(profile.timezone));
   const memberships = await listUserMemberships(supa, profile.id);
@@ -105,7 +99,7 @@ export default async function ChallengesPage() {
     if (!oblByGroup.has(obl.group_id)) oblByGroup.set(obl.group_id, new Map());
     const pairKey = `${obl.from_user}|${obl.to_user}`;
     const inner = oblByGroup.get(obl.group_id)!;
-    inner.set(pairKey, (inner.get(pairKey) ?? 0) + obl.amount_cents);
+    inner.set(pairKey, (inner.get(pairKey) ?? 0) + Number(obl.amount_cents));
   }
 
   for (const [gid, pairs] of oblByGroup.entries()) {

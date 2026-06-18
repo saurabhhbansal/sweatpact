@@ -44,12 +44,6 @@ export default async function GroupPage({
 
   const profile = await getViewerProfile();
   if (!profile) redirect("/login");
-  if (!profile.username || /^user_[a-f0-9]{8}$/.test(profile.username)) {
-    redirect("/onboarding/username");
-  }
-  if (!profile.onboarding_complete) {
-    redirect("/onboarding/schedule");
-  }
 
   const membership = await getMembership(supabase, profile.id, params.id);
   if (!membership || !membership.group) {
@@ -199,13 +193,13 @@ export default async function GroupPage({
     const key = `${obligation.from_user}:${obligation.to_user}`;
     const entry = aggregatedMap.get(key);
     if (entry) {
-      entry.total_cents += obligation.amount_cents;
+      entry.total_cents += Number(obligation.amount_cents);
       entry.obligation_ids.push(obligation.id);
     } else {
       aggregatedMap.set(key, {
         from_user: obligation.from_user,
         to_user: obligation.to_user,
-        total_cents: obligation.amount_cents,
+        total_cents: Number(obligation.amount_cents),
         obligation_ids: [obligation.id],
       });
     }
