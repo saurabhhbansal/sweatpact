@@ -1,3 +1,4 @@
+import "server-only";
 import { cache } from "react";
 import { createClient } from "./server";
 import { createAdminClient } from "./admin";
@@ -26,14 +27,17 @@ export const getViewerProfile = cache(async () => {
   // other sensitive columns) are no longer SELECT-able by the authenticated
   // role after the profile-column lockdown (migration 0029). We're strictly
   // scoped to the authenticated user's own id, so this is safe.
-  const { data } = await createAdminClient()
+  const { data, error } = await createAdminClient()
     .from("profiles")
     .select(
       "id, username, name, email, gender, timezone, created_at, weekly_goal, rest_days, onboarding_complete, avatar_url, notify_unverified_checkin, notify_rest_day, notify_cycle_share"
     )
     .eq("id", user.id)
     .single();
-  return data;
+  if (error) {
+    console.error("[getViewerProfile] db error", error.message);
+  }
+  return data ?? null;
 });
 
 // The viewer's own onboarding_progress row, fetched once per request. Used by
@@ -46,10 +50,13 @@ export const getOnboardingProgress = cache(async (): Promise<ProgressRow | null>
   // Admin client + strict .eq("user_id", user.id) — same justified scope as
   // getViewerProfile (post-0029 column lockdown). SECURITY-CRITICAL: never widen this filter.
   // The eq filter is the sole access-control boundary — the admin client bypasses RLS (T-03-IDOR).
-  const { data } = await createAdminClient()
+  const { data, error } = await createAdminClient()
     .from("onboarding_progress")
     .select("mandatory_done, tour_version, last_step_id, completed_steps, dismissed, completed_at")
     .eq("user_id", user.id) // owner-scoped — SECURITY-CRITICAL: never widen this filter
     .maybeSingle();
+  if (error) {
+    console.error("[getOnboardingProgress] db error", error.message);
+  }
   return data ?? null; // null → blank-slate handling in TourProvider (D-06)
 });
