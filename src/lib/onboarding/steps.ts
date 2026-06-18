@@ -39,6 +39,14 @@ export type OnboardingStep = {
   title: string;
   surface?: SurfaceId;
   probe?: ProbeId;
+  /**
+   * The tab route where this step's `data-tour` anchor lives (D-06). The
+   * `CoachmarkRenderer` reads the NEXT step's `route` on advance and navigates
+   * (navigate-then-reveal) when it differs from the current pathname. The
+   * `challenge` invited-user variant swaps to `/notifications` at RUNTIME in the
+   * renderer (D-09/D-10) — the registry value here stays `/groups`.
+   */
+  route?: string;
 };
 
 /**
@@ -52,11 +60,11 @@ export type OnboardingStep = {
  * (see TEACHING_KEYS and CONTEXT lines 45-46).
  */
 export const STEPS: readonly OnboardingStep[] = Object.freeze([
-  { id: "schedule", title: "Set your weekly goal", surface: "schedule", probe: "schedule" },
-  { id: "gym", title: "Add your gym", surface: "gym", probe: "gym" },
-  { id: "challenge", title: "Start a stakes challenge" },
-  { id: "money", title: "How the money works" },
-  { id: "shortcut_viewed", title: "iOS Shortcut", surface: "shortcut", probe: "shortcut" },
+  { id: "schedule", title: "Set your weekly goal", surface: "schedule", probe: "schedule", route: "/dashboard" },
+  { id: "gym", title: "Add your gym", surface: "gym", probe: "gym", route: "/dashboard" },
+  { id: "challenge", title: "Start a stakes challenge", route: "/groups" },
+  { id: "money", title: "How the money works", route: "/groups" },
+  { id: "shortcut_viewed", title: "iOS Shortcut", surface: "shortcut", probe: "shortcut", route: "/shortcut" },
 ] as const);
 
 /**
