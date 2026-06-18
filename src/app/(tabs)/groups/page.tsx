@@ -3,11 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { betterStatus } from "@/lib/challenge-view";
-import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { formatCents } from "@/lib/money";
 import { UserSearch } from "@/components/user-search";
 import { ChallengeVersusCard, type VersusPerson } from "@/components/challenge-versus-card";
+import { PactLiveOverlay } from "@/components/pact-live-overlay";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +136,11 @@ export default async function ChallengesPage() {
     (m) => (membersByGroup.get(m.group_id)?.size ?? 0) >= 2
   );
 
+  // Request-cached read (shares the request's auth round trip) — null for users
+  // with no row. Drives the shown-once "Pact is live" overlay (UX-03, D-03).
+  const progress = await getOnboardingProgress();
+  const completedSteps = progress?.completed_steps ?? [];
+
   return (
     <>
       <main
@@ -228,6 +234,12 @@ export default async function ChallengesPage() {
           <UserSearch />
         </section>
       </main>
+
+      {/* Phase 6 — fires once when the viewer's first challenge goes active */}
+      <PactLiveOverlay
+        hasActiveChallenge={activeMemberships.length > 0}
+        completedSteps={completedSteps}
+      />
     </>
   );
 }
