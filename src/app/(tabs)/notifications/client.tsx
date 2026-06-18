@@ -235,6 +235,7 @@ export function NotificationsList({ initial }: { initial: Notification[] }) {
         return (
           <li
             key={item.id}
+            {...(index === 0 && isInvite ? { "data-tour": "challenge" } : {})}
             className={`animate-fade-up-item relative rounded-[2rem] border px-4 py-3 ${
               item.read_at ? "border-white/10 bg-white/[0.04]" : "border-white/20 bg-white/[0.08]"
             }`}
