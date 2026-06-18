@@ -4,17 +4,17 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 06
 current_phase_name: skip-on-complete-replay-completion-hardening
-status: executing
+status: verifying
 stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-06-18T18:49:21.827Z"
+last_updated: "2026-06-18T18:54:32.147Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 18
-  completed_plans: 17
-  percent: 83
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State: SweatPact
@@ -30,7 +30,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 Phase: 06 (skip-on-complete-replay-completion-hardening) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-18 — Phase 06 execution started
 
 Progress: [████████░░] 83% (5/6 phases)
@@ -71,6 +71,7 @@ Progress: [████████░░] 83% (5/6 phases)
 | Phase 06 P01 | 8min | 3 tasks | 3 files |
 | Phase 06 P02 | 3min | 2 tasks | 3 files |
 | Phase 06 P03 | 33min | 2 tasks | 4 files |
+| Phase 06 P04 | 2min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,8 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase 05]: Plan 04 — Task 4 human-verify checkpoint deferred to production deployment by user (runtime Network-tab confirmation of zero /api/checkin requests still outstanding)
 - [Phase ?]: [Phase 06]: Plan 01 — real gymCount + restDays probe flows server-side from (tabs) layout RSC into deriveCurrentStep; no new client fetch (D-07), TourValue stays frozen (D-08)
 - [Phase ?]: Pact-is-live overlay shown-once via pact_live_seen completed_steps entry (cross-device, not a teaching key)
+- [Phase ?]: [Phase 06]: Plan 04 — legacy /onboarding/{gym,schedule,shortcut} wizard pages + step-indicator.tsx deleted (D-08/D-09); shared surfaces in src/components/onboarding/ and the username mandatory-start route untouched
+- [Phase ?]: [Phase 06]: Plan 04 — username post-save redirect retargeted /onboarding/schedule -> /dashboard (D-10/D-01); (tabs) layout gate only bounces auto-usernames so /dashboard renders cleanly once a real username is claimed
 
 ### Pending Todos
 
@@ -129,6 +132,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T18:48:29.341Z
+Last session: 2026-06-18T18:54:06.772Z
 Stopped at: Completed 06-01-PLAN.md
 Resume file: None
