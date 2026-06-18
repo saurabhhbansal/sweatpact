@@ -34,7 +34,7 @@ setup in-context. Backed by research in `.planning/research/`.
 - [x] **TEACH-02**: The walkthrough teaches starting (or accepting) a stakes challenge in-context
 - [x] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
 - [x] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
-- [ ] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
+- [x] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
 - [x] **TEACH-06**: The walkthrough is considered complete once all four teaching points (gym, challenge, money, Shortcut) have been presented/done
 
 ### Setup-as-Action Surfaces
@@ -46,7 +46,7 @@ setup in-context. Backed by research in `.planning/research/`.
 
 - [x] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
 - [x] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
-- [ ] **PROG-03**: User can replay the walkthrough anytime from Settings
+- [x] **PROG-03**: User can replay the walkthrough anytime from Settings
 - [x] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
 
 ### Onboarding UX
@@ -96,12 +96,12 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | TEACH-02 | Phase 5 | Complete |
 | TEACH-03 | Phase 5 | Complete |
 | TEACH-04 | Phase 5 | Complete |
-| TEACH-05 | Phase 5 | Pending |
+| TEACH-05 | Phase 5 | Complete |
 | SETUP-02 | Phase 5 | Complete |
 | UX-01 | Phase 5 | Complete |
 | UX-02 | Phase 5 | Complete |
 | UX-04 | Phase 5 | Complete |
-| PROG-03 | Phase 6 | Pending |
+| PROG-03 | Phase 6 | Complete |
 | UX-03 | Phase 6 | Pending |
 
 **Coverage:**

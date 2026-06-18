@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-current_phase: 6
-current_phase_name: Skip-on-Complete, Replay & Completion Hardening
+current_phase: 06
+current_phase_name: skip-on-complete-replay-completion-hardening
 status: executing
-stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-06-18T18:30:29.035Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-06-18T18:37:33.911Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 05 complete, transitioned to Phase 6
+last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 18
+  completed_plans: 15
   percent: 83
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 05 — cross-route-walkthrough-teaching-content
+**Current focus:** Phase 06 — skip-on-complete-replay-completion-hardening
 
 ## Current Position
 
-Phase: 6 — Skip-on-Complete, Replay & Completion Hardening
-Plan: Not started
+Phase: 06 (skip-on-complete-replay-completion-hardening) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-18 — Phase 05 complete, transitioned to Phase 6
+Last activity: 2026-06-18 — Phase 06 execution started
 
 Progress: [████████░░] 83% (5/6 phases)
 
@@ -68,6 +68,7 @@ Progress: [████████░░] 83% (5/6 phases)
 | Phase 05 P02 | 3min | 3 tasks | 3 files |
 | Phase 05 P03 | 4min | 3 tasks | 3 files |
 | Phase 05 P04 | 25min | 3 tasks | 1 files |
+| Phase 06 P01 | 8min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,7 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase 05]: Plan 04 — navigate-then-reveal driven by a currentStepId-keyed effect (router.push guarded by route≠pathname); reveal reuses the single Phase-4 anchor-gate observer (no second observer); TourValue not extended (D-08), TOUR_VERSION not bumped
 - [Phase 05]: Plan 04 — practice check-in is cosmetic only (TEACH-05/D-05): zero fetch, zero /api/checkin, zero geo/submission_id; only side effect is handleAdvance() routing through TourProvider's existing complete_step PATCH; HARD SAFETY grep gate (api/checkin=0 in executable code) holds the financial boundary at the source
 - [Phase 05]: Plan 04 — Task 4 human-verify checkpoint deferred to production deployment by user (runtime Network-tab confirmation of zero /api/checkin requests still outstanding)
+- [Phase ?]: [Phase 06]: Plan 01 — real gymCount + restDays probe flows server-side from (tabs) layout RSC into deriveCurrentStep; no new client fetch (D-07), TourValue stays frozen (D-08)
 
 ### Pending Todos
 
@@ -124,6 +126,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T14:39:05.518Z
-Stopped at: Phase 6 UI-SPEC approved
-Resume file: .planning/phases/06-skip-on-complete-replay-completion-hardening/06-UI-SPEC.md
+Last session: 2026-06-18T18:37:33.897Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
