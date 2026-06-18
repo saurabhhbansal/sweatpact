@@ -4,6 +4,7 @@ import { getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
 import { RefreshOnFocus } from "@/components/refresh-on-focus";
 import { TourProvider } from "@/components/tour-provider";
+import CoachmarkRenderer from "@/components/tour/coachmark-renderer-dynamic";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,13 @@ export default async function TabsLayout({
         aria-hidden="true"
         style={{ height: "calc(max(env(safe-area-inset-top), 0.75rem) + 3.5rem)" }}
       />
-      <TourProvider initialProgress={initialProgress}>{children}</TourProvider>
+      <TourProvider initialProgress={initialProgress}>
+        {children}
+        {/* Client-only coachmark engine (next/dynamic ssr:false, D-03). Mounted
+            INSIDE TourProvider so its useTour() resolves; it renders the joyride
+            overlay into #tour-root and is null whenever no step is pending. */}
+        <CoachmarkRenderer />
+      </TourProvider>
       <Suspense fallback={<MobileNav />}>
         <BottomBar />
       </Suspense>

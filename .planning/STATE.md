@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
-current_phase: 4
-current_phase_name: single-route
-status: "Phase 3 shipped — PR #77"
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-06-18T06:32:19.368Z"
+current_phase: 04
+current_phase_name: coachmark-engine-single-route
+status: "Phase 04 shipped — PR #78"
+stopped_at: Phase 4 UI-SPEC approved
+last_updated: "2026-06-18T08:14:17.823Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 7
+  total_plans: 10
   completed_plans: 7
   percent: 50
 ---
@@ -23,13 +23,13 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 03 — minimal-start-tourprovider-wiring
+**Current focus:** Phase 04 — coachmark-engine-single-route
 
 ## Current Position
 
-Phase: 4 — Coachmark Engine (single-route)
-Plan: Not started
-Status: Phase 3 shipped — PR #77
+Phase: 04 (coachmark-engine-single-route) — EXECUTING
+Plan: 1 of 3
+Status: Phase 04 shipped — PR #78
 Last activity: 2026-06-18
 
 Progress: [███░░░░░░░] 33%
@@ -108,6 +108,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-17T17:08:50.086Z
-Stopped at: Completed 03-03-PLAN.md
-Resume file: None
+Last session: 2026-06-18T07:02:26.766Z
+Stopped at: Phase 4 UI-SPEC approved
+Resume file: .planning/phases/04-coachmark-engine-single-route/04-UI-SPEC.md
