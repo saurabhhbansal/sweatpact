@@ -1,7 +1,7 @@
 ---
 phase: 5
 slug: cross-route-walkthrough-teaching-content
-status: draft
+status: approved
 shadcn_initialized: true
 preset: monochrome-glass (custom, established v1.0)
 created: 2026-06-18
@@ -53,7 +53,9 @@ Touch targets: all interactive controls (Next, Skip tour, surface Continue/Skip,
 
 Card sizing: width `w-[300px] max-w-[calc(100vw-32px)]` (Phase 4 locked). When a surface is embedded (D-01/D-02), the card may widen to a bounded max and the **surface slot** is `max-h-[calc(80vh-8rem)] overflow-y-auto` so the card never exceeds `~80vh` and respects PWA safe-area insets (TOUR-03).
 
-Exceptions: none — surface slot max-height (80vh) is a viewport constraint, not a new spacing token.
+Exceptions:
+- **12px (`mt-3`, `p-3`)** — brownfield-inherited from the locked Phase 4 coachmark card (`coachmark-card.tsx`). Not introduced by Phase 5. Changing it would alter Phase 4's frozen card; retained as-is. Multiples-of-4 constraint satisfied (3×4).
+- Surface slot `max-h-[calc(80vh-8rem)]` — viewport constraint, not a spacing token.
 
 ---
 
@@ -168,11 +170,11 @@ No new keyframes. No motion on route transitions beyond the renderer's existing 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-06-18
