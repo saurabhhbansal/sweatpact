@@ -41,6 +41,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen">
         <InstallGate>{children}</InstallGate>
+        {/* Dedicated portal target for the coachmark engine (react-joyride
+            portalElement, consumed in Plan 03 via document.getElementById).
+            Sibling of InstallGate so the overlay renders outside the
+            InstallGate/Radix portal subtree. Empty, non-visual container. */}
+        <div id="tour-root" />
       </body>
     </html>
   );
