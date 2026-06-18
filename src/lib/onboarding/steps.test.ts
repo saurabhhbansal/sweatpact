@@ -58,6 +58,29 @@ describe("STEPS registry", () => {
       (STEPS as OnboardingStep[]).push({ id: "intruder", title: "x" });
     }).toThrow();
   });
+
+  it("maps each step to its D-07 tab route", () => {
+    const routeById = Object.fromEntries(STEPS.map((s) => [s.id, s.route]));
+    expect(routeById).toEqual({
+      schedule: "/dashboard",
+      gym: "/dashboard",
+      challenge: "/groups",
+      money: "/groups",
+      shortcut_viewed: "/shortcut",
+    });
+  });
+
+  it("gives every step a non-empty route beginning with '/'", () => {
+    for (const step of STEPS) {
+      expect(typeof step.route).toBe("string");
+      expect(step.route && step.route.length).toBeGreaterThan(0);
+      expect(step.route?.startsWith("/")).toBe(true);
+    }
+  });
+
+  it("does NOT bump TOUR_VERSION when adding the route field (still 1)", () => {
+    expect(TOUR_VERSION).toBe(1);
+  });
 });
 
 describe("TEACHING_KEYS", () => {
