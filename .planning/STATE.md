@@ -5,8 +5,8 @@ milestone_name: Guided Onboarding Walkthrough
 current_phase: 4
 current_phase_name: single-route
 status: "Phase 3 shipped — PR #77"
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-06-18T06:32:19.368Z"
+stopped_at: Phase 4 context gathered
+last_updated: "2026-06-18T06:55:39.697Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 6
@@ -108,6 +108,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-17T17:08:50.086Z
-Stopped at: Completed 03-03-PLAN.md
-Resume file: None
+Last session: 2026-06-18T06:55:39.684Z
+Stopped at: Phase 4 context gathered
+Resume file: .planning/phases/04-coachmark-engine-single-route/04-CONTEXT.md
