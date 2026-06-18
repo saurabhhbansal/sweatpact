@@ -172,8 +172,15 @@ including one clearly-labeled practice check-in that never affects real stakes.
   3. A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion.
   4. The legacy `/onboarding/*` redirect chain is cleaned up so no path re-forces the old wizard.
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+**Wave 1** *(all parallel — zero file overlap)*
+
+- [ ] 06-01-PLAN.md — wire real `gymCount`/`restDays` probes from the layout RSC into `deriveCurrentStep()` so already-done steps auto-skip with no flash (skip-on-complete hardening)
+- [ ] 06-02-PLAN.md — replay from Settings: extend `PatchBody`/`mergeProgress` with a `replay` signal and add the "Replay app tour" control to `SettingsForm` (PROG-03)
+- [ ] 06-03-PLAN.md — "Your pact is live." full-screen overlay on first active challenge, shown once via `pact_live_seen` (UX-03)
+- [ ] 06-04-PLAN.md — delete the legacy `/onboarding/{gym,schedule,shortcut}` wizard + `step-indicator.tsx`; repair the kept username route redirect
 
 ## Progress
 
@@ -186,8 +193,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 3/3 | Complete   | 2026-06-18 |
-| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 4/4 | Complete   | 2026-06-18 |
-| 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
+| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 4/4 | Complete    | 2026-06-18 |
+| 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/4 | Planned | - |
 
 ---
 *Roadmap created: 2026-06-14 for milestone v1.1 (Guided Onboarding Walkthrough)*
