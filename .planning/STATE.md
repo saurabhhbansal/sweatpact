@@ -4,11 +4,10 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 04
 current_phase_name: coachmark-engine-single-route
-status: executing
+status: "Phase 04 shipped — PR #78"
 stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-06-18T07:19:57.788Z"
+last_updated: "2026-06-18T08:14:17.823Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 6
   completed_phases: 3
@@ -30,8 +29,8 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 Phase: 04 (coachmark-engine-single-route) — EXECUTING
 Plan: 1 of 3
-Status: Executing Phase 04
-Last activity: 2026-06-18 — Phase 04 execution started
+Status: Phase 04 shipped — PR #78
+Last activity: 2026-06-18
 
 Progress: [███░░░░░░░] 33%
 
