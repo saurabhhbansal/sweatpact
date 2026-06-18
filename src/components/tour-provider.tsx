@@ -4,6 +4,10 @@ import { createContext, useContext, useMemo, useState } from "react";
 import type { ProgressRow } from "@/lib/onboarding-progress";
 import { defaultProgress } from "@/lib/onboarding-progress";
 import { deriveCurrentStep } from "@/lib/onboarding/current-step";
+import { STEPS } from "@/lib/onboarding/steps";
+
+// Guard set for advance() — prevents phantom keys from entering optimistic state.
+const VALID_IDS = new Set(STEPS.map((s) => s.id));
 
 /**
  * The frozen 4-member context surface for the onboarding walkthrough.
@@ -58,12 +62,18 @@ export function TourProvider({
   );
 
   /**
-   * Mark a step complete. Optimistically updates local state, then persists via
-   * PATCH with only `complete_step` + `last_step_id` (never `completed_steps` —
-   * server mergeProgress is authoritative and dedupe-appends, D-04).
-   * Best-effort — the walkthrough is an optional surface (D-08).
+   * Mark a step complete. Validates stepId against the STEPS registry before
+   * applying any optimistic state — an unknown key is rejected client-side to
+   * prevent phantom entries that the server would also reject (400). Optimistically
+   * updates local state, then persists via PATCH with only `complete_step` +
+   * `last_step_id` (never `completed_steps` — server mergeProgress is authoritative
+   * and dedupe-appends, D-04). Best-effort — the walkthrough is an optional surface (D-08).
    */
   async function advance(stepId: string) {
+    if (!VALID_IDS.has(stepId)) {
+      console.error("[TourProvider] advance() called with unknown stepId:", stepId);
+      return;
+    }
     setProgress((p) => ({
       ...p,
       completed_steps: p.completed_steps.includes(stepId)
