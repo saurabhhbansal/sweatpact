@@ -4,9 +4,9 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 6
 current_phase_name: Skip-on-Complete, Replay & Completion Hardening
-status: verifying
-stopped_at: Phase 6 context gathered
-last_updated: "2026-06-18T14:27:28.079Z"
+status: executing
+stopped_at: Phase 6 UI-SPEC approved
+last_updated: "2026-06-18T18:30:29.035Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 05 complete, transitioned to Phase 6
 progress:
@@ -30,7 +30,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 
 Phase: 6 — Skip-on-Complete, Replay & Completion Hardening
 Plan: Not started
-Status: Phase 05 complete; Task 4 human-verify deferred to production deployment
+Status: Ready to execute
 Last activity: 2026-06-18 — Phase 05 complete, transitioned to Phase 6
 
 Progress: [████████░░] 83% (5/6 phases)
@@ -124,6 +124,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T14:27:28.067Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-skip-on-complete-replay-completion-hardening/06-CONTEXT.md
+Last session: 2026-06-18T14:39:05.518Z
+Stopped at: Phase 6 UI-SPEC approved
+Resume file: .planning/phases/06-skip-on-complete-replay-completion-hardening/06-UI-SPEC.md
