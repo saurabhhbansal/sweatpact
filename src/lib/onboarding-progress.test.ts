@@ -87,6 +87,22 @@ describe("PatchBody", () => {
   it("does NOT accept a client-sent full completed_steps array", () => {
     expect(PatchBody.safeParse({ completed_steps: ["gym", "money"] }).success).toBe(false);
   });
+
+  it("accepts the one-way replay signal", () => {
+    expect(PatchBody.safeParse({ replay: true }).success).toBe(true);
+  });
+
+  it("rejects replay:false (z.literal(true) — replay is one-way)", () => {
+    expect(PatchBody.safeParse({ replay: false }).success).toBe(false);
+  });
+
+  it("allows replay to compose with existing fields", () => {
+    expect(PatchBody.safeParse({ replay: true, complete_step: "gym" }).success).toBe(true);
+  });
+
+  it("keeps existing callers valid (no replay field)", () => {
+    expect(PatchBody.safeParse({ complete_step: "gym" }).success).toBe(true);
+  });
 });
 
 describe("mergeProgress", () => {
@@ -158,5 +174,19 @@ describe("mergeProgress", () => {
   it("preserves tour_version from the existing row", () => {
     const merged = mergeProgress(blankRow({ tour_version: 3 }), { complete_step: "gym" });
     expect(merged.tour_version).toBe(3);
+  });
+
+  it("replay reactivates the tour (dismissed:false) without resetting completed_steps (D-04)", () => {
+    const merged = mergeProgress(
+      blankRow({ dismissed: true, completed_steps: ["schedule", "gym"] }),
+      { replay: true }
+    );
+    expect(merged.dismissed).toBe(false);
+    expect(merged.completed_steps).toEqual(["schedule", "gym"]);
+  });
+
+  it("does not reactivate the tour when replay is absent (replay is opt-in)", () => {
+    const merged = mergeProgress(blankRow({ dismissed: true }), {});
+    expect(merged.dismissed).toBe(true);
   });
 });
