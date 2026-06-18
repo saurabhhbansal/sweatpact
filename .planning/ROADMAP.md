@@ -121,9 +121,18 @@ including one clearly-labeled practice check-in that never affects real stakes.
   3. Coachmarks position correctly within PWA safe-area insets, verified on a notched device in standalone mode.
   4. Coachmarks are keyboard-operable (advance / skip / dismiss), manage focus correctly, honor reduced-motion, and announce via aria-live.
 
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
-**Research**: needs spike before planning — final library pick (react-joyride v3 vs Onborda/NextStep) and anchoring to content inside a Radix dialog (pause-resume vs portal-within-portal).
+**Research**: resolved in 04-CONTEXT.md — D-01 picked react-joyride v3.1; Radix-dialog anchoring resolved via D-04 pause/hide (portal-within-portal deferred beyond Phase 5).
+
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — install react-joyride v3.1 (legitimacy gate), add `#tour-root` portal target, add dashboard `data-tour` anchor
+- [ ] 04-02-PLAN.md — pure `deriveDotStates` dot logic (+ Vitest) and `CoachmarkCard` visual shell (title/body/dots/Next/Skip)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04-03-PLAN.md — `CoachmarkRenderer` (joyride wiring, click-through overlay, z-index, Radix pause, a11y, safe-area) via `next/dynamic` ssr:false, mounted in `(tabs)` layout, + human verification
 
 ### Phase 5: Cross-Route Walkthrough & Teaching Content
 
@@ -166,7 +175,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Onboarding Data Foundation | v1.1 | 2/2 | Complete    | 2026-06-15 |
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
-| 4. Coachmark Engine (single-route) | v1.1 | 0/TBD | Not started | - |
+| 4. Coachmark Engine (single-route) | v1.1 | 0/3 | Not started | - |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 0/TBD | Not started | - |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
 
