@@ -99,7 +99,7 @@ export default async function ChallengesPage() {
     if (!oblByGroup.has(obl.group_id)) oblByGroup.set(obl.group_id, new Map());
     const pairKey = `${obl.from_user}|${obl.to_user}`;
     const inner = oblByGroup.get(obl.group_id)!;
-    inner.set(pairKey, (inner.get(pairKey) ?? 0) + obl.amount_cents);
+    inner.set(pairKey, (inner.get(pairKey) ?? 0) + Number(obl.amount_cents));
   }
 
   for (const [gid, pairs] of oblByGroup.entries()) {
