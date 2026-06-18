@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Joyride,
   type Props as JoyrideProps,
@@ -9,12 +10,15 @@ import {
   type TooltipRenderProps,
 } from "react-joyride";
 import { CoachmarkCard } from "@/components/tour/coachmark-card";
+import { GymSurface } from "@/components/onboarding/gym-surface";
+import { ScheduleSurface } from "@/components/onboarding/schedule-surface";
 import { STEPS } from "@/lib/onboarding/steps";
 import { useTour } from "@/components/tour-provider";
 
 /**
  * Placeholder body copy (UI-SPEC §Copywriting "Placeholder step body (POC)").
- * Real teaching copy lands in Phase 5; this proves wrapping/positioning only.
+ * Replaced in Task 2 by per-step STEP_COPY; retained transiently so Task 1's
+ * navigation change keeps the renderer typechecking.
  */
 const PLACEHOLDER_BODY =
   "Coachmarks will spotlight each part of SweatPact, one at a time. Real lessons land in the next phase.";
@@ -22,10 +26,78 @@ const PLACEHOLDER_BODY =
 /** z-index ABOVE InstallGate (z-[100]); see UI-SPEC §Z-index (TOUR-02). */
 const COACHMARK_Z_INDEX = 110;
 
+/**
+ * Per-step brand-voiced teaching copy (UI-SPEC §Copywriting, lines 103-110).
+ * Consequence-first, "stakes not stats" — these replace the terse internal
+ * registry titles for the surface-facing card (UX-04). The `challenge` step has
+ * a self-starter default and an `invited` variant resolved at render time from
+ * the `data-pending-count` DOM read (D-09/D-10).
+ */
+const STEP_COPY: Record<string, { title: string; body: string }> = {
+  schedule: {
+    title: "Set your weekly goal",
+    body: "How many days a week are you showing up? This is the bar you and your partner are held to.",
+  },
+  gym: {
+    title: "Pick your gym",
+    body: "We verify check-ins by location. Set the gym you actually train at — no gym, no proof.",
+  },
+  challenge: {
+    title: "Start a pact",
+    body: "Challenge your gym partner with real money on the line. Skip a day you owe — show up and you don't.",
+  },
+  money: {
+    title: "This is the scoreboard that matters",
+    body: "Not streaks — money. What you've earned, what you owe, and how it settles every week.",
+  },
+  shortcut_viewed: {
+    title: "Check in from your phone",
+    body: "iOS users: one tap via the Shortcut. Everyone else: manual check-in works the same. Try a practice run below — it won't count.",
+  },
+};
+
+/** Invited-path challenge copy (pendingCount > 0, D-10) — "aha = accept". */
+const CHALLENGE_INVITED_COPY = {
+  title: "Your partner challenged you",
+  body: "This is where you respond. Accept the pact to put real money on the line — or decline.",
+};
+
 /** True while any Radix dialog is open (D-04 pause condition). */
 function anyDialogOpen(): boolean {
   if (typeof document === "undefined") return false;
   return document.querySelector('[role="dialog"][data-state="open"]') !== null;
+}
+
+/**
+ * Read the pending challenge-invitation count from the `data-pending-count`
+ * attribute the /groups page renders (D-09). SSR-safe (returns 0 when there is
+ * no document) and NaN-safe (a missing/garbage attribute is treated as 0). This
+ * read grants no authority — it only CHOOSES which route the challenge step
+ * points at (the accept/decline write still goes through the RLS-scoped
+ * respond() flow). See threat T-05-04-01.
+ */
+function readPendingCount(): number {
+  if (typeof document === "undefined") return 0;
+  const el = document.querySelector("[data-pending-count]");
+  if (!el) return 0;
+  const n = Number(el.getAttribute("data-pending-count"));
+  return Number.isNaN(n) ? 0 : n;
+}
+
+/**
+ * Resolve a step's EFFECTIVE route (D-06). Returns the step's registry `route`,
+ * except the `challenge` step swaps `/groups` → `/notifications` when the user
+ * has a pending invite (pendingCount > 0, the invited path D-10). Pure given the
+ * DOM — reads only the non-sensitive data-pending-count integer.
+ */
+function effectiveRoute(stepId: string | null): string | null {
+  if (!stepId) return null;
+  const step = STEPS.find((s) => s.id === stepId);
+  const route = step?.route ?? null;
+  if (stepId === "challenge" && readPendingCount() > 0) {
+    return "/notifications";
+  }
+  return route;
 }
 
 /** True while focus is inside an editable control — never hijack keys there. */
@@ -55,6 +127,14 @@ function isEditableTarget(el: EventTarget | null): boolean {
  */
 export function CoachmarkRenderer() {
   const { currentStepId, isActive, advance, dismiss } = useTour();
+
+  // --- Cross-route navigation (TOUR-05 / D-06) ---------------------------
+  // navigate-then-reveal: on advance the provider recomputes currentStepId to
+  // the NEXT step; this effect (below) reads that step's effective route and
+  // router.push()es when it differs from the current pathname. The existing
+  // anchor-gate observer then reveals once the new page mounts the anchor.
+  const router = useRouter();
+  const pathname = usePathname();
 
   // --- Anchor readiness gate (TOUR-01) -----------------------------------
   // Track whether the current step's `data-tour` target is actually mounted.
@@ -93,6 +173,20 @@ export function CoachmarkRenderer() {
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [isActive, selector]);
+
+  // Navigate-then-reveal (TOUR-05 / D-06): whenever the active step changes,
+  // compute its effective route and push only when it differs from the current
+  // pathname (guards against re-render loops, threat T-05-04-03). We do NOT add
+  // a second observer — the reused anchor-gate above reveals once the new page's
+  // anchor mounts (PATTERNS line 74). The challenge step swaps to /notifications
+  // for invited users via effectiveRoute (D-09/D-10).
+  useEffect(() => {
+    if (!isActive || !currentStepId) return;
+    const target = effectiveRoute(currentStepId);
+    if (target && target !== pathname) {
+      router.push(target);
+    }
+  }, [isActive, currentStepId, pathname, router]);
 
   // Pause while any Radix dialog is open; restore on close (D-04, TOUR-02).
   // Watches data-state changes so it reacts to open/close without re-render churn.
