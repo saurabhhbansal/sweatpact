@@ -194,7 +194,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 3/3 | Complete   | 2026-06-18 |
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 4/4 | Complete    | 2026-06-18 |
-| 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 4/4 | Complete   | 2026-06-18 |
+| 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 4/4 | Complete    | 2026-06-18 |
 
 ---
 *Roadmap created: 2026-06-14 for milestone v1.1 (Guided Onboarding Walkthrough)*
