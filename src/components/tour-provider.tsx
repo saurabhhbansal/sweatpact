@@ -49,14 +49,13 @@ export function TourProvider({
 
   // Phase 3 passes neutral gym/schedule probe state (gymCount 0, restDays [])
   // per RESEARCH A2 — full auto-skip UX is Phase 6.
-  // Pass progress.completed_steps as the shortcut probe input so the
-  // shortcut_viewed key is honored without a separate fetch.
+  // completedSteps is not passed in probe — deriveCurrentStep reads it from the
+  // first argument directly for the shortcut auto-skip check (WR-04).
   const currentStepId = useMemo(
     () =>
       deriveCurrentStep(progress.completed_steps, progress.dismissed, {
         gymCount: 0,
         restDays: [],
-        completedSteps: progress.completed_steps,
       }),
     [progress.completed_steps, progress.dismissed]
   );

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { deriveCurrentStep } from "./current-step";
 
-// Neutral probe: no gym, no schedule, no shortcut — auto-skip never fires.
-const neutralProbe = { gymCount: 0, restDays: [] as number[], completedSteps: [] as string[] };
+// Neutral probe: no gym, no schedule — auto-skip never fires.
+const neutralProbe = { gymCount: 0, restDays: [] as number[] };
 
 describe("deriveCurrentStep — dismissed short-circuits (D-10 / ONB-04)", () => {
   it("returns null immediately when dismissed=true, regardless of completed_steps", () => {
@@ -60,13 +60,13 @@ describe("deriveCurrentStep — tour complete returns null", () => {
 
 describe("deriveCurrentStep — auto-skip via probe (D-09)", () => {
   it("skips 'gym' step when gymCount > 0 (isGymDone)", () => {
-    const gymDoneProbe = { gymCount: 1, restDays: [] as number[], completedSteps: [] as string[] };
+    const gymDoneProbe = { gymCount: 1, restDays: [] as number[] };
     // With completedSteps=[], schedule is first and not auto-skippable → returned.
     expect(deriveCurrentStep([], false, gymDoneProbe)).toBe("schedule");
   });
 
   it("skips 'gym' and returns next pending step when schedule is also completed", () => {
-    const gymDoneProbe = { gymCount: 2, restDays: [] as number[], completedSteps: [] as string[] };
+    const gymDoneProbe = { gymCount: 2, restDays: [] as number[] };
     // schedule done in completed_steps, gym auto-skipped → 'challenge' is next
     expect(deriveCurrentStep(["schedule"], false, gymDoneProbe)).toBe("challenge");
   });
@@ -75,21 +75,17 @@ describe("deriveCurrentStep — auto-skip via probe (D-09)", () => {
     const scheduleDoneProbe = {
       gymCount: 0,
       restDays: [0, 6] as number[],
-      completedSteps: [] as string[],
     };
     // schedule auto-skipped → 'gym' is next (not yet completed, gymCount=0)
     expect(deriveCurrentStep([], false, scheduleDoneProbe)).toBe("gym");
   });
 
-  it("skips 'shortcut_viewed' step when shortcut_viewed is in probe.completedSteps", () => {
-    const shortcutDoneProbe = {
-      gymCount: 0,
-      restDays: [] as number[],
-      completedSteps: ["shortcut_viewed"],
-    };
-    // All other steps completed in progress row; shortcut_viewed auto-skipped → null (complete)
+  it("skips 'shortcut_viewed' step when shortcut_viewed is in completedSteps", () => {
+    // shortcut_viewed in completedSteps is both a completion key and the shortcut
+    // auto-skip signal (isShortcutDone reads from the same completedSteps array).
+    // All other steps completed; shortcut_viewed auto-skipped (already in array) → null (complete)
     expect(
-      deriveCurrentStep(["schedule", "gym", "challenge", "money"], false, shortcutDoneProbe)
+      deriveCurrentStep(["schedule", "gym", "challenge", "money", "shortcut_viewed"], false, neutralProbe)
     ).toBeNull();
   });
 });
@@ -104,8 +100,7 @@ describe("deriveCurrentStep — inputs are not mutated", () => {
   it("does not mutate probe arrays", () => {
     const probe = {
       gymCount: 0,
-      restDays: Object.freeze([0]) as unknown as number[],
-      completedSteps: Object.freeze(["shortcut_viewed"]) as unknown as string[],
+      restDays: Object.freeze([0]) as number[],
     };
     expect(() => deriveCurrentStep([], false, probe)).not.toThrow();
   });
