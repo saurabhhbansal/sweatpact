@@ -6,14 +6,14 @@ current_phase: 05
 current_phase_name: cross-route-walkthrough-teaching-content
 status: executing
 stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-06-18T13:16:59.273Z"
+last_updated: "2026-06-18T13:21:10.962Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
   percent: 67
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-14)
 ## Current Position
 
 Phase: 05 (cross-route-walkthrough-teaching-content) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-18 — Phase 05 execution started
 
@@ -64,6 +64,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 03 P02 | 3min | 2 tasks | 2 files |
 | Phase 03 P03 | 2min | 3 tasks | 8 files |
 | Phase 05 P01 | 8min | 2 tasks | 3 files |
+| Phase 05 P02 | 3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: Phase 5 Plan 01: TOUR_VERSION stays 1 — adding optional route field is not an add/remove/reorder/rename
 - [Phase ?]: Phase 5 Plan 01: challenge route stays /groups in registry; invited /notifications swap resolved at runtime in renderer (D-09/D-10)
 - [Phase ?]: Phase 5 Plan 01: CoachmarkCard widens to w-[360px] only when a surface is present; remains pure prop-driven (no tour import)
+- [Phase ?]: [Phase 05]: Plan 02 — money anchored to always-mounted /groups <main> (not per-challenge standing) so the coachmark always has a target; teaching copy carries the lesson
+- [Phase ?]: [Phase 05]: Plan 02 — pending-invite count surfaced as data-pending-count DOM attribute (D-09 zero-latency); challenge anchored to the unconditional search section, never the conditional empty-state card
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T13:16:14.608Z
+Last session: 2026-06-18T13:20:37.931Z
 Stopped at: Phase 5 UI-SPEC approved
 Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-UI-SPEC.md
