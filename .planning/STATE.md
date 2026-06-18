@@ -5,15 +5,15 @@ milestone_name: Guided Onboarding Walkthrough
 current_phase: 04
 current_phase_name: coachmark-engine-single-route
 status: "Phase 04 shipped — PR #78"
-stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-06-18T08:14:17.823Z"
+stopped_at: Phase 5 context gathered
+last_updated: "2026-06-18T08:49:30.689Z"
 last_activity: 2026-06-18
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 7
-  percent: 50
+  completed_plans: 10
+  percent: 67
 ---
 
 # Project State: SweatPact
@@ -108,6 +108,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T07:02:26.766Z
-Stopped at: Phase 4 UI-SPEC approved
-Resume file: .planning/phases/04-coachmark-engine-single-route/04-UI-SPEC.md
+Last session: 2026-06-18T08:49:30.679Z
+Stopped at: Phase 5 context gathered
+Resume file: .planning/phases/05-cross-route-walkthrough-teaching-content/05-CONTEXT.md
