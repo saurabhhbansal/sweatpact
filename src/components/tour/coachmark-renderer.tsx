@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -127,11 +127,17 @@ function PracticeCheckIn({
   onComplete: () => void;
 }) {
   const [simulating, setSimulating] = useState(false);
+  const timerRef = useRef<number | null>(null);
 
-  // Clean up the pulse timer if the step changes mid-animation (avoid a
-  // setState-after-unmount / double-advance).
+  // Cancel the pulse timer on unmount to prevent a double-advance if the step
+  // changes before the 400ms fires (WR-01).
   useEffect(() => {
-    return () => setSimulating(false);
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   function runPractice() {
@@ -144,7 +150,8 @@ function PracticeCheckIn({
     setSimulating(true);
     // Cosmetic success pulse, capped at 400ms (UI-SPEC §Motion). NO fetch, NO
     // check-in API call — see the safety guarantee above.
-    window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
       onComplete();
     }, 400);
   }
@@ -243,13 +250,18 @@ export function CoachmarkRenderer() {
   // a second observer — the reused anchor-gate above reveals once the new page's
   // anchor mounts (PATTERNS line 74). The challenge step swaps to /notifications
   // for invited users via effectiveRoute (D-09/D-10).
+  // Navigate once per step change. `pathname` is intentionally excluded from
+  // deps: after push("/notifications"), data-pending-count is absent there so
+  // effectiveRoute("challenge") flips back to "/groups" and loops (CR-01).
+  // The closure captures pathname at the moment the step changes — correct.
   useEffect(() => {
     if (!isActive || !currentStepId) return;
     const target = effectiveRoute(currentStepId);
     if (target && target !== pathname) {
       router.push(target);
     }
-  }, [isActive, currentStepId, pathname, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, currentStepId, router]);
 
   // Pause while any Radix dialog is open; restore on close (D-04, TOUR-02).
   // Watches data-state changes so it reacts to open/close without re-render churn.
@@ -385,32 +397,63 @@ export function CoachmarkRenderer() {
     }
   }, [currentStepId, handleAdvance, reducedMotion]);
 
-  // Custom tooltip adapter — renders CoachmarkCard (D-02 owns all visual UI).
-  // Title + body come from the resolved STEP_COPY; surface-bearing steps embed
-  // their real surface in the card's surface slot (Plan 01 hides "Next →" then).
-  const TooltipAdapter = useCallback(
-    (_props: TooltipRenderProps) => (
-      // Safe-area wrapper (TOUR-03): pad edges with max(16px, env(safe-area-inset-*))
-      // so the card never sits under the notch/home indicator/rounded corner.
-      <div
-        style={{
-          paddingTop: "max(16px, env(safe-area-inset-top))",
-          paddingRight: "max(16px, env(safe-area-inset-right))",
-          paddingBottom: "max(16px, env(safe-area-inset-bottom))",
-          paddingLeft: "max(16px, env(safe-area-inset-left))",
-        }}
-      >
-        <CoachmarkCard
-          stepId={currentStepId}
-          title={stepTitle}
-          body={stepBody}
-          surface={surfaceNode}
-          onAdvance={handleAdvance}
-          onDismiss={handleDismiss}
-        />
-      </div>
-    ),
-    [currentStepId, stepTitle, stepBody, surfaceNode, handleAdvance, handleDismiss]
+  // Ref holding current card data — synced each render so the stable component
+  // always reads up-to-date values without recreating its type (WR-02).
+  const tooltipDataRef = useRef({
+    currentStepId,
+    stepTitle,
+    stepBody,
+    surfaceNode,
+    handleAdvance,
+    handleDismiss,
+  });
+  tooltipDataRef.current = {
+    currentStepId,
+    stepTitle,
+    stepBody,
+    surfaceNode,
+    handleAdvance,
+    handleDismiss,
+  };
+
+  // Stable component reference created once on mount. joyride receives the same
+  // component type across re-renders, so the tooltip tree (and ScheduleSurface /
+  // GymSurface form state) is never unmounted between step updates (WR-02).
+  const TooltipAdapter = useMemo(
+    () =>
+      function StableTooltipAdapter(_props: TooltipRenderProps) {
+        const {
+          currentStepId: stepId,
+          stepTitle: title,
+          stepBody: body,
+          surfaceNode: surface,
+          handleAdvance: onAdvance,
+          handleDismiss: onDismiss,
+        } = tooltipDataRef.current;
+        return (
+          // Safe-area wrapper (TOUR-03): pad edges with max(16px, env(safe-area-inset-*))
+          // so the card never sits under the notch/home indicator/rounded corner.
+          <div
+            style={{
+              paddingTop: "max(16px, env(safe-area-inset-top))",
+              paddingRight: "max(16px, env(safe-area-inset-right))",
+              paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+              paddingLeft: "max(16px, env(safe-area-inset-left))",
+            }}
+          >
+            <CoachmarkCard
+              stepId={stepId}
+              title={title}
+              body={body}
+              surface={surface}
+              onAdvance={onAdvance}
+              onDismiss={onDismiss}
+            />
+          </div>
+        );
+      },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   // MOUNT GATE: render nothing when inactive, anchor missing, or a dialog is
