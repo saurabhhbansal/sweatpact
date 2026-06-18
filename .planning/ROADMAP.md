@@ -147,14 +147,14 @@ including one clearly-labeled practice check-in that never affects real stakes.
   4. The first walkthrough check-in is clearly labeled as a practice check-in and does NOT register as a real check-in or affect stakes, penalties, or stats.
   5. A 4-item "getting started" checklist reflects progress as real actions complete; the dashboard shows a "Start your first pact" empty-state CTA fallback for users who skip; copy is outcome-framed and brand-voiced.
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 **UI hint**: yes
 
 **Wave 1** *(parallel — no file overlap)*
 
 - [x] 05-01-PLAN.md — STEPS `route?` field (D-06/D-07) + `CoachmarkCard` inline `surface` slot (D-01/D-02/D-03)
 - [x] 05-02-PLAN.md — cross-route `data-tour` anchors on /groups, /notifications, /shortcut + `data-pending-count` (TOUR-05/ONB-03/TEACH-02..04)
-- [ ] 05-03-PLAN.md — `GettingStartedChecklist` (UX-01) + `EmptyStatePactCTA` (UX-02) + dashboard gym anchor + RSC `completed_steps` wiring
+- [x] 05-03-PLAN.md — `GettingStartedChecklist` (UX-01) + `EmptyStatePactCTA` (UX-02) + dashboard gym anchor + RSC `completed_steps` wiring
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Step Logic & Shared Setup Surfaces | v1.1 | 2/2 | Complete   | 2026-06-15 |
 | 3. Minimal Start & TourProvider Wiring | v1.1 | 3/3 | Complete    | 2026-06-17 |
 | 4. Coachmark Engine (single-route) | v1.1 | 3/3 | Complete   | 2026-06-18 |
-| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 2/4 | In Progress|  |
+| 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 3/4 | In Progress|  |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 0/TBD | Not started | - |
 
 ---

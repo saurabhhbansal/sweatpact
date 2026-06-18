@@ -51,8 +51,8 @@ setup in-context. Backed by research in `.planning/research/`.
 
 ### Onboarding UX
 
-- [ ] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
-- [ ] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
+- [x] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
+- [x] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
 - [ ] **UX-03**: A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion
 - [x] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
 
@@ -98,8 +98,8 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | TEACH-04 | Phase 5 | Complete |
 | TEACH-05 | Phase 5 | Pending |
 | SETUP-02 | Phase 5 | Complete |
-| UX-01 | Phase 5 | Pending |
-| UX-02 | Phase 5 | Pending |
+| UX-01 | Phase 5 | Complete |
+| UX-02 | Phase 5 | Complete |
 | UX-04 | Phase 5 | Complete |
 | PROG-03 | Phase 6 | Pending |
 | UX-03 | Phase 6 | Pending |
