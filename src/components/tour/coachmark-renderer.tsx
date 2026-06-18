@@ -14,6 +14,7 @@ import { GymSurface } from "@/components/onboarding/gym-surface";
 import { ScheduleSurface } from "@/components/onboarding/schedule-surface";
 import { STEPS } from "@/lib/onboarding/steps";
 import { useTour } from "@/components/tour-provider";
+import { cn } from "@/lib/utils";
 
 /** z-index ABOVE InstallGate (z-[100]); see UI-SPEC §Z-index (TOUR-02). */
 const COACHMARK_Z_INDEX = 110;
@@ -101,6 +102,76 @@ function isEditableTarget(el: EventTarget | null): boolean {
     tag === "textarea" ||
     tag === "select" ||
     el.isContentEditable
+  );
+}
+
+/**
+ * PracticeCheckIn — the shortcut step's embedded surface (D-05 / TEACH-05).
+ *
+ * CRITICAL FINANCIAL-SAFETY GUARANTEE: this control is COSMETIC ONLY. Clicking
+ * "Practice check-in" runs a brief (≤400ms) success pulse then calls onComplete
+ * (which advances the tour). It makes ZERO network calls — it never contacts the
+ * real check-in endpoint, issues no fetch, reads no geolocation, and creates no
+ * submission. A practice run can never forge a verified check-in or touch stakes,
+ * penalties, or stats. The ONLY side effect is the tour advancing; the
+ * `shortcut_viewed` completion write happens through TourProvider's existing
+ * best-effort onboarding-progress PATCH (NOT a check-in). This component is
+ * deliberately co-located in this file so the no-network guarantee is auditable
+ * in one place. (Threat T-05-04-CHECKIN.)
+ */
+function PracticeCheckIn({
+  reducedMotion,
+  onComplete,
+}: {
+  reducedMotion: boolean;
+  onComplete: () => void;
+}) {
+  const [simulating, setSimulating] = useState(false);
+
+  // Clean up the pulse timer if the step changes mid-animation (avoid a
+  // setState-after-unmount / double-advance).
+  useEffect(() => {
+    return () => setSimulating(false);
+  }, []);
+
+  function runPractice() {
+    if (simulating) return;
+    // Under reduced motion, advance near-instantly with no pulse (TOUR-04).
+    if (reducedMotion) {
+      onComplete();
+      return;
+    }
+    setSimulating(true);
+    // Cosmetic success pulse, capped at 400ms (UI-SPEC §Motion). NO fetch, NO
+    // check-in API call — see the safety guarantee above.
+    window.setTimeout(() => {
+      onComplete();
+    }, 400);
+  }
+
+  return (
+    <div className="space-y-2 pt-1">
+      <button
+        type="button"
+        onClick={runPractice}
+        disabled={simulating}
+        className={cn(
+          "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black transition disabled:cursor-default",
+          simulating && "animate-pulse bg-emerald-400 text-black"
+        )}
+      >
+        {simulating ? (
+          <>
+            <span aria-hidden="true">✓</span> Checked in
+          </>
+        ) : (
+          "Practice check-in"
+        )}
+      </button>
+      <p className="text-center text-xs text-white/55">
+        Practice only — never counts toward stakes.
+      </p>
+    </div>
   );
 }
 
@@ -249,8 +320,11 @@ export function CoachmarkRenderer() {
     if (copy) return copy;
     const step = STEPS.find((s) => s.id === currentStepId);
     return { title: step?.title ?? "", body: "" };
-    // dialogOpen is included so the invited-variant DOM read re-evaluates when
-    // navigation/anchor churn flips it; currentStepId is the primary key.
+    // dialogOpen is a deliberate extra trigger: it flips on the same DOM churn
+    // (open/close, navigation) that can change data-pending-count, so the
+    // invited-variant swap re-reads. eslint flags it as "unnecessary" because
+    // the body does not reference it directly — that is intended, not a bug.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepId, dialogOpen]);
   const stepTitle = stepCopy.title;
   const stepBody = stepCopy.body;
@@ -300,13 +374,16 @@ export function CoachmarkRenderer() {
       case "gym":
         return <GymSurface initialGymCount={0} onComplete={handleAdvance} />;
       case "shortcut_viewed":
-        // The practice check-in UI is wired in Task 3 (same step's surface slot).
-        return undefined;
+        // Pure-UI practice check-in (D-05/TEACH-05) — ZERO API calls, never
+        // touches the check-in endpoint. Advancing the tour is its only effect.
+        return (
+          <PracticeCheckIn reducedMotion={reducedMotion} onComplete={handleAdvance} />
+        );
       default:
         // challenge / money are teaching-only — no surface, keep "Next →".
         return undefined;
     }
-  }, [currentStepId, handleAdvance]);
+  }, [currentStepId, handleAdvance, reducedMotion]);
 
   // Custom tooltip adapter — renders CoachmarkCard (D-02 owns all visual UI).
   // Title + body come from the resolved STEP_COPY; surface-bearing steps embed
