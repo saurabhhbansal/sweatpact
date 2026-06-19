@@ -63,6 +63,10 @@ body {
   .animate-overlay-in,
   .animate-sheet-in,
   .animate-skeleton,
+  .animate-splash-top,
+  .animate-splash-line,
+  .animate-splash-bottom,
+  .animate-splash-glow,
   .dialog-overlay,
   .dialog-content,
   .dropdown-content {
@@ -242,6 +246,36 @@ body {
 
 .animate-skeleton {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Splash screen ───────────────────────────────────────────────────────────
+ * Three elements stagger in: SWEAT fades up, divider expands from center,
+ * PACT fades up. Easing matches the app's existing spring curves.
+ */
+@keyframes splash-word-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes splash-line-in {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+@keyframes splash-glow-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-splash-top {
+  animation: splash-word-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0ms both;
+}
+.animate-splash-line {
+  animation: splash-line-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+.animate-splash-bottom {
+  animation: splash-word-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) 340ms both;
+}
+.animate-splash-glow {
+  animation: splash-glow-in 0.6s ease 100ms both;
 }
 
 /* Hide scrollbars cross-browser (Firefox + WebKit/Chrome/Safari). */
