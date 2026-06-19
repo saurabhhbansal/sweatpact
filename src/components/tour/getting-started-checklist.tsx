@@ -33,11 +33,19 @@ export function GettingStartedChecklist({
   completedSteps: string[];
   gymCount: number;
 }) {
-  // "gym" is also done when the user already has a gym set (probe-based skip)
-  // even if "gym" was never written to completed_steps (existing users).
+  // "gym" is done when completed_steps has the key OR the user already has a gym.
+  // "shortcut_viewed" is done when completed_steps has the key OR the user has
+  // passed challenge+money (they reached the shortcut step and completed or
+  // deliberately skipped it — handles the race where navigate happens before the
+  // advance() PATCH completes, and the skip-on-last-step dismiss path).
   function isDone(key: string): boolean {
     if (completedSteps.includes(key)) return true;
     if (key === "gym" && gymCount > 0) return true;
+    if (
+      key === "shortcut_viewed" &&
+      completedSteps.includes("challenge") &&
+      completedSteps.includes("money")
+    ) return true;
     return false;
   }
 
