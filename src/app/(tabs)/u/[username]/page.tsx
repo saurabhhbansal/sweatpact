@@ -35,7 +35,7 @@ export default async function ProfilePage({
     supabase
       .from("profiles")
       .select(
-        "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at"
+        "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at, period_last_synced_at"
       )
       .ilike("username", params.username)
       .maybeSingle(),
@@ -215,6 +215,7 @@ export default async function ProfilePage({
             records={popupRecords}
             today={today}
             targetName={displayName}
+            lastSyncedAt={profile.period_last_synced_at ?? null}
           />
         ) : null}
 

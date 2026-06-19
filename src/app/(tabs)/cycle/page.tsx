@@ -45,7 +45,7 @@ export default async function CyclePage() {
             <p className="text-xs uppercase tracking-[0.18em] text-white/45">Your cycle</p>
             <h1 className="mt-1 text-3xl font-semibold text-white">Cycle Tracking</h1>
           </div>
-          <CycleView today={today} stats={stats} records={records} />
+          <CycleView today={today} stats={stats} records={records} lastSyncedAt={profile.period_last_synced_at ?? null} />
         </main>
       </>
     );

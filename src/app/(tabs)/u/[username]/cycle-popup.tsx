@@ -14,11 +14,13 @@ export function CycleDataPopup({
   records,
   today,
   targetName,
+  lastSyncedAt,
 }: {
   stats: PeriodStats;
   records: PeriodRecord[];
   today: string;
   targetName: string;
+  lastSyncedAt: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -72,7 +74,7 @@ export function CycleDataPopup({
                 style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
               >
                 <div className="mx-auto max-w-md">
-                  <CycleView today={today} stats={stats} records={records} readonly />
+                  <CycleView today={today} stats={stats} records={records} lastSyncedAt={lastSyncedAt} readonly />
                 </div>
               </div>
             </div>,

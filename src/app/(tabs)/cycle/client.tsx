@@ -434,17 +434,27 @@ function BarChart({
 
 // ─── Main CycleView export ────────────────────────────────────────────────────
 
+function fmtSyncedAt(iso: string): string {
+  return new Date(iso).toLocaleString("en-IN", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export function CycleView({
   today,
   stats,
   records,
+  lastSyncedAt = null,
   readonly = false,
 }: {
   today: string;
   stats: PeriodStats;
   records: PeriodRecord[];
-  // Read-only view (e.g. a grantee viewing someone else's cycle data):
-  // hides editing affordances and the sharing manager.
+  lastSyncedAt?: string | null;
   readonly?: boolean;
 }) {
   const router = useRouter();
@@ -514,10 +524,10 @@ export function CycleView({
       {/* Sharing manager — owner only (hidden in readonly grantee view) */}
       {!readonly ? <PeriodSharingManager /> : null}
 
-      {/* Last synced footer — shown to both the owner and shared viewers */}
-      {records.length > 0 ? (
+      {/* Shortcut sync timestamp — shown to both owner and shared viewers */}
+      {lastSyncedAt ? (
         <p className="text-center text-xs text-white/30">
-          Last logged {fmtShort(records[records.length - 1].local_day)}
+          Last synced {fmtSyncedAt(lastSyncedAt)}
         </p>
       ) : null}
 

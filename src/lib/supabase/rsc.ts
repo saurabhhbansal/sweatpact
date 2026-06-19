@@ -37,7 +37,7 @@ const fetchViewerProfile = (userId: string) =>
       const { data, error } = await createAdminClient()
         .from("profiles")
         .select(
-          "id, username, name, email, gender, timezone, created_at, weekly_goal, rest_days, onboarding_complete, avatar_url, notify_unverified_checkin, notify_rest_day, notify_cycle_share"
+          "id, username, name, email, gender, timezone, created_at, weekly_goal, rest_days, onboarding_complete, avatar_url, notify_unverified_checkin, notify_rest_day, notify_cycle_share, period_last_synced_at"
         )
         .eq("id", userId)
         .single();
