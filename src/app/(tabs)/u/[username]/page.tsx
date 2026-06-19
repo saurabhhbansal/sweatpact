@@ -35,7 +35,7 @@ export default async function ProfilePage({
     supabase
       .from("profiles")
       .select(
-        "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at, period_last_synced_at"
+        "id, name, username, profile_visibility, avatar_url, timezone, weekly_goal, rest_days, gender, created_at"
       )
       .ilike("username", params.username)
       .maybeSingle(),
@@ -102,18 +102,27 @@ export default async function ProfilePage({
   // Uses the admin client because viewer RLS doesn't cover another user's rows.
   let popupStats: ReturnType<typeof computePeriodStats> | null = null;
   let popupRecords: Array<{ local_day: string; flow_level: "light" | "medium" | "heavy" | "unspecified" }> = [];
+  let popupLastSyncedAt: string | null = null;
   if (periodShareRow != null) {
     const admin = createAdminClient();
     const cutoff = new Date();
     cutoff.setUTCMonth(cutoff.getUTCMonth() - 12);
     const cutoffKey = cutoff.toISOString().slice(0, 10);
-    const { data } = await admin
-      .from("period_records")
-      .select("local_day, flow_level")
-      .eq("user_id", profile.id)
-      .gte("local_day", cutoffKey)
-      .order("local_day", { ascending: true });
+    const [{ data }, { data: syncData }] = await Promise.all([
+      admin
+        .from("period_records")
+        .select("local_day, flow_level")
+        .eq("user_id", profile.id)
+        .gte("local_day", cutoffKey)
+        .order("local_day", { ascending: true }),
+      admin
+        .from("profiles")
+        .select("period_last_synced_at")
+        .eq("id", profile.id)
+        .single(),
+    ]);
     popupRecords = data ?? [];
+    popupLastSyncedAt = (syncData as { period_last_synced_at: string | null } | null)?.period_last_synced_at ?? null;
     popupStats = computePeriodStats(popupRecords, today);
   }
 
@@ -215,7 +224,7 @@ export default async function ProfilePage({
             records={popupRecords}
             today={today}
             targetName={displayName}
-            lastSyncedAt={profile.period_last_synced_at ?? null}
+            lastSyncedAt={popupLastSyncedAt}
           />
         ) : null}
 
