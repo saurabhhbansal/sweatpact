@@ -176,16 +176,29 @@ describe("mergeProgress", () => {
     expect(merged.tour_version).toBe(3);
   });
 
-  it("replay reactivates the tour (dismissed:false) AND clears completed_steps so teaching-only steps re-show", () => {
+  it("replay reactivates the tour (dismissed:false) AND clears tour step keys so teaching-only steps re-show", () => {
     const merged = mergeProgress(
       blankRow({ dismissed: true, completed_steps: ["schedule", "gym", "challenge", "money"] }),
       { replay: true }
     );
     expect(merged.dismissed).toBe(false);
-    // completed_steps cleared: teaching-only steps (challenge/money/shortcut_viewed)
-    // have no real-world probe — without clearing they'd be skipped and the tour
-    // would return null, making the replay button appear broken.
+    // All five tour step keys are cleared: teaching-only steps (challenge/money/
+    // shortcut_viewed) have no real-world probe — without clearing they'd be
+    // skipped and the tour would return null, making the replay button appear broken.
     expect(merged.completed_steps).toEqual([]);
+  });
+
+  it("replay preserves non-step metadata keys (e.g. pact_live_seen) so one-shot overlays don't re-fire", () => {
+    const merged = mergeProgress(
+      blankRow({
+        dismissed: true,
+        completed_steps: ["gym", "challenge", "money", "pact_live_seen"],
+      }),
+      { replay: true }
+    );
+    // Tour step keys are cleared; pact_live_seen (a non-step metadata key) survives.
+    expect(merged.completed_steps).toEqual(["pact_live_seen"]);
+    expect(merged.dismissed).toBe(false);
   });
 
   it("replay resets last_step_id to null", () => {

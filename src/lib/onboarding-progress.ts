@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 /**
+ * The ordered step IDs for the walkthrough registry. Kept here (not imported
+ * from steps.ts) to avoid a circular dependency: steps.ts imports STEP_KEY_REGEX
+ * from this file. mergeProgress uses this set to preserve non-step metadata keys
+ * (e.g. pact_live_seen) across a replay reset — only actual step keys are cleared.
+ */
+const TOUR_STEP_IDS = new Set(["schedule", "gym", "challenge", "money", "shortcut_viewed"]);
+
+/**
  * Semantic step keys are lowercase snake/alphanumeric, 1-40 chars.
  * Used for both `complete_step` (the single key appended per PATCH) and
  * `last_step_id`. Keeping it strict prevents arbitrary/oversized client input
@@ -86,9 +94,12 @@ export function defaultProgress(): ProgressRow {
  * `dismissed` rule applies (replay is opt-in — its absence never reactivates).
  */
 export function mergeProgress(existing: ProgressRow, patch: PatchInput): ProgressRow {
-  // On replay, start fresh: clear completed_steps so teaching-only steps re-show.
-  // Setup steps auto-skip via probe (isGymDone / isScheduleDone) if already done.
-  const completed_steps = patch.replay ? [] : [...existing.completed_steps];
+  // On replay, clear tour step keys so teaching-only steps re-show and setup
+  // steps re-evaluate their probe. Non-step metadata keys (e.g. pact_live_seen)
+  // are preserved so one-shot overlays don't re-fire after a replay reset.
+  const completed_steps = patch.replay
+    ? existing.completed_steps.filter((k) => !TOUR_STEP_IDS.has(k))
+    : [...existing.completed_steps];
   if (patch.complete_step !== undefined && !completed_steps.includes(patch.complete_step)) {
     completed_steps.push(patch.complete_step);
   }

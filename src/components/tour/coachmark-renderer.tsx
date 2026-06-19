@@ -49,11 +49,12 @@ const STEP_COPY: Record<string, { title: string; body: string }> = {
   },
 };
 
-/** Invited-path challenge copy (pendingCount > 0, D-10) — "aha = accept". */
-const CHALLENGE_INVITED_COPY = {
-  title: "Your partner challenged you",
-  body: "This is where you respond. Accept the pact to put real money on the line — or decline.",
-};
+/**
+ * Stable null-arrow component. Defined at module scope so joyride receives the
+ * same component type identity across re-renders — an inline `() => null` would
+ * create a new type every render and cause joyride to remount the arrow slot.
+ */
+function NullArrow() { return null; }
 
 /** True while any Radix dialog is open (D-04 pause condition). */
 function anyDialogOpen(): boolean {
@@ -62,35 +63,16 @@ function anyDialogOpen(): boolean {
 }
 
 /**
- * Read the pending challenge-invitation count from the `data-pending-count`
- * attribute the /groups page renders (D-09). SSR-safe (returns 0 when there is
- * no document) and NaN-safe (a missing/garbage attribute is treated as 0). This
- * read grants no authority — it only CHOOSES which route the challenge step
- * points at (the accept/decline write still goes through the RLS-scoped
- * respond() flow). See threat T-05-04-01.
+ * Resolve a step's route from the registry (D-06). The challenge step always
+ * anchors on /groups with the self-starter copy. The former invited-user variant
+ * (which swapped to /notifications when a DOM `data-pending-count` read was > 0)
+ * was removed: that attribute only exists on /groups, so by the time the step was
+ * active on /groups the swap could never fire, and the "accept the pact" invited
+ * copy rendered against the wrong anchor.
  */
-function readPendingCount(): number {
-  if (typeof document === "undefined") return 0;
-  const el = document.querySelector("[data-pending-count]");
-  if (!el) return 0;
-  const n = Number(el.getAttribute("data-pending-count"));
-  return Number.isNaN(n) ? 0 : n;
-}
-
-/**
- * Resolve a step's EFFECTIVE route (D-06). Returns the step's registry `route`,
- * except the `challenge` step swaps `/groups` → `/notifications` when the user
- * has a pending invite (pendingCount > 0, the invited path D-10). Pure given the
- * DOM — reads only the non-sensitive data-pending-count integer.
- */
-function effectiveRoute(stepId: string | null): string | null {
+function stepRoute(stepId: string | null): string | null {
   if (!stepId) return null;
-  const step = STEPS.find((s) => s.id === stepId);
-  const route = step?.route ?? null;
-  if (stepId === "challenge" && readPendingCount() > 0) {
-    return "/notifications";
-  }
-  return route;
+  return STEPS.find((s) => s.id === stepId)?.route ?? null;
 }
 
 /** True while focus is inside an editable control — never hijack keys there. */
@@ -207,9 +189,13 @@ export function CoachmarkRenderer() {
   const pathname = usePathname();
 
   // --- Anchor readiness gate (TOUR-01) -----------------------------------
-  // Track whether the current step's `data-tour` target is actually mounted.
-  // We never spotlight empty space: joyride only runs once this is true.
-  const [anchorReady, setAnchorReady] = useState(false);
+  // Tracks the VERIFIED selector (the one confirmed present in the DOM), not just
+  // a boolean. The distinction matters on cross-route transitions: when
+  // `selector` changes to the next step, `anchorReady` from the old step would
+  // be stale for one render cycle, causing joyride to briefly spotlight a
+  // non-existent target. By comparing `verifiedSelector === selector` we only
+  // show joyride when the CURRENT selector has been confirmed in the DOM.
+  const [verifiedSelector, setVerifiedSelector] = useState<string | null>(null);
 
   // --- Radix-dialog pause (D-04) -----------------------------------------
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -234,30 +220,43 @@ export function CoachmarkRenderer() {
   // space. Resets whenever the active step changes.
   useEffect(() => {
     if (!isActive || !selector) {
-      setAnchorReady(false);
+      setVerifiedSelector(null);
       return;
     }
-    const check = () => setAnchorReady(document.querySelector(selector) !== null);
+    const check = () =>
+      setVerifiedSelector(
+        document.querySelector(selector) !== null ? selector : null
+      );
     check();
     const observer = new MutationObserver(check);
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [isActive, selector]);
 
+  // The set of routes that the tour owns. Navigation is only triggered when the
+  // user is already on one of these routes (or on the step's own target route).
+  // Intentionally excludes /settings, /u/*, /shortcut, etc. so that the tour
+  // never hijacks deliberate user navigation away from the tour flow (Bug 2 fix:
+  // opening Settings while the tour is active caused an immediate redirect back).
+  const TOUR_ROUTES = useMemo(() => new Set(
+    STEPS.map((s) => s.route).filter(Boolean) as string[]
+  ), []);
+
   // Navigate-then-reveal (TOUR-05 / D-06): whenever the active step changes,
-  // compute its effective route and push only when it differs from the current
+  // compute its registry route and push only when it differs from the current
   // pathname (guards against re-render loops, threat T-05-04-03). We do NOT add
   // a second observer — the reused anchor-gate above reveals once the new page's
-  // anchor mounts (PATTERNS line 74). The challenge step swaps to /notifications
-  // for invited users via effectiveRoute (D-09/D-10).
-  // Navigate once per step change. `pathname` is intentionally excluded from
-  // deps: after push("/notifications"), data-pending-count is absent there so
-  // effectiveRoute("challenge") flips back to "/groups" and loops (CR-01).
-  // The closure captures pathname at the moment the step changes — correct.
+  // anchor mounts (PATTERNS line 74). `pathname` is intentionally excluded from
+  // deps so we navigate exactly once per step change; the closure captures the
+  // pathname at the moment the step changes, which is correct.
+  //
+  // Guard: only redirect when the current pathname is already a tour-owned route.
+  // If the user intentionally navigated to /settings or another non-tour page,
+  // we leave them there — the tour resumes when they return to a tour route.
   useEffect(() => {
     if (!isActive || !currentStepId) return;
-    const target = effectiveRoute(currentStepId);
-    if (target && target !== pathname) {
+    const target = stepRoute(currentStepId);
+    if (target && target !== pathname && TOUR_ROUTES.has(pathname)) {
       router.push(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,10 +289,9 @@ export function CoachmarkRenderer() {
     dismiss();
   }, [dismiss]);
 
-  // A step is "showing" only when active, its anchor is mounted, and no Radix
-  // dialog is open. This single predicate drives joyride `run`, the keyboard
-  // handler, the aria-live announcement, and focus management.
-  const showing = isActive && anchorReady && !dialogOpen;
+  // A step is "showing" only when active, its anchor is confirmed in the DOM for
+  // the CURRENT selector, and no Radix dialog is open.
+  const showing = isActive && verifiedSelector === selector && !dialogOpen;
 
   // Keyboard (TOUR-04): Enter/Space = advance, Escape = dismiss. Never hijack
   // keys while focus is in an editable control or a dialog is open. Focus is
@@ -319,25 +317,15 @@ export function CoachmarkRenderer() {
   }, [showing, handleAdvance, handleDismiss]);
 
   // Resolve the brand-voiced per-step copy (UX-04). Prefer STEP_COPY over the
-  // terse registry titles; swap the challenge step to the invited variant when
-  // the /groups page reports a pending invite (data-pending-count > 0, D-10).
-  // Recompute when the step changes or a Radix dialog toggles (the latter is a
-  // cheap proxy for DOM churn so the invited swap re-reads on re-render).
+  // terse registry titles; fall back to the registry title for any step missing
+  // a copy entry.
   const stepCopy = useMemo(() => {
     if (!currentStepId) return { title: "", body: "" };
-    if (currentStepId === "challenge" && readPendingCount() > 0) {
-      return CHALLENGE_INVITED_COPY;
-    }
     const copy = STEP_COPY[currentStepId];
     if (copy) return copy;
     const step = STEPS.find((s) => s.id === currentStepId);
     return { title: step?.title ?? "", body: "" };
-    // dialogOpen is a deliberate extra trigger: it flips on the same DOM churn
-    // (open/close, navigation) that can change data-pending-count, so the
-    // invited-variant swap re-reads. eslint flags it as "unnecessary" because
-    // the body does not reference it directly — that is intended, not a bug.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepId, dialogOpen]);
+  }, [currentStepId]);
   const stepTitle = stepCopy.title;
   const stepBody = stepCopy.body;
 
@@ -451,20 +439,20 @@ export function CoachmarkRenderer() {
 
   // MOUNT GATE: render nothing when inactive, anchor missing, or a dialog is
   // open. Silent degrade — no error UI ever (UI-SPEC §Error state, D-06).
+  // Memoize the steps array so joyride receives a stable reference between
+  // re-renders. A new array on every render can cause joyride to reset its
+  // internal state unnecessarily (treating it as a new tour).
+  const joyrideSteps = useMemo<Step[]>(
+    () =>
+      selector
+        ? [{ target: selector, content: stepBody, title: stepTitle, placement: "auto" }]
+        : [],
+    [selector, stepBody, stepTitle]
+  );
+
   if (!showing || !selector) {
-    // Still render the (empty) aria-live region container is unnecessary when
-    // nothing is showing; announcements only matter while a step is visible.
     return null;
   }
-
-  const steps: Step[] = [
-    {
-      target: selector,
-      content: stepBody,
-      title: stepTitle,
-      placement: "auto",
-    },
-  ];
 
   const portalElement =
     typeof document !== "undefined"
@@ -472,7 +460,7 @@ export function CoachmarkRenderer() {
       : null;
 
   const joyrideProps: JoyrideProps = {
-    steps,
+    steps: joyrideSteps,
     run: showing,
     // Controlled single-step mode: we render exactly the current step's anchor.
     stepIndex: 0,
@@ -481,7 +469,7 @@ export function CoachmarkRenderer() {
     tooltipComponent: TooltipAdapter,
     // Hide Joyride's built-in arrow — CoachmarkCard is the full UI; the arrow
     // renders in wrong positions and is redundant with the spotlight (TOUR-02).
-    arrowComponent: () => null,
+    arrowComponent: NullArrow,
     // Disable joyride's own keyboard close handling (we own Escape, TOUR-04).
     options: {
       zIndex: COACHMARK_Z_INDEX,
