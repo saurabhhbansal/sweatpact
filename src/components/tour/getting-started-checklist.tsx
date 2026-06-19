@@ -28,12 +28,20 @@ const KEY_LABELS: Record<string, string> = {
  */
 export function GettingStartedChecklist({
   completedSteps,
+  gymCount,
 }: {
   completedSteps: string[];
+  gymCount: number;
 }) {
-  // Hide the whole checklist once every teaching key is complete (the tour is
-  // done — specifics line 142).
-  if (TEACHING_KEYS.every((key) => completedSteps.includes(key))) {
+  // "gym" is also done when the user already has a gym set (probe-based skip)
+  // even if "gym" was never written to completed_steps (existing users).
+  function isDone(key: string): boolean {
+    if (completedSteps.includes(key)) return true;
+    if (key === "gym" && gymCount > 0) return true;
+    return false;
+  }
+
+  if (TEACHING_KEYS.every((key) => isDone(key))) {
     return null;
   }
 
@@ -44,7 +52,7 @@ export function GettingStartedChecklist({
       </p>
       <ul className="mt-3 space-y-2">
         {TEACHING_KEYS.map((key) => {
-          const done = completedSteps.includes(key);
+          const done = isDone(key);
           return (
             <li key={key} className="flex items-center gap-3">
               <span

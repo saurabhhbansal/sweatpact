@@ -6,6 +6,7 @@ import {
   getViewerProfile,
   getOnboardingProgress,
 } from "@/lib/supabase/rsc";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
@@ -82,10 +83,10 @@ export default async function Dashboard() {
         .select("id, amount_cents, from_user, status")
         .eq("to_user", profile.id)
         .eq("status", "pending"),
-      supabase
+      createAdminClient()
         .from("user_gyms")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", profile.id),
+        .eq("user_id", profile.id), // SECURITY-CRITICAL: never widen this filter
       supabase
         .from("group_members")
         .select("group_id", { count: "exact", head: true })
@@ -133,7 +134,7 @@ export default async function Dashboard() {
     return (
       <>
         <main className="container max-w-md flex min-h-[calc(100dvh-3.5rem-max(env(safe-area-inset-top),0.75rem))] flex-col gap-3 pb-[calc(4.25rem+max(env(safe-area-inset-bottom),20px))] pt-3">
-          <GettingStartedChecklist completedSteps={completedSteps} />
+          <GettingStartedChecklist completedSteps={completedSteps} gymCount={gymCount ?? 0} />
 
           <section data-tour="schedule" className="animate-fade-up-item shrink-0 rounded-[2rem] glass-card px-4 py-3">
             <div className="mb-2 flex items-center justify-between">
