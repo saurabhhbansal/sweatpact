@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, Lock, MapPin, Moon, RotateCcw, Smartphone, UserCircle } from "lucide-react";
@@ -165,18 +165,23 @@ function ReplayTourButton() {
     if (busy) return;
     setErr(null);
     setBusy(true);
-    const res = await fetch("/api/onboarding-progress", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ replay: true }),
-    });
-    setBusy(false);
-    if (!res.ok) {
+    try {
+      const res = await fetch("/api/onboarding-progress", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ replay: true }),
+      });
+      if (!res.ok) {
+        setErr("Couldn't restart the tour. Try again.");
+        return;
+      }
+      // Re-hydrate the layout RSC's initialProgress so TourProvider reactivates.
+      startTransition(() => router.refresh());
+    } catch {
       setErr("Couldn't restart the tour. Try again.");
-      return;
+    } finally {
+      setBusy(false);
     }
-    // Re-hydrate the layout RSC's initialProgress so TourProvider reactivates.
-    startTransition(() => router.refresh());
   }
 
   return (
@@ -210,6 +215,13 @@ function ChangePasswordButton() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   function reset() {
     setNewPassword("");
@@ -251,7 +263,7 @@ function ChangePasswordButton() {
     setNewPassword("");
     setConfirm("");
     // Auto-close after 2 seconds
-    window.setTimeout(close, 2000);
+    closeTimerRef.current = setTimeout(close, 2000);
   }
 
   return (
