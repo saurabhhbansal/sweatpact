@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       address: address ?? null,
       lat,
       lng,
-      radius_m: radius_m ?? 150,
+      radius_m: radius_m ?? 50,
     })
     .select("id, name, address, lat, lng, radius_m, created_at")
     .single();
@@ -64,5 +65,6 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+  revalidateTag(`gyms:${auth.user.id}`);
   return NextResponse.json({ ok: true, gym: data });
 }

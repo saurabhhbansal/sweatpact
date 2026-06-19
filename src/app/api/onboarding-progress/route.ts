@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   PatchBody,
@@ -85,5 +86,6 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
+  revalidateTag(`onboarding:${auth.user.id}`);
   return NextResponse.json({ ok: true, progress: data });
 }

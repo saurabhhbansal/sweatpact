@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidTimeZone } from "@/lib/time";
@@ -117,5 +118,6 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
+  revalidateTag(`profile:${auth.user.id}`);
   return NextResponse.json({ ok: true, profile: data });
 }

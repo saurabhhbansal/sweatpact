@@ -4,9 +4,14 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/browser";
+import dynamic from "next/dynamic";
 import { Avatar } from "@/components/avatar";
-import { AvatarCropper } from "./avatar-cropper";
 import { fileToDataUrl } from "./crop-utils";
+
+const AvatarCropper = dynamic(
+  () => import("./avatar-cropper").then((m) => m.AvatarCropper),
+  { ssr: false }
+);
 
 // Original file cap — we re-encode after crop so the final upload is much smaller.
 const MAX_INPUT_BYTES = 10 * 1024 * 1024;

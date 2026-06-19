@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -67,5 +68,6 @@ export async function DELETE(
       { status: 500 }
     );
   }
+  revalidateTag(`gyms:${auth.user.id}`);
   return NextResponse.json({ ok: true });
 }

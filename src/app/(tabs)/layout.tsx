@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getViewerProfile, getOnboardingProgress, getGymCount } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
 import { RefreshOnFocus } from "@/components/refresh-on-focus";
 import { TourProvider } from "@/components/tour-provider";
@@ -69,20 +68,9 @@ export default async function TabsLayout({
   const initialProgress = await getOnboardingProgress();
 
   // Real skip-on-complete probe values, computed server-side (D-07: no new
-  // client-side fetch). Reuse the request-cached RSC client and the already-
-  // fetched profile — gymCount from the owner-scoped user_gyms count, restDays
-  // straight off the profile row. Both flow into TourProvider so deriveCurrentStep
-  // can auto-skip steps whose setup work is already done, with zero flash.
-  // Admin client + strict .eq("user_id", profile.id) — same pattern as
-  // getViewerProfile/getOnboardingProgress. The RLS-bound RSC client can fail
-  // to resolve the cookie session in the layout context, silently returning 0
-  // rows and making gymCount=0 so the gym step never auto-skips.
-  const { data: gyms, error: gymsError } = await createAdminClient()
-    .from("user_gyms")
-    .select("id")
-    .eq("user_id", profile.id); // SECURITY-CRITICAL: never widen this filter
-  if (gymsError) console.error("[layout] user_gyms query failed:", gymsError.message);
-  const gymCount = gyms?.length ?? 0;
+  // client-side fetch). gymCount is cross-request cached in getGymCount (5 min
+  // TTL, invalidated on gym add/delete). restDays straight off the profile row.
+  const gymCount = await getGymCount();
   const rawRestDays = profile.rest_days;
   const restDays = Array.isArray(rawRestDays)
     ? rawRestDays.filter((d): d is number => typeof d === "number")
