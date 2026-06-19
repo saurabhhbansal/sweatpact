@@ -34,14 +34,19 @@ export function PactLiveOverlay({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // Tracks dismiss locally so re-renders before the server round-trip confirms
+  // `pact_live_seen` don't cause the overlay to re-open.
+  const [seenLocally, setSeenLocally] = useState(false);
+
   // Open exactly when the suppression predicate allows it. Seeding from the
   // predicate keeps the open state in sync with the persisted seen-flag.
   const [open, setOpen] = useState(false);
   useEffect(() => {
+    if (seenLocally) return;
     setOpen(
       shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })
     );
-  }, [mounted, hasActiveChallenge, completedSteps]);
+  }, [mounted, hasActiveChallenge, completedSteps, seenLocally]);
 
   // Guard the persistence write so it fires once even if Escape and the CTA
   // both drive onOpenChange(false).
@@ -60,11 +65,12 @@ export function PactLiveOverlay({
   }
 
   function dismiss() {
+    setSeenLocally(true);
     setOpen(false);
     persistSeen();
   }
 
-  if (!shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })) {
+  if (seenLocally || !shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })) {
     return null;
   }
 
