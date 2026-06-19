@@ -514,6 +514,13 @@ export function CycleView({
       {/* Sharing manager — owner only (hidden in readonly grantee view) */}
       {!readonly ? <PeriodSharingManager /> : null}
 
+      {/* Last synced footer — shown to both the owner and shared viewers */}
+      {records.length > 0 ? (
+        <p className="text-center text-xs text-white/30">
+          Last logged {fmtShort(records[records.length - 1].local_day)}
+        </p>
+      ) : null}
+
       <p className="text-center text-xs text-white/30">
         Predictions are estimates — not medical advice.
       </p>
