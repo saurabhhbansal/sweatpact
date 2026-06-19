@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 6
-status: verifying
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-06-18T19:05:53.309Z"
-last_activity: 2026-06-18
-last_activity_desc: Phase 6 complete
+status: shipped
+stopped_at: Phase 6 shipped — PR #79
+last_updated: "2026-06-19T00:10:00.000Z"
+last_activity: 2026-06-19
+last_activity_desc: Phase 6 shipped — PR #79
 progress:
   total_phases: 6
   completed_phases: 6
