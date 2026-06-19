@@ -331,3 +331,72 @@ export async function POST(req: NextRequest) {
     distance_m: distance,
   });
 }
+
+export async function DELETE(req: NextRequest) {
+  const supabase = createServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const admin = createAdminClient();
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id, timezone")
+    .eq("id", auth.user.id)
+    .single();
+
+  if (!profile) {
+    return NextResponse.json({ error: "no_profile" }, { status: 404 });
+  }
+
+  const tz = normalizeTimeZone(profile.timezone);
+  const today = localDay(new Date(), tz);
+
+  // Find the latest unverified submission for today only.
+  const { data: rows, error: fetchError } = await admin
+    .from("checkin_events")
+    .select("id, submission_id, status")
+    .eq("user_id", profile.id)
+    .eq("local_day", today)
+    .eq("status", "unverified")
+    .order("occurred_at", { ascending: false })
+    .limit(20);
+
+  if (fetchError) {
+    return NextResponse.json({ error: "db_error", detail: fetchError.message }, { status: 500 });
+  }
+  if (!rows || rows.length === 0) {
+    return NextResponse.json({ error: "no_unverified_checkin" }, { status: 404 });
+  }
+
+  // Take the latest submission (first row after desc sort) and reject all its rows.
+  const submissionId = rows[0].submission_id;
+  const { error: updateError } = await admin
+    .from("checkin_events")
+    .update({ status: "rejected" })
+    .eq("submission_id", submissionId)
+    .eq("user_id", profile.id);
+
+  if (updateError) {
+    return NextResponse.json({ error: "db_error", detail: updateError.message }, { status: 500 });
+  }
+
+  const now = new Date();
+  await reconcileUserDay(admin, { userId: profile.id, localDay: today, now });
+
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    null;
+  await admin.from("audit_log").insert({
+    user_id: profile.id,
+    kind: "undo_checkin",
+    payload: { submission_id: submissionId, local_day: today },
+    ip,
+    user_agent: req.headers.get("user-agent") || null,
+  });
+
+  return NextResponse.json({ ok: true });
+}

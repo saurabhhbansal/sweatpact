@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { EXCUSED_STATUSES } from "@/lib/derived-status";
 import { CheckInButton } from "@/components/check-in-button";
 import { ExcuseButton } from "@/components/excuse-button";
+import { UndoCheckinButton } from "@/components/undo-checkin-button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const EXCUSED_LABEL: Record<string, string> = {
@@ -89,11 +90,14 @@ export function TodayActionCard({
           <p className="mt-1 text-sm text-white/65">Your streak already reflects it.</p>
         </div>
       ) : todayStatus === "unverified" ? (
-        <div className="py-2 text-center">
-          <p className="text-xl font-semibold text-white">Unverified, but counted</p>
-          <p className="mt-1 text-sm text-white/65">
-            It keeps your streak alive. Whoever runs your challenge can reverse it.
-          </p>
+        <div className="space-y-3 py-2 text-center">
+          <div>
+            <p className="text-xl font-semibold text-white">Unverified, but counted</p>
+            <p className="mt-1 text-sm text-white/65">
+              It keeps your streak alive. Whoever runs your challenge can reverse it.
+            </p>
+          </div>
+          <UndoCheckinButton onUndo={() => setOverrideStatus("pending")} />
         </div>
       ) : todayStatus === "period_day" ? (
         <div className="space-y-4 py-1">
