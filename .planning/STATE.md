@@ -111,6 +111,12 @@ Recent decisions affecting current work (locked for v1.1):
 - [Phase ?]: [Phase 06]: Plan 04 — legacy /onboarding/{gym,schedule,shortcut} wizard pages + step-indicator.tsx deleted (D-08/D-09); shared surfaces in src/components/onboarding/ and the username mandatory-start route untouched
 - [Phase ?]: [Phase 06]: Plan 04 — username post-save redirect retargeted /onboarding/schedule -> /dashboard (D-10/D-01); (tabs) layout gate only bounces auto-usernames so /dashboard renders cleanly once a real username is claimed
 
+### Quick Tasks Completed
+
+| Date | Slug | Summary |
+|------|------|---------|
+| 2026-06-19 | tour-bug-fixes | Fixed 4 tour bugs: Joyride arrow/off-viewport card, replay button broken, gym step no auto-advance, past users seeing tour |
+
 ### Pending Todos
 
 None yet.
