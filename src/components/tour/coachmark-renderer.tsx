@@ -470,23 +470,6 @@ export function CoachmarkRenderer() {
     // Hide Joyride's built-in arrow — CoachmarkCard is the full UI; the arrow
     // renders in wrong positions and is redundant with the spotlight (TOUR-02).
     arrowComponent: NullArrow,
-    // Keep tooltip inside the viewport on both axes (TOUR-03). preventOverflow
-    // with altAxis:true clamps horizontally AND vertically; flip ensures the
-    // card switches sides before it overflows rather than after.
-    floaterProps: {
-      options: {
-        modifiers: [
-          {
-            name: "preventOverflow",
-            options: { boundary: "viewport", padding: 16, altAxis: true },
-          },
-          {
-            name: "flip",
-            options: { fallbackPlacements: ["top", "bottom", "left", "right"], padding: 16 },
-          },
-        ],
-      },
-    },
     // Disable joyride's own keyboard close handling (we own Escape, TOUR-04).
     options: {
       zIndex: COACHMARK_Z_INDEX,
@@ -518,7 +501,9 @@ export function CoachmarkRenderer() {
       // stays fully interactive (TOUR-02).
       overlay: { pointerEvents: "none" },
       // The custom card owns all visual UI; strip joyride's tooltip chrome.
-      tooltip: { padding: 0, backgroundColor: "transparent" },
+      // maxHeight + overflowY ensure the floater never pushes below the fold
+      // when floaterProps (removed in v3) is unavailable (TOUR-03).
+      tooltip: { padding: 0, backgroundColor: "transparent", maxHeight: "calc(100dvh - 48px)", overflowY: "auto" as const },
       tooltipContainer: { padding: 0 },
     },
   };
