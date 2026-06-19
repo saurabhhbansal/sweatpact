@@ -13,6 +13,12 @@ export const STEP_KEY_REGEX = /^[a-z0-9_]{1,40}$/;
  * fields so a client cannot smuggle extra columns. Clients send at most a
  * single semantic step key per write (`complete_step`) — never a full
  * `completed_steps` array (server-authoritative dedupe, D-04).
+ *
+ * `replay` is a one-way reactivation signal (`z.literal(true)` rejects any value
+ * other than literal `true`). It sets `dismissed: false` so the walkthrough
+ * re-enters from the first not-done step, WITHOUT touching `completed_steps`
+ * (D-04: auto-skip fast-forwards already-done steps; resetting would re-teach
+ * them). The schema surface widens by exactly one boolean-true field (T-06-03).
  */
 export const PatchBody = z
   .object({
@@ -25,6 +31,7 @@ export const PatchBody = z
     mandatory_done: z.boolean().optional(),
     dismissed: z.boolean().optional(),
     completed_at: z.string().datetime().nullable().optional(),
+    replay: z.literal(true).optional(),
   })
   .strict();
 
@@ -68,12 +75,23 @@ export function defaultProgress(): ProgressRow {
  * a no-op), and applies the optional scalar fields only when defined. Returns
  * the row to upsert. This is the only testable seam (route handlers are
  * untested per project convention).
+ *
+ * `patch.replay === true` reactivates the tour by forcing `dismissed: false`,
+ * leaving `completed_steps` untouched (D-04). Replay takes precedence over an
+ * explicit `dismissed` in the same patch; absent replay, the existing
+ * `dismissed` rule applies (replay is opt-in — its absence never reactivates).
  */
 export function mergeProgress(existing: ProgressRow, patch: PatchInput): ProgressRow {
   const completed_steps = [...existing.completed_steps];
   if (patch.complete_step !== undefined && !completed_steps.includes(patch.complete_step)) {
     completed_steps.push(patch.complete_step);
   }
+
+  const dismissed = patch.replay
+    ? false
+    : patch.dismissed !== undefined
+      ? patch.dismissed
+      : existing.dismissed;
 
   return {
     mandatory_done:
@@ -82,7 +100,7 @@ export function mergeProgress(existing: ProgressRow, patch: PatchInput): Progres
     last_step_id:
       patch.last_step_id !== undefined ? patch.last_step_id : existing.last_step_id,
     completed_steps,
-    dismissed: patch.dismissed !== undefined ? patch.dismissed : existing.dismissed,
+    dismissed,
     completed_at:
       patch.completed_at !== undefined ? patch.completed_at : existing.completed_at,
   };

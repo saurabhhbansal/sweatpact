@@ -17,7 +17,7 @@ setup in-context. Backed by research in `.planning/research/`.
 
 - [x] **ONB-01**: New user completes a minimal mandatory start (username only) and lands directly in the real app
 - [x] **ONB-02**: The `(tabs)` redirect gate no longer forces the full setup wizard — only a missing username redirects; optional setup is deferred into the walkthrough
-- [ ] **ONB-03**: Walkthrough supports both entry paths — self-starter (start a challenge) and invited (accept a partner's challenge invite)
+- [x] **ONB-03**: Walkthrough supports both entry paths — self-starter (start a challenge) and invited (accept a partner's challenge invite)
 - [x] **ONB-04**: User can skip the walkthrough at any step without being blocked or nagged, and keep using the app
 
 ### Coachmark Walkthrough Engine
@@ -26,35 +26,35 @@ setup in-context. Backed by research in `.planning/research/`.
 - [ ] **TOUR-02**: The coachmark overlay is click-through (cutout) and coexists with the nav stack, Radix dialogs, and the install gate without trapping input or hiding behind chrome
 - [ ] **TOUR-03**: Coachmarks position correctly within PWA safe-area insets on mobile standalone
 - [ ] **TOUR-04**: Coachmarks are accessible — keyboard advance/skip/dismiss, focus handling, and reduced-motion support
-- [ ] **TOUR-05**: The walkthrough sequences across tabs/routes (navigates, then reveals the next step once its anchor is ready)
+- [x] **TOUR-05**: The walkthrough sequences across tabs/routes (navigates, then reveals the next step once its anchor is ready)
 
 ### Teaching Steps
 
-- [ ] **TEACH-01**: The walkthrough teaches and completes gym setup in-context (Google Places)
-- [ ] **TEACH-02**: The walkthrough teaches starting (or accepting) a stakes challenge in-context
-- [ ] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
-- [ ] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
-- [ ] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
+- [x] **TEACH-01**: The walkthrough teaches and completes gym setup in-context (Google Places)
+- [x] **TEACH-02**: The walkthrough teaches starting (or accepting) a stakes challenge in-context
+- [x] **TEACH-03**: The walkthrough teaches the money model — earned/owed, penalties, settlement — anchored to real UI
+- [x] **TEACH-04**: The walkthrough teaches the iOS Shortcut integration, with manual check-in shown as the universal fallback for non-iOS users
+- [x] **TEACH-05**: The first walkthrough check-in is a clearly-labeled practice check-in that does NOT register as a real check-in or affect stakes, penalties, or stats
 - [x] **TEACH-06**: The walkthrough is considered complete once all four teaching points (gym, challenge, money, Shortcut) have been presented/done
 
 ### Setup-as-Action Surfaces
 
 - [x] **SETUP-01**: Gym, schedule, and Shortcut setup UIs are reusable surfaces callable from both the walkthrough and the legacy entry, hitting the existing endpoints (no logic fork)
-- [ ] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
+- [x] **SETUP-02**: User can set their weekly schedule / goal in-context during the walkthrough
 
 ### Progress & Persistence
 
 - [x] **PROG-01**: Walkthrough progress is persisted server-side per user, so it resumes after interruption and across devices
 - [x] **PROG-02**: Steps already completed are auto-skipped, derived from real app state (gym set, weekly goal set, Shortcut viewed) rather than a duplicate flag
-- [ ] **PROG-03**: User can replay the walkthrough anytime from Settings
+- [x] **PROG-03**: User can replay the walkthrough anytime from Settings
 - [x] **PROG-04**: Replay handles walkthrough version changes gracefully without breaking on stale/removed step targets
 
 ### Onboarding UX
 
-- [ ] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
-- [ ] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
-- [ ] **UX-03**: A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion
-- [ ] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
+- [x] **UX-01**: A 4-item "getting started" checklist shows progress and completes as the real actions are done
+- [x] **UX-02**: The dashboard shows a "Start your first pact" empty-state CTA as a fallback for users who skip coachmarks
+- [x] **UX-03**: A sharp, brand-voiced "pact is live" completion moment marks walkthrough/first-challenge completion
+- [x] **UX-04**: Walkthrough copy is outcome-framed and brand-voiced (consequence-first, "stakes not stats")
 
 ## Future Requirements (v1.x / v2)
 
@@ -90,19 +90,19 @@ Mapped during roadmap creation (2026-06-14). Phases defined in `.planning/ROADMA
 | TOUR-02 | Phase 4 | Pending |
 | TOUR-03 | Phase 4 | Pending |
 | TOUR-04 | Phase 4 | Pending |
-| TOUR-05 | Phase 5 | Pending |
-| ONB-03 | Phase 5 | Pending |
-| TEACH-01 | Phase 5 | Pending |
-| TEACH-02 | Phase 5 | Pending |
-| TEACH-03 | Phase 5 | Pending |
-| TEACH-04 | Phase 5 | Pending |
-| TEACH-05 | Phase 5 | Pending |
-| SETUP-02 | Phase 5 | Pending |
-| UX-01 | Phase 5 | Pending |
-| UX-02 | Phase 5 | Pending |
-| UX-04 | Phase 5 | Pending |
-| PROG-03 | Phase 6 | Pending |
-| UX-03 | Phase 6 | Pending |
+| TOUR-05 | Phase 5 | Complete |
+| ONB-03 | Phase 5 | Complete |
+| TEACH-01 | Phase 5 | Complete |
+| TEACH-02 | Phase 5 | Complete |
+| TEACH-03 | Phase 5 | Complete |
+| TEACH-04 | Phase 5 | Complete |
+| TEACH-05 | Phase 5 | Complete |
+| SETUP-02 | Phase 5 | Complete |
+| UX-01 | Phase 5 | Complete |
+| UX-02 | Phase 5 | Complete |
+| UX-04 | Phase 5 | Complete |
+| PROG-03 | Phase 6 | Complete |
+| UX-03 | Phase 6 | Complete |
 
 **Coverage:**
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Lock, MapPin, Moon, Smartphone, UserCircle } from "lucide-react";
+import { Bell, Lock, MapPin, Moon, RotateCcw, Smartphone, UserCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,8 @@ export function SettingsForm({
         <span className="text-white/35">›</span>
       </Link>
 
+      <ReplayTourButton />
+
       <SectionHeader title="Notifications" icon={Bell} />
       <div className="space-y-3">
         <PushPermissionPrompt />
@@ -153,6 +155,59 @@ function SectionHeader({ title, icon: Icon }: { title: string; icon?: LucideIcon
   );
 }
 
+function ReplayTourButton() {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function replay() {
+    if (busy) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      const res = await fetch("/api/onboarding-progress", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ replay: true }),
+      });
+      if (!res.ok) {
+        setErr("Couldn't restart the tour. Try again.");
+        return;
+      }
+      // Re-hydrate the layout RSC's initialProgress so TourProvider reactivates.
+      startTransition(() => router.refresh());
+    } catch {
+      setErr("Couldn't restart the tour. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={replay}
+        disabled={busy}
+        className="flex min-h-11 w-full items-center justify-between rounded-[1.4rem] glass-card px-4 py-3.5 text-sm transition hover:bg-white/[0.06] disabled:opacity-50"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08]">
+            <RotateCcw className="h-[18px] w-[18px] text-white/60" />
+          </div>
+          <div className="text-left">
+            <p className="font-medium text-white">Replay app tour</p>
+            <p className="mt-0.5 text-xs text-white/50">Walk through the app again</p>
+          </div>
+        </div>
+        <span className="text-white/35">›</span>
+      </button>
+      {err ? <p className="text-sm text-destructive">{err}</p> : null}
+    </div>
+  );
+}
+
 function ChangePasswordButton() {
   const [open, setOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -160,6 +215,13 @@ function ChangePasswordButton() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   function reset() {
     setNewPassword("");
@@ -201,7 +263,7 @@ function ChangePasswordButton() {
     setNewPassword("");
     setConfirm("");
     // Auto-close after 2 seconds
-    window.setTimeout(close, 2000);
+    closeTimerRef.current = setTimeout(close, 2000);
   }
 
   return (

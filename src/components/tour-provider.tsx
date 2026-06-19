@@ -36,9 +36,13 @@ const TourContext = createContext<TourValue | null>(null);
  */
 export function TourProvider({
   initialProgress,
+  gymCount,
+  restDays,
   children,
 }: {
   initialProgress: ProgressRow | null;
+  gymCount: number;
+  restDays: number[];
   children: React.ReactNode;
 }) {
   // Seed from the server-hydrated prop; fall back to blank slate (D-06).
@@ -47,17 +51,19 @@ export function TourProvider({
     initialProgress ?? defaultProgress()
   );
 
-  // Phase 3 passes neutral gym/schedule probe state (gymCount 0, restDays [])
-  // per RESEARCH A2 — full auto-skip UX is Phase 6.
-  // completedSteps is not passed in probe — deriveCurrentStep reads it from the
-  // first argument directly for the shortcut auto-skip check (WR-04).
+  // Phase 6 wires real skip-on-complete probe data: gymCount (user_gyms count)
+  // and restDays (profiles.rest_days) flow in server-side from the (tabs) layout
+  // RSC (D-07: no new client-side fetch). deriveCurrentStep auto-skips steps whose
+  // setup work is already done, so the tour opens on the first not-done step with
+  // zero flash. completedSteps is not passed in probe — deriveCurrentStep reads it
+  // from the first argument directly for the shortcut auto-skip check (WR-04).
   const currentStepId = useMemo(
     () =>
       deriveCurrentStep(progress.completed_steps, progress.dismissed, {
-        gymCount: 0,
-        restDays: [],
+        gymCount,
+        restDays,
       }),
-    [progress.completed_steps, progress.dismissed]
+    [progress.completed_steps, progress.dismissed, gymCount, restDays]
   );
 
   /**

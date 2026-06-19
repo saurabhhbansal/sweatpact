@@ -14,6 +14,10 @@ import { cn } from "@/lib/utils";
  * @property body      - 1-2 sentence instructional body text.
  * @property onAdvance - called when the user clicks "Next →".
  * @property onDismiss - called when the user clicks "Skip tour".
+ * @property surface   - optional embedded setup surface (D-01) rendered in a
+ *   bounded-scroll slot between body and dots (D-02). When present, the
+ *   standalone "Next →" button is hidden (D-03) — the surface supplies its own
+ *   Continue / Skip-for-now CTA. "Skip tour" always remains (ONB-04).
  */
 export type CoachmarkCardProps = {
   stepId: string | null;
@@ -21,6 +25,7 @@ export type CoachmarkCardProps = {
   body: string;
   onAdvance: () => void;
   onDismiss: () => void;
+  surface?: React.ReactNode;
 };
 
 /**
@@ -45,6 +50,7 @@ export function CoachmarkCard({
   body,
   onAdvance,
   onDismiss,
+  surface,
 }: CoachmarkCardProps) {
   const dots = deriveDotStates(stepId);
 
@@ -52,7 +58,9 @@ export function CoachmarkCard({
     <div
       className={cn(
         "glass-card animate-fade-up rounded-2xl p-4 text-white",
-        "w-[300px] max-w-[calc(100vw-32px)] mx-4"
+        surface
+          ? "w-[360px] max-w-[calc(100vw-32px)] mx-4"
+          : "w-[300px] max-w-[calc(100vw-32px)] mx-4"
       )}
     >
       {/* 1. Step title — 16px semibold */}
@@ -60,6 +68,11 @@ export function CoachmarkCard({
 
       {/* 2. Body — 14px normal, sm gap below the title */}
       <p className="mt-2 text-sm font-normal text-white">{body}</p>
+
+      {/* 2b. Embedded setup surface (D-01/D-02) — bounded-scroll slot, only when provided */}
+      {surface ? (
+        <div className="mt-3 max-h-[calc(80vh-8rem)] overflow-y-auto">{surface}</div>
+      ) : null}
 
       {/* 3. Dot indicator — one dot per STEPS entry; current=white, past=white/40, future=white/15 (D-07) */}
       <div
@@ -79,10 +92,13 @@ export function CoachmarkCard({
         ))}
       </div>
 
-      {/* 4. Primary "Next →" button — Button default variant (bg-white text-black), 44px tall */}
-      <Button type="button" onClick={onAdvance} className="mt-3 h-11 w-full">
-        Next →
-      </Button>
+      {/* 4. Primary "Next →" button — hidden on surface steps (D-03); the surface
+          supplies its own Continue/Skip-for-now CTA. Teaching-only steps keep it. */}
+      {surface ? null : (
+        <Button type="button" onClick={onAdvance} className="mt-3 h-11 w-full">
+          Next →
+        </Button>
+      )}
 
       {/* 5. "Skip tour" — muted secondary link, real button, 44px tap target (D-06) */}
       <button

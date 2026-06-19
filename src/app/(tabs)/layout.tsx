@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
+import { getViewerProfile, getOnboardingProgress, getSupabaseRSC } from "@/lib/supabase/rsc";
 import { MobileNav, TopNav } from "@/components/nav";
 import { RefreshOnFocus } from "@/components/refresh-on-focus";
 import { TourProvider } from "@/components/tour-provider";
@@ -67,6 +67,23 @@ export default async function TabsLayout({
   // no cookie forwarding, no extra round trip).
   const initialProgress = await getOnboardingProgress();
 
+  // Real skip-on-complete probe values, computed server-side (D-07: no new
+  // client-side fetch). Reuse the request-cached RSC client and the already-
+  // fetched profile — gymCount from the owner-scoped user_gyms count, restDays
+  // straight off the profile row. Both flow into TourProvider so deriveCurrentStep
+  // can auto-skip steps whose setup work is already done, with zero flash.
+  const supa = getSupabaseRSC();
+  const { data: gyms, error: gymsError } = await supa
+    .from("user_gyms")
+    .select("id")
+    .eq("user_id", profile.id);
+  if (gymsError) console.error("[layout] user_gyms query failed:", gymsError.message);
+  const gymCount = gyms?.length ?? 0;
+  const rawRestDays = profile.rest_days;
+  const restDays = Array.isArray(rawRestDays)
+    ? rawRestDays.filter((d): d is number => typeof d === "number")
+    : [];
+
   return (
     <>
       <RefreshOnFocus />
@@ -81,7 +98,7 @@ export default async function TabsLayout({
         aria-hidden="true"
         style={{ height: "calc(max(env(safe-area-inset-top), 0.75rem) + 3.5rem)" }}
       />
-      <TourProvider initialProgress={initialProgress}>
+      <TourProvider initialProgress={initialProgress} gymCount={gymCount} restDays={restDays}>
         {children}
         {/* Client-only coachmark engine (next/dynamic ssr:false, D-03). Mounted
             INSIDE TourProvider so its useTour() resolves; it renders the joyride

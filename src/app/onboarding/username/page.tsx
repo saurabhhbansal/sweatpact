@@ -2,7 +2,6 @@ import type React from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StepIndicator } from "../step-indicator";
 import { UsernamePicker } from "./client";
 import { SweatPactSeal } from "@/components/sweatpact-seal";
 
@@ -38,9 +37,6 @@ export default async function UsernameOnboarding() {
           <p className="mt-2 text-sm text-white/55">
             Pick a username. Others will use it to find you and start challenges.
           </p>
-        </div>
-        <div className="animate-fade-up-item" style={{ "--stagger": "60ms" } as React.CSSProperties}>
-          <StepIndicator current={0} total={4} />
         </div>
         <div className="animate-fade-up-item" style={{ "--stagger": "110ms" } as React.CSSProperties}>
         <Card>

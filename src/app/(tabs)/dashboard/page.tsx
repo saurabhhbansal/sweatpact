@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/money";
-import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
+import {
+  getSupabaseRSC,
+  getViewerProfile,
+  getOnboardingProgress,
+} from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { CheckinStrip } from "@/components/checkin-strip";
 import { StatusBadge } from "@/components/status-badge";
 import { TodayActionCard } from "@/components/today-action-card";
 import { PushPermissionPrompt } from "@/components/push-permission";
+import { GettingStartedChecklist } from "@/components/tour/getting-started-checklist";
+import { EmptyStatePactCTA } from "@/components/tour/empty-state-pact-cta";
 import {
   EXCUSED_STATUSES,
   computeWeekStreak,
@@ -24,6 +30,12 @@ export default async function Dashboard() {
     const profile = await getViewerProfile();
 
     if (!profile) redirect("/login");
+
+    // Onboarding completion for the getting-started checklist (UX-01). This is
+    // the SAME request-cached reader the (tabs) layout already invoked, so it
+    // adds no extra DB round trip (Open Decision option 1, no self-fetch).
+    const progress = await getOnboardingProgress();
+    const completedSteps: string[] = progress?.completed_steps ?? [];
 
     const timezone = normalizeTimeZone(
       typeof profile.timezone === "string" ? profile.timezone : undefined
@@ -46,6 +58,7 @@ export default async function Dashboard() {
       { data: pendingOwes },
       { data: pendingOwed },
       { count: gymCount },
+      { count: challengeCount },
     ] = await Promise.all([
       supabase
         .from("checkin_events")
@@ -72,6 +85,10 @@ export default async function Dashboard() {
       supabase
         .from("user_gyms")
         .select("id", { count: "exact", head: true })
+        .eq("user_id", profile.id),
+      supabase
+        .from("group_members")
+        .select("group_id", { count: "exact", head: true })
         .eq("user_id", profile.id),
     ]);
 
@@ -116,6 +133,8 @@ export default async function Dashboard() {
     return (
       <>
         <main className="container max-w-md flex min-h-[calc(100dvh-3.5rem-max(env(safe-area-inset-top),0.75rem))] flex-col gap-3 pb-[calc(4.25rem+max(env(safe-area-inset-bottom),20px))] pt-3">
+          <GettingStartedChecklist completedSteps={completedSteps} />
+
           <section data-tour="schedule" className="animate-fade-up-item shrink-0 rounded-[2rem] glass-card px-4 py-3">
             <div className="mb-2 flex items-center justify-between">
               <div>
@@ -168,6 +187,7 @@ export default async function Dashboard() {
           </section>
 
           <div
+            data-tour="gym"
             className="animate-fade-up-item shrink-0"
             style={{ "--stagger": "120ms" } as React.CSSProperties}
           >
@@ -178,6 +198,8 @@ export default async function Dashboard() {
               gender={profile.gender ?? "male"}
             />
           </div>
+
+          {challengeCount === 0 ? <EmptyStatePactCTA /> : null}
 
           {totalOwes === 0 && totalOwed === 0 ? (
             <div

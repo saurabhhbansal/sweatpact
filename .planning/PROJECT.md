@@ -81,12 +81,14 @@ Make showing up have a consequence: if you skip, you owe your partner — the he
 
 <!-- v1.1 Guided Onboarding Walkthrough. Hypotheses until shipped and validated. -->
 
-- [ ] Minimal mandatory start gets a new user into the app fast
-- [ ] Optional setup (gym, schedule, iOS Shortcut) deferred into the walkthrough as real in-context actions
-- [ ] Contextual coachmarks anchored to live UI, shown per screen
-- [ ] Walkthrough lands the four teaching points (gym, stakes challenge, money model, Shortcut)
-- [ ] Onboarding/walkthrough progress persisted server-side (resume + replay)
-- [ ] Walkthrough skippable anytime and skips already-completed steps
+- [x] Minimal mandatory start gets a new user into the app fast — Validated in Phase 6
+- [x] Optional setup (gym, schedule, iOS Shortcut) deferred into the walkthrough as real in-context actions — Validated in Phase 6
+- [x] Contextual coachmarks anchored to live UI, shown per screen — Validated in Phase 6
+- [x] Walkthrough lands the four teaching points (gym, stakes challenge, money model, Shortcut) — Validated in Phase 6
+- [x] Onboarding/walkthrough progress persisted server-side (resume + replay) — Validated in Phase 6
+- [x] Walkthrough skippable anytime and skips already-completed steps — Validated in Phase 6
+
+**Current State:** Phase 6 complete — v1.1 Guided Onboarding Walkthrough milestone finished. All 6 phases shipped.
 
 ### Out of Scope
 

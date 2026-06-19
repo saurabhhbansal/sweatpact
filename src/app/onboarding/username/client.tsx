@@ -69,7 +69,7 @@ export function UsernamePicker() {
       return;
     }
     startTransition(() => {
-      router.push("/onboarding/schedule");
+      router.push("/dashboard");
       router.refresh();
     });
   }

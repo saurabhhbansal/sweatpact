@@ -3,11 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { betterStatus } from "@/lib/challenge-view";
-import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
+import { getSupabaseRSC, getViewerProfile, getOnboardingProgress } from "@/lib/supabase/rsc";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { formatCents } from "@/lib/money";
 import { UserSearch } from "@/components/user-search";
 import { ChallengeVersusCard, type VersusPerson } from "@/components/challenge-versus-card";
+import { PactLiveOverlay } from "@/components/pact-live-overlay";
 
 export const dynamic = "force-dynamic";
 
@@ -135,9 +136,18 @@ export default async function ChallengesPage() {
     (m) => (membersByGroup.get(m.group_id)?.size ?? 0) >= 2
   );
 
+  // Request-cached read (shares the request's auth round trip) — null for users
+  // with no row. Drives the shown-once "Pact is live" overlay (UX-03, D-03).
+  const progress = await getOnboardingProgress();
+  const completedSteps = progress?.completed_steps ?? [];
+
   return (
     <>
-      <main className="container max-w-md space-y-5 pb-28 pt-4">
+      <main
+        className="container max-w-md space-y-5 pb-28 pt-4"
+        data-tour="money"
+        data-pending-count={pendingCount}
+      >
         <div className="animate-fade-up-item">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Your active bets</h1>
@@ -214,6 +224,7 @@ export default async function ChallengesPage() {
 
         {/* New-challenge search — below the daily view */}
         <section
+          data-tour="challenge"
           className="animate-fade-up-item rounded-[1.7rem] glass-card p-4"
           style={{ "--stagger": "150ms" } as React.CSSProperties}
         >
@@ -223,6 +234,16 @@ export default async function ChallengesPage() {
           <UserSearch />
         </section>
       </main>
+
+      {/* Phase 6 — fires once when the viewer's first challenge goes active.
+          Guard: only render when a progress row exists so persistSeen() never
+          creates a row with dismissed:false for a user who hasn't started the tour. */}
+      {progress !== null && (
+        <PactLiveOverlay
+          hasActiveChallenge={activeMemberships.length > 0}
+          completedSteps={completedSteps}
+        />
+      )}
     </>
   );
 }

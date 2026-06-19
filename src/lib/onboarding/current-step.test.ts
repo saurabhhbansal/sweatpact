@@ -90,6 +90,45 @@ describe("deriveCurrentStep — auto-skip via probe (D-09)", () => {
   });
 });
 
+describe("deriveCurrentStep — combined real-probe skip-on-complete (D-07 no-flash contract)", () => {
+  // All setup work already done: a gym exists (gymCount=1) and the weekly goal
+  // is set (restDays non-empty). schedule + gym both auto-skip via the real probe.
+  const allSetupDoneProbe = { gymCount: 1, restDays: [0, 6] as number[] };
+
+  it("opens on 'challenge' when gym+schedule are probe-done and nothing is completed", () => {
+    // schedule auto-skips (restDays non-empty), gym auto-skips (gymCount>0) →
+    // first not-done teaching step is 'challenge'. The opening step is NEVER an
+    // already-done step's id — proving the no-flash contract at the logic boundary.
+    expect(deriveCurrentStep([], false, allSetupDoneProbe)).toBe("challenge");
+  });
+
+  it("returns 'shortcut_viewed' when setup is probe-done and challenge+money are completed", () => {
+    expect(
+      deriveCurrentStep(["challenge", "money"], false, allSetupDoneProbe)
+    ).toBe("shortcut_viewed");
+  });
+
+  it("returns null when every step is auto-skipped or completed (tour complete)", () => {
+    expect(
+      deriveCurrentStep(
+        ["challenge", "money", "shortcut_viewed"],
+        false,
+        allSetupDoneProbe
+      )
+    ).toBeNull();
+  });
+
+  it("never returns 'schedule' or 'gym' as the opening step when both are probe-done", () => {
+    // No-flash contract: an already-done step's id is never returned as the
+    // first/opening step. With gym+schedule probe-done and no teaching key
+    // complete, the opening step is strictly the first not-done step.
+    const first = deriveCurrentStep([], false, allSetupDoneProbe);
+    expect(first).not.toBe("schedule");
+    expect(first).not.toBe("gym");
+    expect(first).toBe("challenge");
+  });
+});
+
 describe("deriveCurrentStep — inputs are not mutated", () => {
   it("does not mutate completedSteps", () => {
     const steps = Object.freeze(["schedule", "gym"]) as string[];

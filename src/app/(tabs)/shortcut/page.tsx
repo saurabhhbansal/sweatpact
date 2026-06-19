@@ -28,7 +28,11 @@ export default async function ShortcutPage() {
             Automate your check-ins from your iPhone.
           </p>
         </div>
-        <div className="animate-fade-up-item" style={{ "--stagger": "70ms" } as React.CSSProperties}>
+        <div
+          data-tour="shortcut_viewed"
+          className="animate-fade-up-item"
+          style={{ "--stagger": "70ms" } as React.CSSProperties}
+        >
           <ShortcutSetup
             userId={profile.id}
             webhookSecret={webhookSecret}
