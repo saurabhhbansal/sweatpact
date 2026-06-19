@@ -479,9 +479,9 @@ export function CoachmarkRenderer() {
     continuous: false,
     portalElement: portalElement ?? undefined,
     tooltipComponent: TooltipAdapter,
-    // Hide Joyride's built-in floater arrow — the CoachmarkCard is the full UI;
-    // the arrow renders in wrong positions and is redundant with the spotlight.
-    floaterProps: { hideArrow: true },
+    // Hide Joyride's built-in arrow — CoachmarkCard is the full UI; the arrow
+    // renders in wrong positions and is redundant with the spotlight (TOUR-02).
+    arrowComponent: () => null,
     // Disable joyride's own keyboard close handling (we own Escape, TOUR-04).
     options: {
       zIndex: COACHMARK_Z_INDEX,
