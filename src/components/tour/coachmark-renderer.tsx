@@ -445,7 +445,7 @@ export function CoachmarkRenderer() {
   const joyrideSteps = useMemo<Step[]>(
     () =>
       selector
-        ? [{ target: selector, content: stepBody, title: stepTitle, placement: "bottom" }]
+        ? [{ target: selector, content: stepBody, title: stepTitle, placement: "center" }]
         : [],
     [selector, stepBody, stepTitle]
   );
