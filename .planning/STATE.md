@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 6
-status: shipped
-stopped_at: Phase 6 shipped — PR #79
-last_updated: "2026-06-19T00:10:00.000Z"
+status: complete
+stopped_at: v1.1 milestone closed — archived 2026-06-19
+last_updated: "2026-06-19T00:00:00.000Z"
 last_activity: 2026-06-19
-last_activity_desc: Phase 6 shipped — PR #79
+last_activity_desc: v1.1 milestone complete — all 6 phases, 18 plans shipped
 progress:
   total_phases: 6
   completed_phases: 6
@@ -21,10 +21,10 @@ current_phase_name: skip-on-complete-replay-completion-hardening
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-06-14)
+See: `.planning/PROJECT.md` (updated 2026-06-19)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 06 — skip-on-complete-replay-completion-hardening
+**Current focus:** Planning next milestone (v1.2)
 
 ## Current Position
 
@@ -121,6 +121,15 @@ None yet.
 - **Open question carried into Phase 5:** invited-path tour variant branching in the step registry (aha = "accept" not "start").
 
 ## Deferred Items
+
+Items acknowledged at milestone close on 2026-06-19:
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat | Phase 03 UAT partial — tests skipped by user | deferred |
+| uat | Phase 04 UAT flagged partial by audit tool | deferred |
+| uat | Phase 06 UAT partial — 10 items skipped by user | deferred |
+| verification | Phase 05 human_needed — navigate-then-reveal sequencing, invited-path swap, practice check-in Network-tab zero-request proof (all explicitly deferred to production by user) | deferred |
 
 Items acknowledged and carried forward / out of v1.1 scope:
 
