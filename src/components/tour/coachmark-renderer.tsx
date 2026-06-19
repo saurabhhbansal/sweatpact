@@ -196,6 +196,7 @@ export function CoachmarkRenderer() {
   // non-existent target. By comparing `verifiedSelector === selector` we only
   // show joyride when the CURRENT selector has been confirmed in the DOM.
   const [verifiedSelector, setVerifiedSelector] = useState<string | null>(null);
+  const prevStepIdRef = useRef<string | null>(null);
 
   // --- Radix-dialog pause (D-04) -----------------------------------------
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -254,13 +255,20 @@ export function CoachmarkRenderer() {
   // If the user intentionally navigated to /settings or another non-tour page,
   // we leave them there — the tour resumes when they return to a tour route.
   useEffect(() => {
-    if (!isActive || !currentStepId) return;
+    if (!isActive || !currentStepId) {
+      prevStepIdRef.current = null;
+      return;
+    }
     const target = stepRoute(currentStepId);
-    if (target && target !== pathname && TOUR_ROUTES.has(pathname)) {
+    const stepChanged = prevStepIdRef.current !== currentStepId;
+    prevStepIdRef.current = currentStepId;
+    // Navigate when already on a tour route (normal advance), OR when the step
+    // just changed from null/different (replay triggered from any page, e.g. /settings).
+    if (target && target !== pathname && (TOUR_ROUTES.has(pathname) || stepChanged)) {
       router.push(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, currentStepId, router]);
+  }, [isActive, currentStepId, pathname, router]);
 
   // Pause while any Radix dialog is open; restore on close (D-04, TOUR-02).
   // Watches data-state changes so it reacts to open/close without re-render churn.

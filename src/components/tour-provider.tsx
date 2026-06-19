@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ProgressRow } from "@/lib/onboarding-progress";
 import { defaultProgress } from "@/lib/onboarding-progress";
 import { deriveCurrentStep } from "@/lib/onboarding/current-step";
-import { STEPS } from "@/lib/onboarding/steps";
+import { STEPS, TEACHING_KEYS } from "@/lib/onboarding/steps";
 
 // Guard set for advance() — prevents phantom keys from entering optimistic state.
 const VALID_IDS = new Set(STEPS.map((s) => s.id));
@@ -20,6 +20,7 @@ type TourValue = {
   isActive: boolean;
   advance: (stepId: string) => Promise<void>;
   dismiss: () => Promise<void>;
+  startReplay: () => Promise<void>;
 };
 
 const TourContext = createContext<TourValue | null>(null);
@@ -51,6 +52,11 @@ export function TourProvider({
     initialProgress ?? defaultProgress()
   );
 
+  // Ref so dismiss/startReplay can read current progress without adding it to
+  // their useCallback deps (keeps advance/dismiss stable across renders).
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+
   // Phase 6 wires real skip-on-complete probe data: gymCount (user_gyms count)
   // and restDays (profiles.rest_days) flow in server-side from the (tabs) layout
   // RSC (D-07: no new client-side fetch). deriveCurrentStep auto-skips steps whose
@@ -73,8 +79,13 @@ export function TourProvider({
    * updates local state, then persists via PATCH with only `complete_step` +
    * `last_step_id` (never `completed_steps` — server mergeProgress is authoritative
    * and dedupe-appends, D-04). Best-effort — the walkthrough is an optional surface (D-08).
+   *
+   * Stable across renders (useCallback + empty deps): setProgress is a stable
+   * dispatch, VALID_IDS is a module-level constant. Stability prevents handleAdvance
+   * in CoachmarkRenderer from changing on every TourProvider re-render, which would
+   * otherwise cause unnecessary surfaceNode remounts (losing form state mid-step).
    */
-  async function advance(stepId: string) {
+  const advance = useCallback(async (stepId: string) => {
     if (!VALID_IDS.has(stepId)) {
       console.error("[TourProvider] advance() called with unknown stepId:", stepId);
       return;
@@ -91,27 +102,70 @@ export function TourProvider({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ complete_step: stepId, last_step_id: stepId }),
     }).catch(() => {}); // best-effort — optional surface (D-08)
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Dismiss the walkthrough. Optimistic state update makes currentStepId null
    * and isActive false immediately. Persists dismissed:true via PATCH (D-10,
    * ONB-04). Phase 6 adds the Settings reset path.
+   *
+   * Stable across renders for the same reason as advance (empty deps, stable
+   * setProgress dispatch).
    */
-  async function dismiss() {
-    setProgress((p) => ({ ...p, dismissed: true }));
-    await fetch("/api/onboarding-progress", {
+  const dismiss = useCallback(async () => {
+    const wasCompleted = progressRef.current.completed_at !== null;
+    if (wasCompleted) {
+      // Skipping mid-replay for an already-completed user: restore "complete"
+      // state so the tour doesn't resurface on next open. Setting dismissed=true
+      // would break the tour permanently for them.
+      const keys = TEACHING_KEYS as string[];
+      setProgress((p) => ({
+        ...p,
+        completed_steps: Array.from(new Set([...p.completed_steps, ...keys])),
+        dismissed: false,
+      }));
+      for (const key of keys) {
+        await fetch("/api/onboarding-progress", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ complete_step: key }),
+        }).catch(() => {});
+      }
+    } else {
+      setProgress((p) => ({ ...p, dismissed: true }));
+      await fetch("/api/onboarding-progress", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ dismissed: true }),
+      }).catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Resets tour state in-session so replay is immediate without a page reload.
+  // Persists replay to server first (non-best-effort); throws on failure so the
+  // caller (ReplayTourButton) can show an error. The navigate effect in
+  // CoachmarkRenderer detects the step change and routes to the first step.
+  const startReplay = useCallback(async () => {
+    const res = await fetch("/api/onboarding-progress", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ dismissed: true }),
-    }).catch(() => {}); // best-effort — optional surface (D-08)
-  }
+      body: JSON.stringify({ replay: true }),
+    });
+    if (!res.ok) throw new Error("replay_failed");
+    setProgress((p) => ({
+      ...p,
+      completed_steps: p.completed_steps.filter((k) => !VALID_IDS.has(k)),
+      dismissed: false,
+      last_step_id: null,
+    }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: TourValue = {
     currentStepId,
     isActive: currentStepId !== null,
     advance,
     dismiss,
+    startReplay,
   };
 
   // Render {children} directly — no wrapper div/element/padding/margin.

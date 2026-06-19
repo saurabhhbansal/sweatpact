@@ -13,6 +13,7 @@ import { GymsSection } from "./gyms-section";
 import { DeleteAccountButton } from "./delete-account";
 import { PushPermissionPrompt } from "@/components/push-permission";
 import { createClient as createBrowserClient } from "@/lib/supabase/browser";
+import { useTour } from "@/components/tour-provider";
 
 type SettingsProfile = Pick<
   Profile,
@@ -156,8 +157,7 @@ function SectionHeader({ title, icon: Icon }: { title: string; icon?: LucideIcon
 }
 
 function ReplayTourButton() {
-  const router = useRouter();
-  const [, startTransition] = useTransition();
+  const { startReplay } = useTour();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -166,17 +166,10 @@ function ReplayTourButton() {
     setErr(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/onboarding-progress", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ replay: true }),
-      });
-      if (!res.ok) {
-        setErr("Couldn't restart the tour. Try again.");
-        return;
-      }
-      // Re-hydrate the layout RSC's initialProgress so TourProvider reactivates.
-      startTransition(() => router.refresh());
+      // startReplay persists to server then updates TourProvider state in-session.
+      // CoachmarkRenderer's navigate effect detects the step change and routes to
+      // the first tour step immediately — no page reload needed.
+      await startReplay();
     } catch {
       setErr("Couldn't restart the tour. Try again.");
     } finally {
