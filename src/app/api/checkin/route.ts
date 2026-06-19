@@ -130,11 +130,14 @@ export async function POST(req: NextRequest) {
     for (const gym of gyms ?? []) {
       const d = haversineMeters(body.latitude, body.longitude, gym.lat, gym.lng);
       if (distance == null || d < distance) distance = d;
-      if (d <= (gym.radius_m ?? 150)) verified = true;
+      if (d <= (gym.radius_m ?? 75)) verified = true;
     }
   }
 
-  if (!verified && !body.allow_unverified) {
+  // Shortcut check-ins are always rejected when unverified regardless of
+  // allow_unverified — the Shortcut runs on location automations that can fire
+  // outside the gym radius; only the verified path is trustworthy there.
+  if (!verified && (!body.allow_unverified || body.source === "shortcut")) {
     return NextResponse.json(
       { error: "location_outside_radius", distance_m: distance },
       { status: 422 }
