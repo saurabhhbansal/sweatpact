@@ -350,6 +350,7 @@ export function CoachmarkRenderer() {
     const root = document.getElementById("tour-root");
     if (!root) return;
     let cancelled = false;
+    let attempts = 0;
     const focusPrimary = () => {
       if (cancelled) return;
       const primary = root.querySelector<HTMLButtonElement>("button");
@@ -357,7 +358,7 @@ export function CoachmarkRenderer() {
         primary.focus();
         return;
       }
-      // Tooltip not portaled yet — retry on the next frame until it appears.
+      if (attempts++ >= 120) return; // ~2s at 60fps; stop if tooltip never portals
       requestAnimationFrame(focusPrimary);
     };
     const raf = requestAnimationFrame(focusPrimary);

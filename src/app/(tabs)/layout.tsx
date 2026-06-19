@@ -79,7 +79,10 @@ export default async function TabsLayout({
     .eq("user_id", profile.id);
   if (gymsError) console.error("[layout] user_gyms query failed:", gymsError.message);
   const gymCount = gyms?.length ?? 0;
-  const restDays = (profile.rest_days as number[] | null) ?? [];
+  const rawRestDays = profile.rest_days;
+  const restDays = Array.isArray(rawRestDays)
+    ? rawRestDays.filter((d): d is number => typeof d === "number")
+    : [];
 
   return (
     <>

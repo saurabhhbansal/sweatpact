@@ -38,15 +38,13 @@ export function PactLiveOverlay({
   // `pact_live_seen` don't cause the overlay to re-open.
   const [seenLocally, setSeenLocally] = useState(false);
 
-  // Open exactly when the suppression predicate allows it. Seeding from the
-  // predicate keeps the open state in sync with the persisted seen-flag.
+  // Compute once — reused by the effect and the early-return guard.
+  const show = !seenLocally && shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps });
+
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (seenLocally) return;
-    setOpen(
-      shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })
-    );
-  }, [mounted, hasActiveChallenge, completedSteps, seenLocally]);
+    setOpen(show);
+  }, [show]);
 
   // Guard the persistence write so it fires once even if Escape and the CTA
   // both drive onOpenChange(false).
@@ -70,9 +68,7 @@ export function PactLiveOverlay({
     persistSeen();
   }
 
-  if (seenLocally || !shouldShowPactLive({ mounted, hasActiveChallenge, completedSteps })) {
-    return null;
-  }
+  if (!show) return null;
 
   return (
     <DialogPrimitive.Root

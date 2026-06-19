@@ -235,11 +235,15 @@ export default async function ChallengesPage() {
         </section>
       </main>
 
-      {/* Phase 6 — fires once when the viewer's first challenge goes active */}
-      <PactLiveOverlay
-        hasActiveChallenge={activeMemberships.length > 0}
-        completedSteps={completedSteps}
-      />
+      {/* Phase 6 — fires once when the viewer's first challenge goes active.
+          Guard: only render when a progress row exists so persistSeen() never
+          creates a row with dismissed:false for a user who hasn't started the tour. */}
+      {progress !== null && (
+        <PactLiveOverlay
+          hasActiveChallenge={activeMemberships.length > 0}
+          completedSteps={completedSteps}
+        />
+      )}
     </>
   );
 }
