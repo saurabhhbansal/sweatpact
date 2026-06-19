@@ -213,7 +213,7 @@ function AddGymForm({
           address,
           lat: details.lat,
           lng: details.lng,
-          radius_m: 150,
+          radius_m: 50,
         }),
       });
       const data = await addRes.json().catch(() => ({}));
@@ -245,7 +245,7 @@ function AddGymForm({
             name: "Current location",
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
-            radius_m: 150,
+            radius_m: 50,
           }),
         });
         const data = await addRes.json().catch(() => ({}));

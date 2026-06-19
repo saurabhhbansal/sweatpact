@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     for (const gym of gyms ?? []) {
       const d = haversineMeters(body.latitude, body.longitude, gym.lat, gym.lng);
       if (distance == null || d < distance) distance = d;
-      if (d <= (gym.radius_m ?? 75)) verified = true;
+      if (d <= (gym.radius_m ?? 50)) verified = true;
     }
   }
 

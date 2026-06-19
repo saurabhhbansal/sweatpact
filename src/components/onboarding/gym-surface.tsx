@@ -73,7 +73,7 @@ export function GymSurface({
       const addRes = await fetch("/api/gyms", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, address, lat: details.lat, lng: details.lng, radius_m: 150 }),
+        body: JSON.stringify({ name, address, lat: details.lat, lng: details.lng, radius_m: 50 }),
       });
       const data = await addRes.json().catch(() => ({}));
       if (!addRes.ok) {
@@ -106,7 +106,7 @@ export function GymSurface({
               name: "My gym",
               lat: pos.coords.latitude,
               lng: pos.coords.longitude,
-              radius_m: 150,
+              radius_m: 50,
             }),
           });
           const data = await addRes.json().catch(() => ({}));

@@ -78,8 +78,9 @@ export default async function GroupPage({
       .from("obligations")
       .select("id, from_user, to_user, amount_cents, status, created_at, note")
       .eq("group_id", group.id)
+      .eq("status", "pending")
       .order("created_at", { ascending: false })
-      .limit(50),
+      .limit(200),
     supabase
       .from("disputes")
       .select("id, raised_by, target_type, target_id, status, reason, created_at")
@@ -102,13 +103,24 @@ export default async function GroupPage({
       .limit(5_000),
   ]);
 
-  const obligationIds = (obligations ?? []).map((obligation) => obligation.id);
+  // Fetch recent settled obligations to power the "Recent settlements" display.
+  // These are queried separately from pending obligations so the limit(200) on
+  // pending rows does not prevent settled history from appearing.
+  const { data: settledObligations } = await supabase
+    .from("obligations")
+    .select("id")
+    .eq("group_id", group.id)
+    .eq("status", "settled")
+    .order("updated_at", { ascending: false })
+    .limit(20);
+
+  const settledObligationIds = (settledObligations ?? []).map((o) => o.id);
   const { data: settlements } =
-    obligationIds.length > 0
+    settledObligationIds.length > 0
       ? await supabase
           .from("settlements")
           .select("id, obligation_id, amount_cents, settled_at, marked_by, note")
-          .in("obligation_id", obligationIds)
+          .in("obligation_id", settledObligationIds)
           .order("settled_at", { ascending: false })
           .limit(20)
       : { data: [] as Array<{
@@ -188,7 +200,7 @@ export default async function GroupPage({
   };
 
   const aggregatedMap = new Map<string, AggregatedObligation>();
-  for (const obligation of (obligations ?? []).filter((o) => o.status === "pending")) {
+  for (const obligation of (obligations ?? [])) {
     if (!memberMap.has(obligation.from_user) || !memberMap.has(obligation.to_user)) continue;
     const key = `${obligation.from_user}:${obligation.to_user}`;
     const entry = aggregatedMap.get(key);

@@ -143,12 +143,8 @@ export default async function ChallengesPage() {
 
   return (
     <>
-      <main
-        className="container max-w-md space-y-5 pb-28 pt-4"
-        data-tour="money"
-        data-pending-count={pendingCount}
-      >
-        <div className="animate-fade-up-item">
+      <main className="container max-w-md space-y-5 pb-28 pt-4">
+        <div className="animate-fade-up-item" data-tour="money">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Challenges</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Your active bets</h1>
         </div>
