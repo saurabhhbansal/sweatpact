@@ -57,7 +57,10 @@ export function CoachmarkCard({
   return (
     <div
       className={cn(
+        // glass-card base gives the bevel shadow language; override its near-transparent
+        // background with a solid dark fill so the card reads over any UI content.
         "glass-card animate-fade-up rounded-2xl p-4 text-white max-h-[calc(100dvh-48px)] overflow-y-auto",
+        "!bg-zinc-900 ring-1 ring-white/25 shadow-2xl",
         surface
           ? "w-[360px] max-w-[calc(100vw-32px)] mx-4"
           : "w-[300px] max-w-[calc(100vw-32px)] mx-4"
