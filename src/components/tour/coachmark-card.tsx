@@ -57,7 +57,7 @@ export function CoachmarkCard({
   return (
     <div
       className={cn(
-        "glass-card animate-fade-up rounded-2xl p-4 text-white",
+        "glass-card animate-fade-up rounded-2xl p-4 text-white max-h-[calc(100dvh-48px)] overflow-y-auto",
         surface
           ? "w-[360px] max-w-[calc(100vw-32px)] mx-4"
           : "w-[300px] max-w-[calc(100vw-32px)] mx-4"
