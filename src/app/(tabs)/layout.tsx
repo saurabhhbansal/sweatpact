@@ -73,10 +73,11 @@ export default async function TabsLayout({
   // straight off the profile row. Both flow into TourProvider so deriveCurrentStep
   // can auto-skip steps whose setup work is already done, with zero flash.
   const supa = getSupabaseRSC();
-  const { data: gyms } = await supa
+  const { data: gyms, error: gymsError } = await supa
     .from("user_gyms")
     .select("id")
     .eq("user_id", profile.id);
+  if (gymsError) console.error("[layout] user_gyms query failed:", gymsError.message);
   const gymCount = gyms?.length ?? 0;
   const restDays = (profile.rest_days as number[] | null) ?? [];
 
