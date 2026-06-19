@@ -4,10 +4,10 @@ milestone: v1.1
 milestone_name: Guided Onboarding Walkthrough
 current_phase: 6
 status: shipped
-stopped_at: Phase 6 shipped — PR #79
-last_updated: "2026-06-19T00:10:00.000Z"
-last_activity: 2026-06-19
-last_activity_desc: Phase 6 shipped — PR #79
+stopped_at: context exhaustion at 75% (2026-06-19)
+last_updated: "2026-06-19T05:17:17.305Z"
+last_activity: 2026-06-18
+last_activity_desc: Phase 6 complete
 progress:
   total_phases: 6
   completed_phases: 6
@@ -133,6 +133,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-18T18:54:06.772Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-06-19T05:17:17.290Z
+Stopped at: context exhaustion at 75% (2026-06-19)
 Resume file: None
