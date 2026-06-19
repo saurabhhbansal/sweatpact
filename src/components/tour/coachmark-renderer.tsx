@@ -420,6 +420,9 @@ export function CoachmarkRenderer() {
   // Stable component reference created once on mount. joyride receives the same
   // component type across re-renders, so the tooltip tree (and ScheduleSurface /
   // GymSurface form state) is never unmounted between step updates (WR-02).
+  // No safe-area wrapper here: adding padding inflates the tooltip's measured
+  // size causing Joyride's position algorithm to place the card off-screen.
+  // The card itself uses max-w-[calc(100vw-32px)] + mx-4 for horizontal safety.
   const TooltipAdapter = useMemo(
     () =>
       function StableTooltipAdapter(_props: TooltipRenderProps) {
@@ -432,25 +435,14 @@ export function CoachmarkRenderer() {
           handleDismiss: onDismiss,
         } = tooltipDataRef.current;
         return (
-          // Safe-area wrapper (TOUR-03): pad edges with max(16px, env(safe-area-inset-*))
-          // so the card never sits under the notch/home indicator/rounded corner.
-          <div
-            style={{
-              paddingTop: "max(16px, env(safe-area-inset-top))",
-              paddingRight: "max(16px, env(safe-area-inset-right))",
-              paddingBottom: "max(16px, env(safe-area-inset-bottom))",
-              paddingLeft: "max(16px, env(safe-area-inset-left))",
-            }}
-          >
-            <CoachmarkCard
-              stepId={stepId}
-              title={title}
-              body={body}
-              surface={surface}
-              onAdvance={onAdvance}
-              onDismiss={onDismiss}
-            />
-          </div>
+          <CoachmarkCard
+            stepId={stepId}
+            title={title}
+            body={body}
+            surface={surface}
+            onAdvance={onAdvance}
+            onDismiss={onDismiss}
+          />
         );
       },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -487,6 +479,9 @@ export function CoachmarkRenderer() {
     continuous: false,
     portalElement: portalElement ?? undefined,
     tooltipComponent: TooltipAdapter,
+    // Hide Joyride's built-in floater arrow — the CoachmarkCard is the full UI;
+    // the arrow renders in wrong positions and is redundant with the spotlight.
+    floaterProps: { hideArrow: true },
     // Disable joyride's own keyboard close handling (we own Escape, TOUR-04).
     options: {
       zIndex: COACHMARK_Z_INDEX,

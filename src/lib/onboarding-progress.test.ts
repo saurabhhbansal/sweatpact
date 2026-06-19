@@ -176,13 +176,24 @@ describe("mergeProgress", () => {
     expect(merged.tour_version).toBe(3);
   });
 
-  it("replay reactivates the tour (dismissed:false) without resetting completed_steps (D-04)", () => {
+  it("replay reactivates the tour (dismissed:false) AND clears completed_steps so teaching-only steps re-show", () => {
     const merged = mergeProgress(
-      blankRow({ dismissed: true, completed_steps: ["schedule", "gym"] }),
+      blankRow({ dismissed: true, completed_steps: ["schedule", "gym", "challenge", "money"] }),
       { replay: true }
     );
     expect(merged.dismissed).toBe(false);
-    expect(merged.completed_steps).toEqual(["schedule", "gym"]);
+    // completed_steps cleared: teaching-only steps (challenge/money/shortcut_viewed)
+    // have no real-world probe — without clearing they'd be skipped and the tour
+    // would return null, making the replay button appear broken.
+    expect(merged.completed_steps).toEqual([]);
+  });
+
+  it("replay resets last_step_id to null", () => {
+    const merged = mergeProgress(
+      blankRow({ dismissed: true, last_step_id: "money", completed_steps: ["gym", "money"] }),
+      { replay: true }
+    );
+    expect(merged.last_step_id).toBeNull();
   });
 
   it("does not reactivate the tour when replay is absent (replay is opt-in)", () => {

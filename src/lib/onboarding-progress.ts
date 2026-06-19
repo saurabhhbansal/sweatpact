@@ -76,13 +76,19 @@ export function defaultProgress(): ProgressRow {
  * the row to upsert. This is the only testable seam (route handlers are
  * untested per project convention).
  *
- * `patch.replay === true` reactivates the tour by forcing `dismissed: false`,
- * leaving `completed_steps` untouched (D-04). Replay takes precedence over an
- * explicit `dismissed` in the same patch; absent replay, the existing
+ * `patch.replay === true` reactivates the tour: sets `dismissed: false` AND
+ * clears `completed_steps` to `[]`. Teaching-only steps (challenge/money/
+ * shortcut_viewed) have no real-world probe — they skip only when present in
+ * completed_steps. Without clearing, replay returns null and appears broken
+ * for users who already finished the tour. Setup steps (gym/schedule) auto-skip
+ * via probe if already done, so clearing is safe. Replay takes precedence over
+ * an explicit `dismissed` in the same patch; absent replay, the existing
  * `dismissed` rule applies (replay is opt-in — its absence never reactivates).
  */
 export function mergeProgress(existing: ProgressRow, patch: PatchInput): ProgressRow {
-  const completed_steps = [...existing.completed_steps];
+  // On replay, start fresh: clear completed_steps so teaching-only steps re-show.
+  // Setup steps auto-skip via probe (isGymDone / isScheduleDone) if already done.
+  const completed_steps = patch.replay ? [] : [...existing.completed_steps];
   if (patch.complete_step !== undefined && !completed_steps.includes(patch.complete_step)) {
     completed_steps.push(patch.complete_step);
   }
@@ -93,12 +99,18 @@ export function mergeProgress(existing: ProgressRow, patch: PatchInput): Progres
       ? patch.dismissed
       : existing.dismissed;
 
+  // On replay, also reset last_step_id so the tour resumes from the top.
+  const last_step_id = patch.replay
+    ? null
+    : patch.last_step_id !== undefined
+      ? patch.last_step_id
+      : existing.last_step_id;
+
   return {
     mandatory_done:
       patch.mandatory_done !== undefined ? patch.mandatory_done : existing.mandatory_done,
     tour_version: existing.tour_version,
-    last_step_id:
-      patch.last_step_id !== undefined ? patch.last_step_id : existing.last_step_id,
+    last_step_id,
     completed_steps,
     dismissed,
     completed_at:

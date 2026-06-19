@@ -83,6 +83,7 @@ export function GymSurface({
       setCount((c) => c + 1);
       setQuery("");
       setResults([]);
+      onComplete();
     } finally {
       setBusy(false);
     }
@@ -114,6 +115,7 @@ export function GymSurface({
             return;
           }
           setCount((c) => c + 1);
+          onComplete();
         } catch {
           setErr("Network error. Try again.");
         } finally {
