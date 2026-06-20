@@ -27,7 +27,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 ### v1.2 Analytics & Admin Dashboard (Phases 7–10)
 
-- [ ] **Phase 7: Analytics Foundation** - Stand up PostHog ingestion (SDK init, identify, typed event catalog, reverse proxy, Node 20.20+ runtime)
+- [ ] **Phase 7: Analytics Foundation** (4 plans) - Stand up PostHog ingestion (SDK init, identify, typed event catalog, reverse proxy, Node 20.20+ runtime)
 - [ ] **Phase 8: Event Instrumentation** - Capture onboarding, check-in, pact, financial, and feature-usage events across server and client
 - [ ] **Phase 9: Admin Dashboard** - Owner-gated `/admin` route with branded layout, Supabase-backed financial/check-in/user views, and PostHog-backed funnel/adoption/retention panels
 
@@ -43,7 +43,11 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   3. All event names used anywhere in the app resolve to constants in `src/lib/analytics/events.ts` following the `category:object_action` convention — no string literals at call sites.
   4. PostHog ingestion traffic is served first-party through `/ingest` (rewrites in place, excluded from middleware, service worker bypasses it) and reaches PostHog without being blocked.
   5. The deployed Vercel runtime is Node.js 20.20+, satisfying the `posthog-node@5` peer dependency so server-side capture works in production.
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 07-01-PLAN.md — Install posthog-js + posthog-node, set engines.node 20.x, create typed event catalog with tests (FOUND-03, FOUND-05)
+- [ ] 07-02-PLAN.md — PostHogProvider, PostHogPageview, PostHogIdentity client components (FOUND-01, FOUND-02)
+- [ ] 07-03-PLAN.md — /ingest reverse proxy rewrites, middleware exclusion, PWA service worker bypass (FOUND-04)
+- [ ] 07-04-PLAN.md — Wire components into root layout, document env vars, run build + test phase gate (FOUND-01, FOUND-02, FOUND-04)
 
 ### Phase 8: Event Instrumentation
 **Goal**: Every key product moment — onboarding steps, check-ins, pact lifecycle, financial settlement, and feature usage — emits a typed event, so the dashboard phases have real data to read.
