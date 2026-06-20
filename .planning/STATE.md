@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Analytics & Admin Dashboard
 status: planning
-last_updated: "2026-06-20T12:46:35.902Z"
+last_updated: "2026-06-20T13:10:00.000Z"
 last_activity: 2026-06-20
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -24,20 +24,30 @@ See: `.planning/PROJECT.md` (updated 2026-06-20)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 7 — Analytics Foundation (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-20 — Milestone v1.2 started
+Status: Roadmap complete — ready to plan Phase 7
+Last activity: 2026-06-20 — v1.2 roadmapped (Phases 7–10, 18/18 requirements mapped)
+
+Progress: [----------] 0/3 phases
+
+## Phase Map (v1.2)
+
+| Phase | Goal | Requirements | Depends on |
+|-------|------|--------------|------------|
+| 7. Analytics Foundation | PostHog wired in: init, identify, typed catalog, reverse proxy, Node 20.20+ | FOUND-01..05 | — |
+| 8. Event Instrumentation | Onboarding, check-in, pact, financial, feature-usage events captured | INSTR-01..05 | Phase 7 |
+| 9. Admin Dashboard | Owner-gated branded `/admin` with full dashboard — Supabase + PostHog views | ADMIN-01..02, DASH-01..06 | Phase 8 |
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 15
+- Total plans completed: 15 (v1.1)
 - Average duration: —
 - Total execution time: —
 
-**By Phase:**
+**By Phase (v1.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -73,37 +83,15 @@ Last activity: 2026-06-20 — Milestone v1.2 started
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work (locked for v1.1):
 
-- Walkthrough "complete" = all four teaching points (gym, challenge, money, Shortcut) presented/done — drives Phase 2 completion logic.
-- Both entry paths supported in v1.1: self-starter (start a challenge) and invited (accept a challenge invite) — Phase 5.
-- First walkthrough check-in is a labeled PRACTICE check-in — never a real check-in, never affects stakes/penalties/stats — Phase 5.
-- Skip-already-done is derived from real app state (gym set, weekly goal set, Shortcut viewed), not a duplicate flag — Phases 2 & 6.
-- Coachmark engine library NOT yet picked (react-joyride v3 vs Onborda/NextStep) — spike required before Phase 4 planning.
-- [Phase ?]: D-03: onboarding_progress is the runtime source of truth for tour state; profiles.onboarding_complete read only at backfill to seed it (Plan 01-01)
-- [Phase 01]: D-04: PATCH /api/onboarding-progress accepts a single semantic complete_step key (dedupe-appended server-side), never a client full completed_steps array; replay is a no-op (Plan 01-02)
-- [Phase 01]: onboarding-progress route uses non-admin createClient() only; owner RLS is the enforcement boundary, never service-role (Plan 01-02)
-- [Phase ?]: [Phase 02]: D-04 step registry — TOUR_VERSION=1, ordered STEPS [schedule,gym,challenge,money,shortcut_viewed]; schedule is setup-bearing but NOT a completion-gating teaching key (Plan 02-01)
-- [Phase ?]: [Phase 02]: completion probes derive from real state (gymCount, rest_days non-empty, completed_steps), no duplicate flag; isTourComplete reuses TEACHING_KEYS (Plan 02-01)
-- [Phase 02]: setup surfaces (gym/schedule/shortcut) are onComplete-driven and own their own fetch+save against existing endpoints — no logic fork; same surface serves legacy wizard and Phase 3+ walkthrough (D-03 "not dummy", SETUP-01) (Plan 02-02)
-- [Phase 02]: write-authority decouple — ShortcutSurface writes only shortcut_viewed; the onboarding_complete:true flip is confined to the legacy shell so a walkthrough mount cannot prematurely end onboarding (Phase-1 D-05) (Plan 02-02)
-- [Phase ?]: deriveCurrentStep extracted as pure .ts not inlined in provider .tsx so ONB-04 resume/dismiss is unit-covered by Vitest (plan 03-01)
-- [Phase ?]: getOnboardingProgress uses admin client with strict .eq(user_id, user.id) filter as sole access-control boundary post-0029 column lockdown (T-03-IDOR) (plan 03-01)
-- [Phase ?]: D-03 enforced: per-page username + onboarding_complete redirects removed from all 8 (tabs) pages; layout gate is single source of truth (plan 03-03)
-- [Phase ?]: Phase 5 Plan 01: TOUR_VERSION stays 1 — adding optional route field is not an add/remove/reorder/rename
-- [Phase ?]: Phase 5 Plan 01: challenge route stays /groups in registry; invited /notifications swap resolved at runtime in renderer (D-09/D-10)
-- [Phase ?]: Phase 5 Plan 01: CoachmarkCard widens to w-[360px] only when a surface is present; remains pure prop-driven (no tour import)
-- [Phase ?]: [Phase 05]: Plan 02 — money anchored to always-mounted /groups <main> (not per-challenge standing) so the coachmark always has a target; teaching copy carries the lesson
-- [Phase ?]: [Phase 05]: Plan 02 — pending-invite count surfaced as data-pending-count DOM attribute (D-09 zero-latency); challenge anchored to the unconditional search section, never the conditional empty-state card
-- [Phase ?]: [Phase 05]: Plan 03 — Open Decision resolved via option 1: dashboard RSC reads completed_steps from request-cached getOnboardingProgress() and passes completedSteps as a prop; TourValue stays frozen (D-08), no extra client fetch/round trip
-- [Phase ?]: [Phase 05]: Plan 03 — challengeCount derived from group_members head-count; EmptyStatePactCTA gated on challengeCount===0; data-tour=gym on always-mounted TodayActionCard wrapper
-- [Phase 05]: Plan 04 — navigate-then-reveal driven by a currentStepId-keyed effect (router.push guarded by route≠pathname); reveal reuses the single Phase-4 anchor-gate observer (no second observer); TourValue not extended (D-08), TOUR_VERSION not bumped
-- [Phase 05]: Plan 04 — practice check-in is cosmetic only (TEACH-05/D-05): zero fetch, zero /api/checkin, zero geo/submission_id; only side effect is handleAdvance() routing through TourProvider's existing complete_step PATCH; HARD SAFETY grep gate (api/checkin=0 in executable code) holds the financial boundary at the source
-- [Phase 05]: Plan 04 — Task 4 human-verify checkpoint deferred to production deployment by user (runtime Network-tab confirmation of zero /api/checkin requests still outstanding)
-- [Phase ?]: [Phase 06]: Plan 01 — real gymCount + restDays probe flows server-side from (tabs) layout RSC into deriveCurrentStep; no new client fetch (D-07), TourValue stays frozen (D-08)
-- [Phase ?]: Pact-is-live overlay shown-once via pact_live_seen completed_steps entry (cross-device, not a teaching key)
-- [Phase ?]: [Phase 06]: Plan 04 — legacy /onboarding/{gym,schedule,shortcut} wizard pages + step-indicator.tsx deleted (D-08/D-09); shared surfaces in src/components/onboarding/ and the username mandatory-start route untouched
-- [Phase ?]: [Phase 06]: Plan 04 — username post-save redirect retargeted /onboarding/schedule -> /dashboard (D-10/D-01); (tabs) layout gate only bounces auto-usernames so /dashboard renders cleanly once a real username is claimed
+**v1.2 roadmap decisions (2026-06-20):**
+
+- Phase ordering is dependency-driven: ingestion (7) before instrumentation (8) before dashboards (9, 10); gate (9) before any data exposure; Supabase-backed cards (9) before PostHog-backed cards (10) because Supabase needs no event backfill while PostHog views require Phase 8 events to have accumulated.
+- Phases 9 and 10 are UI-bearing (admin layout, brand tokens, charts, panels) — UI hint set in ROADMAP.md; candidates for `/gsd-ui-phase`.
+- INSTR-01 carries the deferred ANL-01 / ANL-02 (per-step onboarding drop-off) from v1.1.
+- No event backfill: PostHog-backed dashboard views (Phase 10) reflect only data captured from Phase 8 onward — acceptable for a < 50-user product.
+
+**v1.1 decisions (locked, shipped):** see PROJECT.md Key Decisions and `.planning/milestones/v1.1-*`.
 
 ### Quick Tasks Completed
 
@@ -117,31 +105,40 @@ None yet.
 
 ### Blockers/Concerns
 
-- **Phase 4 research spike (required before planning):** final coachmark library pick (react-joyride v3 vs Onborda/NextStep) and Radix-dialog-internal anchoring strategy (pause-resume vs portal-within-portal). Flagged in research SUMMARY.md.
-- **Open question carried into Phase 5:** invited-path tour variant branching in the step registry (aha = "accept" not "start").
+None for v1.2 yet. Risk areas to watch during planning (from PROJECT.md / CONCERNS.md):
+
+- FOUND-04 reverse proxy must coexist with existing middleware matcher and the PWA service worker — verify `/ingest` is excluded from both.
+- INSTR-04 financial events from `cron/enforce` require `await posthog.shutdown()` or Vercel teardown drops the flush.
+- DASH-04 PostHog Query API is rate-limited to 120 req/hr — funnel view must be cached with `next: { revalidate }`.
+- ADMIN-01 owner gate is env-allow-list (`ADMIN_USER_IDS`) + `getUser()` revalidation returning 404 — no DB role column this milestone.
 
 ## Deferred Items
 
-Items acknowledged at milestone close on 2026-06-19:
+Items acknowledged at v1.1 milestone close on 2026-06-19:
 
 | Category | Item | Status |
 |----------|------|--------|
 | uat | Phase 03 UAT partial — tests skipped by user | deferred |
 | uat | Phase 04 UAT flagged partial by audit tool | deferred |
 | uat | Phase 06 UAT partial — 10 items skipped by user | deferred |
-| verification | Phase 05 human_needed — navigate-then-reveal sequencing, invited-path swap, practice check-in Network-tab zero-request proof (all explicitly deferred to production by user) | deferred |
+| verification | Phase 05 human_needed — navigate-then-reveal sequencing, invited-path swap, practice check-in Network-tab zero-request proof | deferred |
 
-Items acknowledged and carried forward / out of v1.1 scope:
+Carried into v1.2 scope (now requirements):
 
-| Category | Item | Status | Deferred At |
-|----------|------|--------|-------------|
-| Analytics | Per-step onboarding drop-off analytics (ANL-01) | Deferred to v1.x/v2 | 2026-06-14 |
-| Engagement | Re-engagement nudge for non-converters (ANL-02) | Deferred to v1.x/v2 | 2026-06-14 |
-| Teaching | Money coachmark anchored to user's own live numbers (TEACH-07) | Deferred to v2 | 2026-06-14 |
-| Onboarding | Adaptive step ordering by entry path (ONB-05) | Deferred to v1.x/v2 | 2026-06-14 |
+| Category | Item | Resolution |
+|----------|------|------------|
+| Analytics | Per-step onboarding drop-off analytics (ANL-01) | Now INSTR-01 / DASH-04 (Phases 8, 10) |
+| Engagement | Re-engagement nudge for non-converters (ANL-02) | Data captured via INSTR-01; nudge delivery still deferred (out of scope this milestone) |
+
+Still deferred beyond v1.2:
+
+| Category | Item | Status |
+|----------|------|--------|
+| Teaching | Money coachmark anchored to user's own live numbers (TEACH-07 / ADV-04) | Deferred |
+| Onboarding | Adaptive step ordering by entry path (ONB-05) | Deferred |
 
 ## Session Continuity
 
-Last session: 2026-06-19T19:21:17.636Z
-Stopped at: context exhaustion at 77% (2026-06-19)
+Last session: 2026-06-20 — v1.2 roadmap created
+Stopped at: Roadmap complete, awaiting Phase 7 planning
 Resume file: None

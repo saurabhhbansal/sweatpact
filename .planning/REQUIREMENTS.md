@@ -67,30 +67,35 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| FOUND-05 | — | Pending |
-| INSTR-01 | — | Pending |
-| INSTR-02 | — | Pending |
-| INSTR-03 | — | Pending |
-| INSTR-04 | — | Pending |
-| INSTR-05 | — | Pending |
-| ADMIN-01 | — | Pending |
-| ADMIN-02 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| DASH-04 | — | Pending |
-| DASH-05 | — | Pending |
-| DASH-06 | — | Pending |
+| FOUND-01 | Phase 7 | Pending |
+| FOUND-02 | Phase 7 | Pending |
+| FOUND-03 | Phase 7 | Pending |
+| FOUND-04 | Phase 7 | Pending |
+| FOUND-05 | Phase 7 | Pending |
+| INSTR-01 | Phase 8 | Pending |
+| INSTR-02 | Phase 8 | Pending |
+| INSTR-03 | Phase 8 | Pending |
+| INSTR-04 | Phase 8 | Pending |
+| INSTR-05 | Phase 8 | Pending |
+| ADMIN-01 | Phase 9 | Pending |
+| ADMIN-02 | Phase 9 | Pending |
+| DASH-01 | Phase 9 | Pending |
+| DASH-02 | Phase 9 | Pending |
+| DASH-03 | Phase 9 | Pending |
+| DASH-04 | Phase 9 | Pending |
+| DASH-05 | Phase 9 | Pending |
+| DASH-06 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 18 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 18 ⚠️ (roadmapper will resolve)
+- Mapped to phases: 18 ✓
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 7 (Analytics Foundation): FOUND-01..05 (5)
+- Phase 8 (Event Instrumentation): INSTR-01..05 (5)
+- Phase 9 (Admin Dashboard): ADMIN-01, ADMIN-02, DASH-01..06 (8)
 
 ---
 *Requirements defined: 2026-06-20*
-*Last updated: 2026-06-20 after initial v1.2 definition*
+*Last updated: 2026-06-20 — roadmapped to Phases 7–10, 18/18 requirements mapped*
