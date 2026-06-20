@@ -10,6 +10,19 @@ v1.1 adds a contextual coachmark walkthrough that teaches new users the four cor
 
 Make showing up have a consequence: if you skip, you owe your partner — the head-to-head financial stake is the one thing that must work.
 
+## Current Milestone: v1.2 Analytics & Admin Dashboard
+
+**Goal:** Instrument SweatPact with comprehensive event tracking and surface all business/product metrics in a protected `/admin` dashboard.
+
+**Target features:**
+- Event instrumentation via PostHog (onboarding funnel, check-ins, pact lifecycle, financial events, feature usage)
+- Onboarding funnel visualization (step-by-step drop-off — ANL-01 from deferred backlog)
+- Check-in rate over time (weekly trend, success/geo-fail rates)
+- Financial & pact overview (active pacts, avg stake, penalties, settlement rate)
+- Feature adoption stats (tab usage, notification CTR, Shortcut vs manual ratio)
+- Engagement & retention metrics (DAU/WAU, streak lengths, churn)
+- Protected `/admin` route — owner-only, SweatPact-branded, separate layout
+
 ## Current State (v1.1)
 
 **Shipped:** 2026-06-19
@@ -108,9 +121,17 @@ Make showing up have a consequence: if you skip, you owe your partner — the he
 
 ### Active
 
-<!-- Next milestone requirements go here. Define via /gsd-new-milestone. -->
+**Analytics Instrumentation**
+- [ ] **ANL-01**: User actions tracked via PostHog across all key product moments
+- [ ] **ANL-02**: Onboarding walkthrough step-by-step drop-off tracked with REQ-IDs
 
-*(No active requirements — run `/gsd-new-milestone` to define v1.2 scope)*
+**Admin Dashboard**
+- [ ] **ADMIN-01**: Protected `/admin` route with owner-only access gate
+- [ ] **ADMIN-02**: Dashboard shows onboarding funnel visualization
+- [ ] **ADMIN-03**: Dashboard shows check-in rate over time
+- [ ] **ADMIN-04**: Dashboard shows financial & pact overview
+- [ ] **ADMIN-05**: Dashboard shows feature adoption stats
+- [ ] **ADMIN-06**: Dashboard shows engagement & retention metrics
 
 ### Out of Scope
 
@@ -181,4 +202,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-19 after v1.1 milestone — Guided Onboarding Walkthrough shipped*
+*Last updated: 2026-06-20 — v1.2 Analytics & Admin Dashboard milestone started*

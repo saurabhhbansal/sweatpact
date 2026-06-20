@@ -1,39 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Guided Onboarding Walkthrough
-current_phase: 6
-status: complete
-stopped_at: context exhaustion at 80% (2026-06-19)
-last_updated: "2026-06-19T12:35:45.764Z"
-last_activity: 2026-06-18
-last_activity_desc: Phase 6 complete
+milestone: v1.2
+milestone_name: Analytics & Admin Dashboard
+status: planning
+last_updated: "2026-06-20T12:46:35.902Z"
+last_activity: 2026-06-20
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
-current_phase_name: skip-on-complete-replay-completion-hardening
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State: SweatPact
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-06-19)
+See: `.planning/PROJECT.md` (updated 2026-06-20)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Planning next milestone (v1.2)
+**Current focus:** v1.2 Analytics & Admin Dashboard
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-06-18 — Phase 6 complete
-
-Progress: [████████░░] 83% (5/6 phases)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-20 — Milestone v1.2 started
 
 ## Performance Metrics
 
@@ -148,6 +142,6 @@ Items acknowledged and carried forward / out of v1.1 scope:
 
 ## Session Continuity
 
-Last session: 2026-06-19T12:35:45.751Z
-Stopped at: context exhaustion at 80% (2026-06-19)
+Last session: 2026-06-19T19:21:17.636Z
+Stopped at: context exhaustion at 77% (2026-06-19)
 Resume file: None
