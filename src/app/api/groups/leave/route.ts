@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getMembership } from "@/lib/groups";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { captureServerEvent } from "@/lib/analytics/server";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +63,11 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  await captureServerEvent(auth.user.id, EVENT.PACT_MEMBER_LEFT, {
+    group_id: groupId,
+    role: membership.role,
+  });
 
   return NextResponse.json({ ok: true, deleted_group: false });
 }

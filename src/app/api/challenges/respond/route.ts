@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
 import { sendPushToUser } from "@/lib/push";
+import { captureServerEvent } from "@/lib/analytics/server";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,6 +93,10 @@ export async function POST(req: NextRequest) {
       url: "/notifications",
       tag: `challenge-declined-${invitation_id}`,
     });
+    await captureServerEvent(auth.user.id, EVENT.PACT_INVITE_DECLINED, {
+      invitation_id,
+      group_id: invitation.group_id ?? null,
+    });
     return NextResponse.json({ ok: true, action: "declined" });
   }
 
@@ -168,6 +174,11 @@ export async function POST(req: NextRequest) {
     if (isNewGroup) await admin.from("groups").delete().eq("id", groupId);
     return releaseAndFail(memberError.message);
   }
+
+  await captureServerEvent(auth.user.id, EVENT.PACT_INVITE_ACCEPTED, {
+    group_id: groupId,
+    method: "invitation",
+  });
 
   // Backfill each member's check-ins from their own "today" so the group's
   // "Today's check-ins" view is correct immediately. Only backfill the inviter
