@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Eye, EyeOff } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
+import { EVENT } from "@/lib/analytics/events";
 
 // ─── CopyField ────────────────────────────────────────────────────────────────
 
@@ -587,7 +589,12 @@ export function ShortcutSetup({
   isFemale: boolean;
 }) {
   const router = useRouter();
+  const posthog = usePostHog();
   const [tab, setTab] = useState<"gym" | "period">("gym");
+
+  useEffect(() => {
+    posthog?.capture(EVENT.FEATURE_SHORTCUT_SETUP_VIEWED);
+  }, []);
 
   const steps =
     tab === "gym"

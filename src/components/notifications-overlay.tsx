@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { NotificationsList, SentInvitations } from "@/app/(tabs)/notifications/client";
+import { usePostHog } from "posthog-js/react";
+import { EVENT } from "@/lib/analytics/events";
 
 type Notification = {
   id: string;
@@ -37,6 +39,7 @@ export function NotificationsOverlay({
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
   const [sent, setSent] = useState<SentInvitation[]>([]);
+  const posthog = usePostHog();
 
   // Keep the latest onClose in a ref so the open effect can stay keyed on
   // `open` alone — onClose is an inline arrow at the call site, so depending on
@@ -112,7 +115,10 @@ export function NotificationsOverlay({
             </div>
           ) : (
             <>
-              <section className="rounded-[2rem] glass-card p-5">
+              <section
+                className="rounded-[2rem] glass-card p-5"
+                onClick={() => posthog?.capture(EVENT.FEATURE_NOTIFICATION_CLICKED)}
+              >
                 <p className="mb-4 text-sm text-white/55">
                   {notifications.length === 0
                     ? "Nothing here yet."
