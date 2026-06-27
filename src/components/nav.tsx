@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/browser";
 import { SweatPactSeal } from "@/components/sweatpact-seal";
 import { NotificationsOverlay } from "@/components/notifications-overlay";
+import { usePostHog } from "posthog-js/react";
+import { EVENT } from "@/lib/analytics/events";
 
 type NavLink = {
   href: string;
@@ -91,6 +93,7 @@ export function MobileNav({ username }: { username?: string }) {
   // stays mounted across tab routes via the (tabs) layout, so this animates
   // on every navigation.
   const prevIndexRef = useRef(activeIndex);
+  const posthog = usePostHog();
   useEffect(() => {
     const prev = prevIndexRef.current;
     const el = indicatorRef.current;
@@ -137,6 +140,7 @@ export function MobileNav({ username }: { username?: string }) {
                 href={link.href}
                 prefetch={true}
                 aria-current={active ? "page" : undefined}
+                onClick={() => posthog?.capture(EVENT.FEATURE_TAB_VISITED, { tab: link.label.toLowerCase() })}
                 className={cn(
                   // iOS-standard tab height ≈ 52 px (was 4.3rem = 69 px — too tall)
                   "group relative z-10 flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[1.65rem] text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
