@@ -66,7 +66,14 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   4. Financial events (penalty issued, settlement recorded) are emitted from `cron/enforce` and survive Vercel function teardown via `await posthog.shutdown()` (no lost flush).
   5. Client-side feature-usage events (tab visits, notification CTR, Shortcut setup viewed) fire using the typed constants from `events.ts`.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Create captureServerEvent server helper + unit tests (INSTR-01)
+- [ ] 08-02-PLAN.md — Instrument onboarding-progress and checkin routes (INSTR-01, INSTR-02)
+- [ ] 08-03-PLAN.md — Instrument pact lifecycle routes: create, join, respond, leave (INSTR-03)
+- [ ] 08-04-PLAN.md — Instrument financial routes: enforcement penalties + settlement recorded (INSTR-04)
+- [ ] 08-05-PLAN.md — Wire client-side feature events: tab visits, notification CTR, shortcut viewed (INSTR-05)
 
 ### Phase 9: Admin Dashboard
 
