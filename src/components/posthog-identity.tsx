@@ -13,7 +13,7 @@ export function PostHogIdentity() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
         // UUID is non-guessable and contains no PII (T-07-03)
         posthog.identify(session.user.id);
       } else if (event === "SIGNED_OUT") {
