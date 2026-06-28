@@ -24,7 +24,7 @@
 ### Admin Shell
 
 - [x] **ADMIN-01**: Protected `/admin` route group with separate layout (no tab nav, no TourProvider); `requireOwner()` server function revalidates session via `getUser()` and returns 404 for non-owners; owner identified by env-listed Supabase UUID (`ADMIN_USER_IDS`)
-- [ ] **ADMIN-02**: Admin layout uses SweatPact brand tokens (same Tailwind color variables) with a data-dense dashboard-appropriate layout distinct from the tab shell
+- [x] **ADMIN-02**: Admin layout uses SweatPact brand tokens (same Tailwind color variables) with a data-dense dashboard-appropriate layout distinct from the tab shell
 
 ### Dashboard — Financial & Check-in (Supabase-backed)
 
@@ -78,7 +78,7 @@
 | INSTR-04 | Phase 8 | Pending |
 | INSTR-05 | Phase 8 | Pending |
 | ADMIN-01 | Phase 9 | Complete |
-| ADMIN-02 | Phase 9 | Pending |
+| ADMIN-02 | Phase 9 | Complete |
 | DASH-01 | Phase 9 | Complete |
 | DASH-02 | Phase 9 | Complete |
 | DASH-03 | Phase 9 | Complete |

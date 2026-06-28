@@ -29,7 +29,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 - [x] **Phase 7: Analytics Foundation** (4 plans) - Stand up PostHog ingestion (SDK init, identify, typed event catalog, reverse proxy, Node 20.20+ runtime) (completed 2026-06-27)
 - [x] **Phase 8: Event Instrumentation** (5/5 plans) - Capture onboarding, check-in, pact, financial, and feature-usage events across server and client (completed 2026-06-28)
-- [ ] **Phase 9: Admin Dashboard** - Owner-gated `/admin` route with branded layout, Supabase-backed financial/check-in/user views, and PostHog-backed funnel/adoption/retention panels
+- [x] **Phase 9: Admin Dashboard** - Owner-gated `/admin` route with branded layout, Supabase-backed financial/check-in/user views, and PostHog-backed funnel/adoption/retention panels (completed 2026-06-28)
 
 ## Phase Details
 
@@ -92,7 +92,7 @@ Plans:
   7. The feature adoption panel shows tab usage, notification CTR, and Shortcut setup rate from PostHog event data.
   8. The engagement & retention panel shows DAU/WAU trend, average streak length, and 14-day churn signal from PostHog + Supabase.
 
-**Plans**: 5/6 plans executed
+**Plans**: 6/6 plans complete
 
 Plans:
 **Wave 1**
@@ -108,7 +108,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 09-06-PLAN.md — Admin shell (layout + error) + dashboard page integration of all 6 panels (ADMIN-01/02, DASH-01..06)
+- [x] 09-06-PLAN.md — Admin shell (layout + error) + dashboard page integration of all 6 panels (ADMIN-01/02, DASH-01..06)
 
 **UI hint**: yes
 
@@ -124,7 +124,7 @@ Plans:
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 4/4 | ✅ Complete | 2026-06-18 |
 | 7. Analytics Foundation | v1.2 | 4/4 | Complete   | 2026-06-27 |
 | 8. Event Instrumentation | v1.2 | 5/5 | ✅ Complete | 2026-06-28 |
-| 9. Admin Dashboard | v1.2 | 5/6 | In Progress|  |
+| 9. Admin Dashboard | v1.2 | 6/6 | Complete   | 2026-06-28 |
 
 ---
 *Roadmap created: 2026-06-14 for milestone v1.1 (Guided Onboarding Walkthrough)*
