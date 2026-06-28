@@ -28,9 +28,9 @@
 
 ### Dashboard — Financial & Check-in (Supabase-backed)
 
-- [ ] **DASH-01**: Financial overview card shows active pact count, total stakes on the line, total penalties issued, and settlement completion rate (penalties settled ÷ penalties owed) — all queried directly from Supabase, never from PostHog
-- [ ] **DASH-02**: Check-in rate over time chart shows weekly check-in success count, geo-fail count, and manual vs Shortcut split as a trend chart; date range selectable (7d / 30d / 90d presets)
-- [ ] **DASH-03**: User overview shows total registered users, users who have completed onboarding, users with at least one active pact, and users who checked in this week
+- [x] **DASH-01**: Financial overview card shows active pact count, total stakes on the line, total penalties issued, and settlement completion rate (penalties settled ÷ penalties owed) — all queried directly from Supabase, never from PostHog
+- [x] **DASH-02**: Check-in rate over time chart shows weekly check-in success count, geo-fail count, and manual vs Shortcut split as a trend chart; date range selectable (7d / 30d / 90d presets)
+- [x] **DASH-03**: User overview shows total registered users, users who have completed onboarding, users with at least one active pact, and users who checked in this week
 
 ### Dashboard — Product Analytics (PostHog-backed)
 
@@ -79,9 +79,9 @@
 | INSTR-05 | Phase 8 | Pending |
 | ADMIN-01 | Phase 9 | Complete |
 | ADMIN-02 | Phase 9 | Pending |
-| DASH-01 | Phase 9 | Pending |
-| DASH-02 | Phase 9 | Pending |
-| DASH-03 | Phase 9 | Pending |
+| DASH-01 | Phase 9 | Complete |
+| DASH-02 | Phase 9 | Complete |
+| DASH-03 | Phase 9 | Complete |
 | DASH-04 | Phase 9 | Pending |
 | DASH-05 | Phase 9 | Pending |
 | DASH-06 | Phase 9 | Pending |
