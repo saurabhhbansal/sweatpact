@@ -34,9 +34,9 @@
 
 ### Dashboard — Product Analytics (PostHog-backed)
 
-- [ ] **DASH-04**: Onboarding funnel view shows step-by-step drop-off across all walkthrough steps using PostHog data; cached with `next: { revalidate }` to respect the 120 req/hr PostHog Query API limit
-- [ ] **DASH-05**: Feature adoption panel shows relative usage of key features (tabs visited, notification CTR, Shortcut setup rate, manual vs Shortcut check-in ratio) from PostHog event data
-- [ ] **DASH-06**: Engagement & retention panel shows DAU/WAU trend, average streak length, and users who have not checked in for 14+ days (churn signal) from PostHog + Supabase
+- [x] **DASH-04**: Onboarding funnel view shows step-by-step drop-off across all walkthrough steps using PostHog data; cached with `next: { revalidate }` to respect the 120 req/hr PostHog Query API limit
+- [x] **DASH-05**: Feature adoption panel shows relative usage of key features (tabs visited, notification CTR, Shortcut setup rate, manual vs Shortcut check-in ratio) from PostHog event data
+- [x] **DASH-06**: Engagement & retention panel shows DAU/WAU trend, average streak length, and users who have not checked in for 14+ days (churn signal) from PostHog + Supabase
 
 ## Future Requirements
 
@@ -82,9 +82,9 @@
 | DASH-01 | Phase 9 | Complete |
 | DASH-02 | Phase 9 | Complete |
 | DASH-03 | Phase 9 | Complete |
-| DASH-04 | Phase 9 | Pending |
-| DASH-05 | Phase 9 | Pending |
-| DASH-06 | Phase 9 | Pending |
+| DASH-04 | Phase 9 | Complete |
+| DASH-05 | Phase 9 | Complete |
+| DASH-06 | Phase 9 | Complete |
 
 **Coverage:**
 

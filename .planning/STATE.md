@@ -6,14 +6,14 @@ current_phase: 09
 current_phase_name: admin-dashboard
 status: executing
 stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-06-28T09:35:22.263Z"
+last_updated: "2026-06-28T09:42:44.946Z"
 last_activity: 2026-06-28
 last_activity_desc: Phase 09 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 15
-  completed_plans: 11
+  completed_plans: 12
   percent: 67
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-20)
 ## Current Position
 
 Phase: 09 (admin-dashboard) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-06-28 — Phase 09 execution started
 
@@ -83,6 +83,7 @@ Progress: [----------] 0/3 phases
 | Phase 06 P04 | 2min | 3 tasks | 9 files |
 | Phase 09 P01 | 2min | 2 tasks | 4 files |
 | Phase 09 P02 | 8min | 2 tasks | 2 files |
+| Phase 09 P03 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: Stubbed server-only in vitest.config.ts so server-only library modules are unit-testable (Next supplies it via build-time alias only)
 - [Phase 09]: Active pact = group with >=2 members; stake = default_penalty_cents (09-02 planner resolution of RESEARCH Open Q1)
 - [Phase 09]: settlementRate denominator = settled + pending; disputed/voided excluded (09-02, RESEARCH A5)
+- [Phase ?]: [Phase 09]: PostHog Query API host hardcoded to https://eu.posthog.com (private), distinct from eu.i. ingestion host (09-03)
+- [Phase ?]: [Phase 09]: HogQL builders static + EVENT-constant-based; days clamped to integer literal (09-03 injection defense T-09-08)
 
 ### Quick Tasks Completed
 
@@ -149,6 +152,6 @@ Still deferred beyond v1.2:
 
 ## Session Continuity
 
-Last session: 2026-06-28T09:35:22.252Z
+Last session: 2026-06-28T09:42:44.935Z
 Stopped at: Completed 09-02-PLAN.md
 Resume file: None
