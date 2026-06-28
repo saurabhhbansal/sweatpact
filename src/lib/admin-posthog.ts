@@ -9,10 +9,10 @@ import { EVENT } from "@/lib/analytics/events";
  * DASH-04 (onboarding funnel), DASH-05 (feature adoption), DASH-06 (engagement).
  *
  * IMPORTANT — host: the Query API is a PRIVATE/authenticated endpoint served at
- * `https://eu.posthog.com`. This is NOT the ingestion host `eu.i.posthog.com`
- * used by `src/lib/analytics/server.ts`. Copying the ingestion host here 404s
- * (Pitfall 2 / RESEARCH). Do not reuse `NEXT_PUBLIC_POSTHOG_HOST` either — that
- * is the browser-only `/ingest` reverse proxy.
+ * `https://eu.posthog.com`. This is NOT the EU ingestion host (the `eu.i.`
+ * subdomain) used by `src/lib/analytics/server.ts`. Copying the ingestion host
+ * here 404s (Pitfall 2 / RESEARCH). Do not reuse `NEXT_PUBLIC_POSTHOG_HOST`
+ * either — that is the browser-only `/ingest` reverse proxy.
  */
 const HOST = "https://eu.posthog.com";
 
