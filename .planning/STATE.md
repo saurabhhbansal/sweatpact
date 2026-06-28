@@ -6,14 +6,14 @@ current_phase: 09
 current_phase_name: admin-dashboard
 status: executing
 stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-06-28T09:49:04.562Z"
+last_updated: "2026-06-28T09:55:50.118Z"
 last_activity: 2026-06-28
 last_activity_desc: Phase 09 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 67
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-20)
 ## Current Position
 
 Phase: 09 (admin-dashboard) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-06-28 — Phase 09 execution started
 
@@ -85,6 +85,7 @@ Progress: [----------] 0/3 phases
 | Phase 09 P02 | 8min | 2 tasks | 2 files |
 | Phase 09 P03 | 5min | 2 tasks | 3 files |
 | Phase 09 P04 | 4min | 2 tasks | 6 files |
+| Phase 09 P05 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [Phase ?]: [Phase 09]: PostHog Query API host hardcoded to https://eu.posthog.com (private), distinct from eu.i. ingestion host (09-03)
 - [Phase ?]: [Phase 09]: HogQL builders static + EVENT-constant-based; days clamped to integer literal (09-03 injection defense T-09-08)
 - [Phase 09]: Admin dashboard panels are pure props views; recharts confined to a "use client" island, RSC cards stay server-only (09-04)
+- [Phase ?]: [Phase 09]: Admin PostHog panels are props-only RSC with a shared EmptyPostHogState; notification metric shown as raw click count, no rate (09-05)
 
 ### Quick Tasks Completed
 
@@ -154,6 +156,6 @@ Still deferred beyond v1.2:
 
 ## Session Continuity
 
-Last session: 2026-06-28T09:48:25.210Z
+Last session: 2026-06-28T09:55:36.032Z
 Stopped at: Completed 09-02-PLAN.md
 Resume file: None
