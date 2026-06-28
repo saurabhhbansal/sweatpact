@@ -8,16 +8,45 @@ import {
   activePactCount,
   bucketCheckinsByWeek,
   computeAverageStreak,
+  mergeGeoFailByWeek,
   rangeStartDay,
   rangeToDays,
   settlementRate,
   totalStakesCents,
   usersWithActivePact,
 } from "@/lib/admin-metrics";
+import {
+  checkinMethodQuery,
+  dauWauQuery,
+  geoFailByWeekQuery,
+  notificationClickQuery,
+  onboardingFunnelQuery,
+  parseAdoptionRows,
+  parseEngagementRows,
+  parseFunnelRows,
+  parseGeoFailRows,
+  runHogQL,
+  shortcutViewQuery,
+  tabUsageQuery,
+} from "@/lib/admin-posthog";
 import { FinancialOverview } from "@/components/admin/financial-overview";
 import { CheckinTrendChart } from "@/components/admin/checkin-trend-chart";
 import { UserOverview } from "@/components/admin/user-overview";
 import { RangeControl } from "@/components/admin/range-control";
+import { OnboardingFunnel } from "@/components/admin/onboarding-funnel";
+import { FeatureAdoption } from "@/components/admin/feature-adoption";
+import { EngagementPanel } from "@/components/admin/engagement-panel";
+
+// Extract a single scalar count from a HogQL `[[count]]` result (the
+// notification-click and shortcut-view queries return one row, one column).
+// Returns null on null/empty/bad shape so FeatureAdoption renders its empty
+// state — mirrors the parser null-contract in admin-posthog.ts.
+function scalarCount(results: unknown[] | null): number | null {
+  if (!results || results.length === 0) return null;
+  const first = results[0];
+  if (Array.isArray(first) && typeof first[0] === "number") return first[0];
+  return null;
+}
 
 // Force-dynamic: the dashboard reads live service-role aggregates on every
 // request (no static prerender). Authorization is already enforced in
@@ -195,6 +224,41 @@ export default async function AdminDashboardPage({
       if (!verifiedRecently.has(uid)) churnCount++;
     }
 
+    // ── PostHog block (DASH-04/05/06) ──────────────────────────────────────
+    // runHogQL never throws (returns null on any failure), and each parser maps
+    // null → empty state, so the PostHog block needs no try/catch of its own.
+    const [
+      funnelResult,
+      tabResult,
+      methodResult,
+      notificationResult,
+      shortcutResult,
+      geoFailResult,
+      dauResult,
+    ] = await Promise.all([
+      runHogQL(onboardingFunnelQuery()),
+      runHogQL(tabUsageQuery()),
+      runHogQL(checkinMethodQuery()),
+      runHogQL(notificationClickQuery()),
+      runHogQL(shortcutViewQuery()),
+      runHogQL(geoFailByWeekQuery(days)),
+      runHogQL(dauWauQuery(days)),
+    ]);
+
+    const funnelRows = parseFunnelRows(funnelResult);
+    const tabUsage = parseAdoptionRows(tabResult);
+    const checkinMethods = parseAdoptionRows(methodResult);
+    const notificationClicks = scalarCount(notificationResult);
+    const shortcutSetups = scalarCount(shortcutResult);
+    const dailyActiveUsers = parseEngagementRows(dauResult);
+
+    // DASH-02 geo-fail series is PostHog-sourced (never written to checkin_events),
+    // so it is merged into the Supabase week buckets BEFORE the chart renders.
+    const mergedBuckets = mergeGeoFailByWeek(
+      weekBuckets,
+      parseGeoFailRows(geoFailResult) ?? []
+    );
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -221,9 +285,32 @@ export default async function AdminDashboardPage({
               <CardTitle>Check-in trend</CardTitle>
             </CardHeader>
             <CardContent>
-              <CheckinTrendChart data={weekBuckets} />
+              <CheckinTrendChart data={mergedBuckets} />
             </CardContent>
           </Card>
+        </div>
+
+        {/* Source divider: Supabase block above, PostHog block below. */}
+        <div className="border-t border-white/10 pt-6">
+          {/* PostHog block (DASH-04/05/06). Streak + churn come from Supabase. */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <OnboardingFunnel rows={funnelRows} />
+            <FeatureAdoption
+              tabUsage={tabUsage}
+              notificationClicks={notificationClicks}
+              shortcutSetups={shortcutSetups}
+              checkinMethods={checkinMethods}
+            />
+            <EngagementPanel
+              dailyActiveUsers={dailyActiveUsers}
+              // No PostHog query yields a true weekly-distinct count (dauWau is
+              // per-day distinct), so WAU is omitted rather than fabricated —
+              // same honesty rule as notificationClicks (no invented metric).
+              weeklyActiveUsers={null}
+              avgStreakLength={Math.round(averageStreakLength)}
+              churn14d={churnCount}
+            />
+          </div>
         </div>
       </div>
     );
