@@ -7,6 +7,10 @@ import {
   geoFailByWeekQuery,
   notificationClickQuery,
   onboardingFunnelQuery,
+  parseAdoptionRows,
+  parseEngagementRows,
+  parseFunnelRows,
+  parseGeoFailRows,
   shortcutViewQuery,
   tabUsageQuery,
 } from "@/lib/admin-posthog";
@@ -66,5 +70,95 @@ describe("HogQL query builders", () => {
     // Defends against a non-integer / negative day count reaching the HogQL string.
     expect(geoFailByWeekQuery(-5)).toContain("INTERVAL 0 DAY");
     expect(dauWauQuery(30.9)).toContain("INTERVAL 30 DAY");
+  });
+});
+
+describe("Zod response parsers", () => {
+  describe("parseFunnelRows", () => {
+    it("maps [step, users] tuples to typed rows", () => {
+      expect(
+        parseFunnelRows([
+          ["welcome", 40],
+          ["gym", 31],
+        ])
+      ).toEqual([
+        { step: "welcome", users: 40 },
+        { step: "gym", users: 31 },
+      ]);
+    });
+
+    it("returns null for null input", () => {
+      expect(parseFunnelRows(null)).toBeNull();
+    });
+
+    it("returns null on a shape mismatch", () => {
+      expect(parseFunnelRows([["welcome", "not-a-number"]])).toBeNull();
+    });
+  });
+
+  describe("parseAdoptionRows", () => {
+    it("maps [label, count] tuples to typed rows", () => {
+      expect(
+        parseAdoptionRows([
+          ["dashboard", 12],
+          ["shortcut", 8],
+        ])
+      ).toEqual([
+        { label: "dashboard", count: 12 },
+        { label: "shortcut", count: 8 },
+      ]);
+    });
+
+    it("returns null for null input", () => {
+      expect(parseAdoptionRows(null)).toBeNull();
+    });
+
+    it("returns null on a shape mismatch", () => {
+      expect(parseAdoptionRows([[123, 4]])).toBeNull();
+    });
+  });
+
+  describe("parseEngagementRows", () => {
+    it("maps [key, count] tuples to typed rows", () => {
+      expect(
+        parseEngagementRows([
+          ["2026-06-27", 5],
+          ["2026-06-28", 7],
+        ])
+      ).toEqual([
+        { key: "2026-06-27", count: 5 },
+        { key: "2026-06-28", count: 7 },
+      ]);
+    });
+
+    it("returns null for null input", () => {
+      expect(parseEngagementRows(null)).toBeNull();
+    });
+
+    it("returns null on a shape mismatch", () => {
+      expect(parseEngagementRows([["2026-06-28", null]])).toBeNull();
+    });
+  });
+
+  describe("parseGeoFailRows", () => {
+    it("maps [week, count] tuples to typed rows", () => {
+      expect(
+        parseGeoFailRows([
+          ["2026-06-22", 2],
+          ["2026-06-29", 1],
+        ])
+      ).toEqual([
+        { week: "2026-06-22", count: 2 },
+        { week: "2026-06-29", count: 1 },
+      ]);
+    });
+
+    it("returns null for null input", () => {
+      expect(parseGeoFailRows(null)).toBeNull();
+    });
+
+    it("returns null on a shape mismatch", () => {
+      expect(parseGeoFailRows([["2026-06-22"]])).toBeNull();
+    });
   });
 });
