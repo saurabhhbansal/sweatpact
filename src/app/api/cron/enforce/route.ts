@@ -51,7 +51,7 @@ async function handle(req: NextRequest) {
       { status: 500 }
     );
   } finally {
-    await posthog.shutdown();
+    await posthog.shutdown().catch(() => {});
   }
 }
 
