@@ -92,12 +92,12 @@ Plans:
   7. The feature adoption panel shows tab usage, notification CTR, and Shortcut setup rate from PostHog event data.
   8. The engagement & retention panel shows DAU/WAU trend, average streak length, and 14-day churn signal from PostHog + Supabase.
 
-**Plans**: 6 plans
+**Plans**: 1/6 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 09-01-PLAN.md — Owner gate: parseAdminUserIds + requireOwner (404, fail-closed) with tests (ADMIN-01)
+- [x] 09-01-PLAN.md — Owner gate: parseAdminUserIds + requireOwner (404, fail-closed) with tests (ADMIN-01)
 - [ ] 09-02-PLAN.md — Supabase metrics helpers: settlement rate, active-pact, ISO-week trend buckets, geo-fail merge (DASH-01/02/03)
 - [ ] 09-03-PLAN.md — PostHog Query API client + static HogQL builders + Zod parsers + env docs (DASH-04/05/06)
 
@@ -124,7 +124,7 @@ Plans:
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 4/4 | ✅ Complete | 2026-06-18 |
 | 7. Analytics Foundation | v1.2 | 4/4 | Complete   | 2026-06-27 |
 | 8. Event Instrumentation | v1.2 | 5/5 | ✅ Complete | 2026-06-28 |
-| 9. Admin Dashboard | v1.2 | 0/6 | Planned | - |
+| 9. Admin Dashboard | v1.2 | 1/6 | In Progress|  |
 
 ---
 *Roadmap created: 2026-06-14 for milestone v1.1 (Guided Onboarding Walkthrough)*

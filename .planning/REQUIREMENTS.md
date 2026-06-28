@@ -23,7 +23,7 @@
 
 ### Admin Shell
 
-- [ ] **ADMIN-01**: Protected `/admin` route group with separate layout (no tab nav, no TourProvider); `requireOwner()` server function revalidates session via `getUser()` and returns 404 for non-owners; owner identified by env-listed Supabase UUID (`ADMIN_USER_IDS`)
+- [x] **ADMIN-01**: Protected `/admin` route group with separate layout (no tab nav, no TourProvider); `requireOwner()` server function revalidates session via `getUser()` and returns 404 for non-owners; owner identified by env-listed Supabase UUID (`ADMIN_USER_IDS`)
 - [ ] **ADMIN-02**: Admin layout uses SweatPact brand tokens (same Tailwind color variables) with a data-dense dashboard-appropriate layout distinct from the tab shell
 
 ### Dashboard — Financial & Check-in (Supabase-backed)
@@ -77,7 +77,7 @@
 | INSTR-03 | Phase 8 | Pending |
 | INSTR-04 | Phase 8 | Pending |
 | INSTR-05 | Phase 8 | Pending |
-| ADMIN-01 | Phase 9 | Pending |
+| ADMIN-01 | Phase 9 | Complete |
 | ADMIN-02 | Phase 9 | Pending |
 | DASH-01 | Phase 9 | Pending |
 | DASH-02 | Phase 9 | Pending |
@@ -87,11 +87,13 @@
 | DASH-06 | Phase 9 | Pending |
 
 **Coverage:**
+
 - v1.2 requirements: 18 total
 - Mapped to phases: 18 ✓
 - Unmapped: 0
 
 **Phase distribution:**
+
 - Phase 7 (Analytics Foundation): FOUND-01..05 (5)
 - Phase 8 (Event Instrumentation): INSTR-01..05 (5)
 - Phase 9 (Admin Dashboard): ADMIN-01, ADMIN-02, DASH-01..06 (8)

@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Analytics & Admin Dashboard
-current_phase: 08
-current_phase_name: event-instrumentation
+current_phase: 09
+current_phase_name: admin-dashboard
 status: executing
-stopped_at: Phase 9 UI-SPEC approved
-last_updated: "2026-06-28T09:12:51.596Z"
-last_activity: 2026-06-27
-last_activity_desc: Phase 08 execution started
+stopped_at: context exhaustion at 81% (2026-06-28)
+last_updated: "2026-06-28T09:28:45.743Z"
+last_activity: 2026-06-28
+last_activity_desc: Phase 09 execution started
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 15
+  completed_plans: 10
   percent: 67
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-20)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 08 — event-instrumentation
+**Current focus:** Phase 09 — admin-dashboard
 
 ## Current Position
 
-Phase: 08 (event-instrumentation) — EXECUTING
-Plan: 1 of 5
+Phase: 09 (admin-dashboard) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-06-27 — Phase 08 execution started
+Last activity: 2026-06-28 — Phase 09 execution started
 
 Progress: [----------] 0/3 phases
 
@@ -81,6 +81,7 @@ Progress: [----------] 0/3 phases
 | Phase 06 P02 | 3min | 2 tasks | 3 files |
 | Phase 06 P03 | 33min | 2 tasks | 4 files |
 | Phase 06 P04 | 2min | 3 tasks | 9 files |
+| Phase 09 P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - No event backfill: PostHog-backed dashboard views (Phase 10) reflect only data captured from Phase 8 onward — acceptable for a < 50-user product.
 
 **v1.1 decisions (locked, shipped):** see PROJECT.md Key Decisions and `.planning/milestones/v1.1-*`.
+
+- [Phase ?]: Stubbed server-only in vitest.config.ts so server-only library modules are unit-testable (Next supplies it via build-time alias only)
 
 ### Quick Tasks Completed
 
@@ -143,6 +146,6 @@ Still deferred beyond v1.2:
 
 ## Session Continuity
 
-Last session: 2026-06-28T08:20:28.961Z
-Stopped at: Phase 9 UI-SPEC approved
+Last session: 2026-06-28T09:27:51.353Z
+Stopped at: context exhaustion at 81% (2026-06-28)
 Resume file: .planning/phases/09-admin-dashboard/09-UI-SPEC.md
