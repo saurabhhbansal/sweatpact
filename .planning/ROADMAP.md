@@ -28,7 +28,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 ### v1.2 Analytics & Admin Dashboard (Phases 7–10)
 
 - [x] **Phase 7: Analytics Foundation** (4 plans) - Stand up PostHog ingestion (SDK init, identify, typed event catalog, reverse proxy, Node 20.20+ runtime) (completed 2026-06-27)
-- [ ] **Phase 8: Event Instrumentation** - Capture onboarding, check-in, pact, financial, and feature-usage events across server and client
+- [x] **Phase 8: Event Instrumentation** (5/5 plans) - Capture onboarding, check-in, pact, financial, and feature-usage events across server and client (completed 2026-06-28)
 - [ ] **Phase 9: Admin Dashboard** - Owner-gated `/admin` route with branded layout, Supabase-backed financial/check-in/user views, and PostHog-backed funnel/adoption/retention panels
 
 ## Phase Details
@@ -69,11 +69,11 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans**: 5 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Create captureServerEvent server helper + unit tests (INSTR-01)
-- [ ] 08-02-PLAN.md — Instrument onboarding-progress and checkin routes (INSTR-01, INSTR-02)
-- [ ] 08-03-PLAN.md — Instrument pact lifecycle routes: create, join, respond, leave (INSTR-03)
-- [ ] 08-04-PLAN.md — Instrument financial routes: enforcement penalties + settlement recorded (INSTR-04)
-- [ ] 08-05-PLAN.md — Wire client-side feature events: tab visits, notification CTR, shortcut viewed (INSTR-05)
+- [x] 08-01-PLAN.md — Create captureServerEvent server helper + unit tests (INSTR-01)
+- [x] 08-02-PLAN.md — Instrument onboarding-progress and checkin routes (INSTR-01, INSTR-02)
+- [x] 08-03-PLAN.md — Instrument pact lifecycle routes: create, join, respond, leave (INSTR-03)
+- [x] 08-04-PLAN.md — Instrument financial routes: enforcement penalties + settlement recorded (INSTR-04)
+- [x] 08-05-PLAN.md — Wire client-side feature events: tab visits, notification CTR, shortcut viewed (INSTR-05)
 
 ### Phase 9: Admin Dashboard
 
@@ -91,7 +91,15 @@ Plans:
   7. The feature adoption panel shows tab usage, notification CTR, and Shortcut setup rate from PostHog event data.
   8. The engagement & retention panel shows DAU/WAU trend, average streak length, and 14-day churn signal from PostHog + Supabase.
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Owner gate: parseAdminUserIds + requireOwner (404, fail-closed) with tests (ADMIN-01)
+- [ ] 09-02-PLAN.md — Supabase metrics helpers: settlement rate, active-pact, ISO-week trend buckets, geo-fail merge (DASH-01/02/03)
+- [ ] 09-03-PLAN.md — PostHog Query API client + static HogQL builders + Zod parsers + env docs (DASH-04/05/06)
+- [ ] 09-04-PLAN.md — Supabase panel components + recharts: financial, user, range control, trend chart (DASH-01/02/03)
+- [ ] 09-05-PLAN.md — PostHog panel components: onboarding funnel, feature adoption, engagement/retention (DASH-04/05/06)
+- [ ] 09-06-PLAN.md — Admin shell (layout + error) + dashboard page integration of all 6 panels (ADMIN-01/02, DASH-01..06)
 **UI hint**: yes
 
 ## Progress
@@ -105,8 +113,8 @@ Plans:
 | 5. Cross-Route Walkthrough & Teaching Content | v1.1 | 4/4 | ✅ Complete | 2026-06-18 |
 | 6. Skip-on-Complete, Replay & Completion Hardening | v1.1 | 4/4 | ✅ Complete | 2026-06-18 |
 | 7. Analytics Foundation | v1.2 | 4/4 | Complete   | 2026-06-27 |
-| 8. Event Instrumentation | v1.2 | 0/? | Not started | - |
-| 9. Admin Dashboard | v1.2 | 0/? | Not started | - |
+| 8. Event Instrumentation | v1.2 | 5/5 | ✅ Complete | 2026-06-28 |
+| 9. Admin Dashboard | v1.2 | 0/6 | Planned | - |
 
 ---
 *Roadmap created: 2026-06-14 for milestone v1.1 (Guided Onboarding Walkthrough)*
