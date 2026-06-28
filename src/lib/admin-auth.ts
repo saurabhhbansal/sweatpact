@@ -9,3 +9,8 @@ export function parseAdminUserIds(raw: string | undefined): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+// Stub — implementation lands in the GREEN step.
+export async function requireOwner(): Promise<string> {
+  return "";
+}
