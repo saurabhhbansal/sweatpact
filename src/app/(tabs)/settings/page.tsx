@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSupabaseRSC, getViewerProfile } from "@/lib/supabase/rsc";
+import { parseAdminUserIds } from "@/lib/admin-auth";
 import { SettingsForm } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,8 @@ export default async function SettingsPage() {
 
   const profile = await getViewerProfile();
   if (!profile) redirect("/login");
+
+  const isOwner = parseAdminUserIds(process.env.ADMIN_USER_IDS).includes(profile.id);
 
   const { data: gyms } = await supabase
     .from("user_gyms")
@@ -46,6 +49,7 @@ export default async function SettingsPage() {
             profile={profile}
             initialGyms={gyms ?? []}
             sharesWithMe={sharesWithMe}
+            isOwner={isOwner}
           />
         </section>
       </main>

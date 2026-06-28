@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Lock, MapPin, Moon, RotateCcw, Smartphone, UserCircle } from "lucide-react";
+import { Bell, LayoutDashboard, Lock, MapPin, Moon, RotateCcw, Smartphone, UserCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +40,12 @@ export function SettingsForm({
   profile,
   initialGyms,
   sharesWithMe = [],
+  isOwner = false,
 }: {
   profile: SettingsProfile;
   initialGyms: Gym[];
   sharesWithMe?: PeriodShare[];
+  isOwner?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -130,6 +132,23 @@ export function SettingsForm({
       ) : null}
 
       <SectionHeader title="Account" icon={Lock} />
+      {isOwner ? (
+        <Link
+          href="/admin"
+          className="flex items-center justify-between rounded-[1.4rem] glass-card px-4 py-3.5 text-sm transition hover:bg-white/[0.06]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08]">
+              <LayoutDashboard className="h-[18px] w-[18px] text-white/60" />
+            </div>
+            <div>
+              <p className="font-medium text-white">Admin dashboard</p>
+              <p className="mt-0.5 text-xs text-white/50">Usage metrics and financial overview</p>
+            </div>
+          </div>
+          <span className="text-white/35">›</span>
+        </Link>
+      ) : null}
       <ChangePasswordButton />
 
       {profile.username ? (

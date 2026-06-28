@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PostHog } from "posthog-node";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runEnforcement } from "@/lib/enforcement";
 import { sendPeriodReminders } from "@/lib/period-notify";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +26,16 @@ async function handle(req: NextRequest) {
   }
   const admin = createAdminClient();
   const now = new Date();
+  const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY ?? "", {
+    host: "https://eu.i.posthog.com",
+    flushAt: 1,
+    flushInterval: 0,
+  });
   try {
     const result = await runEnforcement(admin, now);
+    for (const userId of result.penalized_user_ids) {
+      posthog.capture({ distinctId: userId, event: EVENT.FINANCIAL_PENALTY_ISSUED });
+    }
     // Period reminders are non-critical — a failure here must not abort the run
     // or mask the enforcement result.
     try {
@@ -40,6 +50,8 @@ async function handle(req: NextRequest) {
       { error: "enforcement_failed", detail: err instanceof Error ? err.message : String(err) },
       { status: 500 }
     );
+  } finally {
+    await posthog.shutdown().catch(() => {});
   }
 }
 

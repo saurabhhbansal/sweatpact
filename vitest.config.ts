@@ -3,8 +3,14 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    // Mirror the "@/*" → "src/*" path alias from tsconfig.json.
-    alias: { "@": path.resolve(__dirname, "src") },
+    alias: {
+      // Mirror the "@/*" → "src/*" path alias from tsconfig.json.
+      "@": path.resolve(__dirname, "src"),
+      // Next.js supplies `server-only` via a build-time alias, so it is not a
+      // real installed package. Stub it here so server-only library modules can
+      // be imported and unit-tested under Vitest.
+      "server-only": path.resolve(__dirname, "test/shims/server-only.ts"),
+    },
   },
   test: {
     include: ["src/**/*.test.ts"],

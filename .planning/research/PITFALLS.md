@@ -1,187 +1,155 @@
 # Pitfalls Research
 
-**Domain:** Interactive in-app onboarding / coachmark walkthrough added to a Next.js 14 App Router PWA (React 18, Tailwind + Radix/shadcn, Supabase + RLS, installable PWA)
-**Researched:** 2026-06-14
-**Confidence:** HIGH for codebase-grounded pitfalls (anchoring, z-index/Radix, safe-area, RSC streaming, redirect gate, persistence); MEDIUM for general coachmark-UX pitfalls (cross-checked against tour-library write-ups)
+**Domain:** Adding PostHog analytics + protected owner-only `/admin` dashboard to an existing Next.js 14 App Router + Supabase (RLS) PWA on Vercel
+**Researched:** 2026-06-20
+**Confidence:** HIGH (PostHog SDK split, query rate limits, Supabase auth gate, Recharts SSR all confirmed against official docs); MEDIUM on PWA/service-worker proxy interaction (inferred from proxy docs + PWA mechanics, not a single authoritative source)
 
-> Scope note: These are mistakes specific to *adding a contextual coachmark tour to SweatPact as it exists today*, not generic onboarding advice. Every pitfall is tied to a concrete fact in the current codebase (the `(tabs)` shell, the z-index stack, the redirect-everywhere onboarding gate, server-persisted `onboarding_complete`) or to a known failure mode of spotlight tours in App Router PWAs.
+> Scope note: This is a **brownfield** milestone. The biggest risks are not "how do I set up PostHog" — they are how PostHog's client SDK, reverse proxy, and the new `/admin` gate collide with things SweatPact *already has*: a session-refreshing middleware with an explicit `matcher` exclusion list, an existing service worker, server-authoritative RLS, and Vercel serverless functions that get killed the instant a response returns.
 
 ## Critical Pitfalls
 
-### Pitfall 1: Anchoring coachmarks to elements that aren't mounted yet (RSC streaming + Suspense + async data)
+### Pitfall 1: Server-side events silently dropped because the serverless function exits before flush
 
 **What goes wrong:**
-A coachmark targets an element by CSS selector / id (e.g. the check-in button, the "You owe" ledger card, the gym section) and reads `getBoundingClientRect()` on mount. But in SweatPact the anchor targets live inside Suspense-streamed and `force-dynamic` server content. The `(tabs)/layout.tsx` streams `TopBar`/`BottomBar` behind `<Suspense>` with prop-less nav fallbacks; the dashboard awaits a `Promise.all` of five Supabase queries before its markup exists; the cycle tab only renders for `gender === "female"` after a client fetch in `nav.tsx`. The tour fires before the target paints, so the spotlight lands at `{0,0}`, on the Suspense fallback, or on nothing — an empty highlight in the corner.
+You add `posthog-node` to instrument server events (check-in verified, penalty settled, pact created — exactly the "money" moments that matter most). Events fire in dev (long-lived process) but vanish in production. The funnel/financial numbers in the dashboard are quietly wrong.
 
 **Why it happens:**
-Developers test on a warm cache where streaming is instant, so the target appears "synchronously." The race only shows on cold loads, slow networks, or the very first navigation — exactly a new user's first session, which is the only audience this feature has.
+`posthog-node` batches and flushes asynchronously. On Vercel, the function is frozen/terminated the moment the route returns its response, before the background flush runs. The official docs are explicit: set `flushAt: 1`, `flushInterval: 0`, and **always `await client.shutdown()`** after capturing in a serverless/request context.
 
 **How to avoid:**
-- Anchor via **React refs threaded through context**, not global `document.querySelector` selectors. A ref resolves to the real node only once React has committed it, so the tour can wait on it.
-- Have each step **wait for its target** (e.g. `ResizeObserver`/`IntersectionObserver` or a ref-presence check with a timeout) before showing; never compute position eagerly on tour start.
-- Make the spotlight a function of a *live* rect (observe resize/scroll), not a one-shot measurement.
-- If a target genuinely may not exist (cycle tab for male users; ledger card only when debts exist — see dashboard's `totalOwes === 0 && totalOwed === 0` branch), the step must be declared **conditional/skippable**, not assumed present.
+- Create a single `PostHogClient()` factory in `src/lib/posthog/server.ts` returning a client configured with `flushAt: 1, flushInterval: 0`.
+- In every server capture site, `await posthog.shutdown()` (or `await posthog.flush()`) before the handler returns.
+- Treat server analytics as **best-effort, non-blocking** — wrap in try/catch so a PostHog outage never fails a check-in or settlement (matches SweatPact's existing "silent catch for best-effort operations" convention).
 
 **Warning signs:**
-Spotlight appears top-left or off-screen; highlight covers the skeleton/`loading.tsx` shell instead of content; works locally but QA on a throttled phone reports "the circle points at nothing."
+Event counts in PostHog are far lower than DB row counts; events appear locally but not in prod; intermittent missing events under load.
 
-**Phase to address:**
-The coachmark engine/primitive phase (foundations). Ref-based anchoring + target-ready gating must be designed in before any step content is written.
+**Phase to address:** Instrumentation phase (server SDK setup) — before any dashboard work, because a broken pipeline makes every downstream metric untrustworthy.
 
 ---
 
-### Pitfall 2: Coachmarks anchored to a route's content surviving (or dying) across navigation
+### Pitfall 2: `getSession()` used to gate `/admin` — spoofable owner bypass
 
 **What goes wrong:**
-The walkthrough spans tabs — gym lives in settings, the stakes/money story lives on dashboard and `/groups`, the Shortcut step lives on `/shortcut`. When a step says "now tap Challenges" and the user navigates, the previous step's target unmounts. If the tour controller lives *inside* a page (not the persistent layout), it unmounts on navigation and the tour silently dies. If it lives in the layout but keeps pointing at the old route's selector, the spotlight strands on a node that no longer exists, or jumps to a coincidentally-matching selector on the new page.
+The `/admin` gate is built with `supabase.auth.getSession()` (the obvious choice, and what a lot of tutorials still show). The session/user object from `getSession()` is read from cookies and **is not guaranteed to be revalidated** against the auth server, so it can be spoofed. A crafted cookie can present as the owner and the dashboard — exposing every user's financial data, churn, and PII-adjacent funnels — opens up.
 
 **Why it happens:**
-App Router unmounts page subtrees on navigation but keeps `layout.tsx` mounted (the codebase already relies on this — the nav indicator "glides between tabs" precisely because the nav is in the layout). A tour built as a page-level component doesn't get that persistence for free, and selector-based targeting has no notion of "which route am I on."
+`getSession()` is faster and ubiquitous in older examples. Developers assume "I have a session, therefore the user is who they say." Supabase's own guidance is now unambiguous: **never trust `getSession()` in server code for authorization**; use `getUser()` (or `getClaims()`), which round-trips to the Supabase Auth server to revalidate the token every call.
 
 **How to avoid:**
-- Mount the **tour controller in a persistent shell** (the `(tabs)` layout or root), not inside any single page — mirror exactly how `MobileNav`/`TopNav` are hoisted.
-- Bind each step to **both a route and a target**: the step only activates when `usePathname()` matches its expected route AND its ref/target is present. On mismatch, show a "go to X" affordance rather than a stranded spotlight.
-- Re-acquire the anchor after navigation (refs re-register on the new page's mount); don't cache a detached DOM node across a route change.
-- Drive cross-tab progression by the user's *real* navigation (they tap the real Challenges tab), not by `router.push` inside the tour — this is the whole "let them do real actions" premise.
+- In the `/admin` layout (server component), call `await supabase.auth.getUser()`, then compare `user.id`/`user.email` to an owner allowlist (env var `ADMIN_USER_IDS` or a DB flag — prefer ID over email, emails can be reassigned/changed).
+- On non-owner: `notFound()` (404, don't reveal `/admin` exists) rather than a redirect to a login.
+- Gate at the **layout** level so every nested admin page inherits it; do not rely on the page component alone or on middleware alone.
+- Defense-in-depth: any admin *data* route should also re-check ownership server-side (don't trust the UI gate). SweatPact already re-implements auth per route — keep that discipline here.
 
 **Warning signs:**
-Tour vanishes after the first tab switch; spotlight points at the wrong element after navigating; "resume" lands you mid-tour but on the wrong screen.
+The gate references `getSession()`; the owner check is done only in client code or only in middleware; `/admin` redirects (revealing existence) instead of 404ing.
 
-**Phase to address:**
-Tour orchestration / cross-screen flow phase. The step model (route + target + condition) is a design decision, not a late patch.
+**Phase to address:** Admin route / auth-gate phase — this is the milestone's single highest-severity security item (ADMIN-01).
 
 ---
 
-### Pitfall 3: z-index and portal conflicts with the existing fixed chrome and Radix dialogs
+### Pitfall 3: PostHog reverse proxy collides with the existing middleware matcher and the existing service worker
 
 **What goes wrong:**
-SweatPact has a specific, occupied z-stack: `TopNav` is `z-40`, `MobileNav` is `z-50`, Radix `DialogOverlay`/`DialogContent` are `z-50`, `dropdown-menu` portals over that, and the `InstallGate` is `z-[100]` covering everything. A naive spotlight overlay (`fixed inset-0`) will either (a) sit *under* the `z-50` nav so the highlighted check-in button is dimmed but the bottom nav stays bright and tappable, breaking the "focus the user here" illusion; or (b) sit *above* everything including the gym-picker `Dialog` it's trying to teach, so the user can't actually interact with the thing the coachmark points at; or (c) collide with the `z-[100]` install gate so the tour renders behind the install wall on a non-installed browser.
+The default `us.posthog.com` ingest host is blocked by most ad blockers and privacy browsers, so a chunk of events never arrive. The fix is a same-origin reverse proxy — but bolting one onto SweatPact mishandles **two existing systems**:
+1. SweatPact's `middleware.ts` runs on every request with an explicit `matcher` that *excludes* `api/checkin`, `api/cron`, and static assets. A new proxy path (e.g. `/ph/*`) either gets unnecessarily run through session-refresh middleware (latency, cookie churn) or, if added via Next rewrites, fights the middleware matcher.
+2. SweatPact ships a **service worker (PWA)**. A SW that caches/intercepts fetches can swallow or stale-cache the analytics requests, dropping or replaying events.
 
 **Why it happens:**
-The tour overlay and Radix both use `createPortal` to `document.body` and both fight for the top of the stacking context. Pick one number and something is always wrong, because the requirement is contradictory: the overlay must be *above* the page but *below* the interactive target and any dialog the target opens.
+Proxy guides are written for greenfield apps with no existing middleware and no SW. Brownfield integration is left as an exercise.
 
 **How to avoid:**
-- Treat the spotlight as a **"cutout" overlay, not a blanket**: dim everything via an SVG mask / box-shadow ring around the target's rect, and set `pointer-events: none` on the dim layer while leaving the cutout region click-through to the real element. Do not put an opaque modal between the user and the control they must press.
-- Establish an explicit z-index **above the nav (`z-50`) but reconcile with dialogs**: when a step's action opens a Radix `Dialog` (gym picker, schedule), either raise the dialog above the coachmark or pause/hide the coachmark for the dialog's lifetime, then resume. Decide this per step.
-- Never show the tour while `InstallGate` is visible (`gateVisible` / not standalone) — gate the tour on `display-mode: standalone` just like the rest of the PWA chrome.
-- Reuse the existing `modal={false}` lesson: the codebase already disables Radix scroll-lock on the profile dropdown "to prevent pointer-events:none on <body> when navigating away." A tour that opens dialogs mid-navigation can re-introduce the exact `pointer-events:none` body lock — verify the body is interactive after every step transition.
+- Pick a **non-obvious proxy path** — not `/analytics`, `/tracking`, `/telemetry`, `/posthog` (blockers pattern-match these). Use something app-specific (e.g. `/sp-ingest/*`).
+- Add the proxy path to the middleware `matcher` **exclusion** list, exactly as `api/checkin`/`api/cron` are excluded — the proxy must not run session-refresh logic.
+- Explicitly **exclude the proxy path and PostHog asset requests from service-worker caching** (network-only / SW `fetch` handler bypass). Verify with the SW registered.
+- Set `posthog.init({ api_host: '/sp-ingest', ui_host: 'https://us.posthog.com' })` so links in the toolbar still work.
 
 **Warning signs:**
-The highlighted button is visibly dimmed but unclickable; the bottom nav glows through the overlay; opening the gym dialog hides the coachmark permanently; body becomes unscrollable / unclickable after a step that opened then closed a dialog.
+Events drop only for users with ad blockers; events drop only for installed-PWA users (SW active) but work in a fresh browser tab; the proxy path appears in middleware logs.
 
-**Phase to address:**
-Coachmark engine phase (overlay/spotlight rendering). z-index reconciliation with nav + Radix + install gate is a foundational constraint, not polish.
+**Phase to address:** Instrumentation phase (proxy + client SDK). Must be tested against the *installed PWA*, not just a desktop tab.
 
 ---
 
-### Pitfall 4: Spotlight overlay trapping focus / accessibility regressions
+### Pitfall 4: Admin dashboard exhausts the PostHog Query API 120-requests/hour limit (and is slow)
 
 **What goes wrong:**
-A spotlight that dims the page with a real modal traps keyboard focus inside the tooltip, hides the rest of the app from screen readers (`aria-hidden` on the root), or — worse — leaves the highlighted control reachable by mouse but not by keyboard/SR because the dim layer eats events. Conversely, an overlay with no focus management lets Tab wander into the dimmed-but-still-focusable background, so a keyboard user tabs into invisible controls. Either way the tour, meant to *teach*, makes the app *less* usable than before.
+Each dashboard panel (onboarding funnel, check-in rate, retention, feature adoption) issues its own HogQL query from a server component on every page load. The Query API (`/api/project/:id/query`) is rate-limited to **120 requests/hour** when authenticated with a personal API key. With ~6 panels, ~20 admin page loads/hour blows the budget; panels start 429ing. On top of that, each query round-trips over the network with serverless cold-start latency, so the dashboard feels slow and can hit function timeouts.
 
 **Why it happens:**
-Spotlight overlays are usually built mouse-first on a phone-shaped viewport; focus order and SR semantics are an afterthought. Radix gives the app good a11y defaults for dialogs, but a hand-rolled spotlight overlay inherits none of that.
+Developers treat PostHog like a local DB and query it live per render. The 120/hr limit is easy to miss; it's per personal API key, and dashboards multiply requests.
 
 **How to avoid:**
-- The coachmark tooltip should be an **`aria-live`/labelled region** announced when it appears; describe the target, don't just visually ring it.
-- Keep the **real target focusable and operable** (it's the point — the user does the real action). Don't `aria-hidden` or `inert` the target.
-- Honor `prefers-reduced-motion` — globals.css already branches on it for `animate-fade-up`; the spotlight move/pulse must respect the same media query.
-- Maintain a visible focus ring on the active control; the app's focus-visible rings (`focus-visible:ring-2 ring-white`) must not be obscured by the dim layer.
-- Provide a keyboard path: advance/skip/dismiss reachable by keyboard, Esc dismisses.
+- **Cache aggressively.** Wrap server queries in Next.js `unstable_cache` / `fetch` with `revalidate` (e.g. 1 hour) or a Vercel Cron job that snapshots metrics into a Supabase table the dashboard reads from. PostHog responses are cached by default (`is_cached`) but that doesn't exempt you from the request-count limit — you must cache on *your* side.
+- Batch where possible; don't fire one request per chart on every render.
+- Keep the personal API key (with `Query Read` scope) server-only; never expose it to the client.
+- For early scale (<50 users) a nightly/hourly Cron snapshot into Postgres is simpler, faster, and rate-limit-proof than live querying — and reuses SweatPact's existing Vercel Cron pattern.
 
 **Warning signs:**
-Tab key moves focus to off-screen/dimmed elements; VoiceOver reads nothing when a coachmark appears; the only way to advance is a mouse tap on a small tooltip button.
+Intermittent 429s on the dashboard; dashboard load times of several seconds; metrics that only update when you hard-refresh repeatedly until a panel succeeds.
 
-**Phase to address:**
-Coachmark engine phase, with an explicit a11y verification gate before content phases ship.
+**Phase to address:** Dashboard-data phase (ADMIN-02..06). Decide live-query-with-cache vs. Cron-snapshot up front — it shapes the whole data layer.
 
 ---
 
-### Pitfall 5: A tour that blocks the user, can't be skipped, or teaches instead of letting them act
+### Pitfall 5: Double initialization / duplicate pageviews from the client SDK
 
 **What goes wrong:**
-The walkthrough becomes a gauntlet: forced "Next… Next… Next" through screens the user can't dismiss, or a passive narrated tour ("this is the dashboard, this is the streak ring") that never lets them *do* the real action. This directly violates the milestone goal — "using the real app immediately and never stuck in a tutorial" — and replicates the very front-loaded flow v1.1 is replacing. For a stakes product where the core value is "showing up has a consequence," a tour that delays the first real challenge kills activation.
+PostHog gets initialized more than once (e.g. both in a provider and in `instrumentation-client`, or re-init on every render under React 18 StrictMode double-mount), producing duplicate events and inflated counts. Separately, App Router does **not** reliably auto-capture pageviews on client-side (SPA) navigations, so either pageviews are missing or — once you add manual capture — they fire twice.
 
 **Why it happens:**
-It's easier to build a linear slideshow than a state machine that watches for real user actions. "Skip" gets deferred as a nice-to-have. Teaching copy is easier to write than wiring a coachmark to a real in-context action (set gym, start a challenge).
+The recommended init point changed across PostHog versions (provider vs. `instrumentation-client.ts`). Mixing patterns double-inits. App Router's client navigation doesn't trigger full page loads, so default pageview capture misses route changes unless you add a `PostHogPageView` component.
 
 **How to avoid:**
-- **Skippable anytime** is a first-class requirement (it's in the milestone). A persistent, obvious "Skip tour" / "Skip this step" — not buried. Skipping must not strand the user mid-flow or leave `onboarding_complete` false forever.
-- Each teaching point should advance by the user **completing a real action** (gym saved, challenge created), not by clicking "Next." Tie step completion to the existing success signals: `user_gyms` count > 0, `weekly_goal`/`rest_days` set, a real challenge row created, `webhook_secret` shortcut configured.
-- Never block the core loop: the user must be able to check in / start a challenge even if they ignore the tour entirely.
-- Keep mandatory surface minimal (bare identity only — the milestone's "minimal mandatory start"); everything else is opt-in coachmarks.
+- Initialize **once** via `instrumentation-client.ts` at the app root (current recommended pattern); don't also init in a provider.
+- Disable automatic pageview capture (`capture_pageview: false`) and add a single `PostHogPageView` client component using `usePathname()` + `useSearchParams()`. **Wrap it in `<Suspense>`** — `useSearchParams()` without a Suspense boundary forces the whole route to client-render / can break the build.
+- Guard against StrictMode double-init with an init flag or by relying on the instrumentation-client single-load.
 
 **Warning signs:**
-Usability testers say "let me just use it"; analytics show high tour-start but low first-challenge-created; the only path past a step is a "Next" button; skipping the tour breaks the app or re-prompts forever.
+Pageview/event counts roughly 2× expected; route changes within the app don't show as pageviews; build warning/error about `useSearchParams()` needing Suspense.
 
-**Phase to address:**
-UX/flow design phase (mandatory-start + step model). Skip and act-don't-teach are acceptance criteria, not enhancements.
+**Phase to address:** Instrumentation phase (client SDK).
 
 ---
 
-### Pitfall 6: Tour-version drift — replaying after the UI changed leaves steps pointing at stale targets
+### Pitfall 6: Recharts renders blank (width/height 0) or causes hydration mismatch in App Router
 
 **What goes wrong:**
-The milestone requires replay-from-settings and resume-after-interruption, with progress persisted server-side. Months later a tab is renamed, the ledger card is restructured, or the gym moves from settings to a dialog. A user replays the tour (or resumes a stale persisted position) and the engine drives them to selectors/refs that no longer exist or now mean something else. The spotlight strands; "resume" lands on a step that was deleted; a returning user gets a broken tour that's worse than no tour.
+Charts render blank with console warnings like `width(0) and height(0)... should be greater than 0`, or there's a hydration mismatch error, or the build fails because a Recharts component leaked into a server component.
 
 **Why it happens:**
-Persisted progress stores *step indices or ids* that assume a fixed step set. The UI is a moving target (the codebase is explicitly brownfield/mature and changing). Nobody versions the tour definition, so old persisted state silently mis-maps onto a new step list.
+Recharts is client-only and must be under `"use client"` — it cannot render in an RSC. `ResponsiveContainer` measures its parent on mount; if the parent has no resolved height (common under Suspense, dynamic import, or a flex/grid cell before layout settles) it computes 0×0. SSR of Recharts can also produce server/client markup drift.
 
 **How to avoid:**
-- **Version the tour definition** (e.g. `tour_version`). Persist `{version, completed_step_keys}`, not a raw index. On load, if the persisted version is older, reconcile: skip steps whose target is absent, never replay a step whose key no longer exists.
-- Key steps by **stable semantic keys** ("set_gym", "start_challenge", "understand_money", "shortcut"), not positional index — so reordering/inserting steps doesn't corrupt saved progress.
-- Every step must **degrade gracefully when its target is missing** (already required by Pitfall 1) — that same guard makes version drift non-fatal.
-- "Skip completed setup" (a milestone requirement) is the same mechanism: derive completion from real state (`user_gyms`, `weekly_goal`, `webhook_secret`) at replay time, not from a stale stored flag.
+- Put all chart components behind `"use client"`; give every chart wrapper an **explicit height** (`height={300}`), not `height="50%"` on an unsized parent.
+- Use `<ResponsiveContainer width="100%" height={300}>` with a parent that has a real height.
+- Where SSR causes hydration drift, load the chart via `next/dynamic(() => import(...), { ssr: false })` with a sized skeleton fallback (also keeps the heavy charting JS out of the server bundle).
 
 **Warning signs:**
-Replaying the tour after a UI change shows an empty spotlight; "resume" jumps to a nonexistent screen; a user who already set their gym is taught to set it again.
+`width(0) and height(0)` warnings; charts appear only after a window resize; hydration mismatch errors mentioning chart DOM; charting code imported into a `page.tsx` without `"use client"`.
 
-**Phase to address:**
-Persistence + resume/replay phase. Versioning and semantic step keys are schema decisions made when the progress table is designed.
+**Phase to address:** Dashboard-UI phase (chart rendering).
 
 ---
 
-### Pitfall 7: Mobile/PWA viewport + safe-area issues for the spotlight and tooltip
+### Pitfall 7: Event-schema rot — events that become meaningless as the product evolves
 
 **What goes wrong:**
-The spotlight rect and tooltip are computed against `100vh` and naive coordinates, but SweatPact is an installed PWA with notch/home-indicator insets. The fixed `TopNav` uses `paddingTop: max(env(safe-area-inset-top), 12px)` and the `MobileNav` uses `paddingBottom: max(env(safe-area-inset-bottom), 20px)`. A coachmark tooltip placed at the bottom can render *under* the home indicator or behind the fixed bottom nav; a top tooltip can hide under the notch. Using `vh` instead of `dvh` (the app deliberately uses `100dvh` math in the dashboard) makes the spotlight jump when the iOS URL bar collapses. Scroll position isn't accounted for, so a target below the fold gets a spotlight at the wrong Y.
+Events are named loosely (`button_clicked`, `checkin`) with ad-hoc, inconsistent properties. Six weeks later nobody knows whether `checkin` means "attempted," "geo-verified," or "manual," `snake_case` and `camelCase` props coexist, and the onboarding funnel (the whole point of ANL-01/ANL-02) can't be reconstructed because step names drifted between releases.
 
 **Why it happens:**
-Spotlight math is written desktop-first with `window.innerHeight` and `position: fixed`, ignoring `env(safe-area-inset-*)`, `dvh`, dynamic toolbar resize, and the fact that two fixed bars (z-40 top, z-50 bottom) already occupy the edges.
+Events get added inline at call sites with no central contract; property naming isn't enforced; nobody owns the taxonomy; product changes (e.g. the v1.1 walkthrough rewrite) rename or remove steps without versioning the events.
 
 **How to avoid:**
-- Compute tooltip placement against **`100dvh` and `env(safe-area-inset-*)`**, matching the app's existing conventions; reserve the top 3.5rem+inset and bottom nav+inset as no-go zones for tooltips.
-- If a target is below the fold, **scroll it into view first** (and re-measure after scroll settles) before spotlighting.
-- Recompute on `resize`/`scroll`/`orientationchange` and on iOS dynamic-toolbar changes (the app already has a `RefreshOnFocus`; the tour needs live re-measure, not one-shot).
-- Test in **standalone mode on a notched device**, not just desktop Chrome devtools — the install gate means real users are always standalone.
+- Define a **typed event catalog** in one module (e.g. `src/lib/analytics/events.ts`): `object_action` naming (`pact_created`, `checkin_verified`, `walkthrough_step_completed`), a fixed property schema per event, and a single `capture()` wrapper so no raw strings appear at call sites. Fits SweatPact's "named exports, pure `src/lib` modules" convention and is Vitest-testable.
+- Tie funnel steps to **REQ-IDs** (ANL-02 already asks for this) so step identity survives copy/UX changes.
+- Establish naming conventions before instrumenting (snake_case to match the codebase's DB field style), and a deprecation rule: never silently repurpose an event name — version it (`walkthrough_v2_step_completed`) or add a `version` property.
 
 **Warning signs:**
-Tooltip clipped by the notch or home indicator; spotlight ring offset vertically after scrolling; highlight jumps when the iOS address bar shows/hides; tooltip hidden behind the bottom nav pill.
+Two events for the "same" thing; mixed casing in property keys; funnels that break whenever copy changes; analysts asking "what does this event mean?"
 
-**Phase to address:**
-Coachmark engine phase (positioning), verified on-device during content phases.
-
----
-
-### Pitfall 8: Persistence race conditions when marking steps done (server-side progress)
-
-**What goes wrong:**
-Progress is persisted server-side. Marking a step complete is a write; SweatPact's known concern is "no cross-table transactional guarantees" and "no background job queue — heavy work runs inline." If completing the gym step both saves the gym AND marks the tour step done as two separate writes, a partial failure (gym saved, step-flag write fails — exactly the orphan pattern flagged in CONCERNS.md) leaves the user re-prompted to do something they already did. Rapid step advances (double-tap, fast navigation) can fire overlapping PATCHes that clobber each other (last-write-wins on a JSON blob), losing completed-step keys. Optimistic client state that advances before the server confirms can desync on a failed write, so a refresh resurrects a finished step.
-
-**Why it happens:**
-Tour progress feels trivial ("just a flag") so it skips the rigor applied to financial writes. The existing onboarding even sets `onboarding_complete: true` as a fire-and-forget PATCH in `/onboarding/shortcut/client.tsx`. Coachmark progress is more granular (per-step) and more prone to concurrent updates.
-
-**How to avoid:**
-- Store progress as a **set of completed step keys** updated with an idempotent, additive operation (append-if-absent), not a read-modify-write of a whole blob that races. Prefer a small dedicated column/table with a unique constraint per `(user, step_key)` so a duplicate completion is a no-op, not a clobber.
-- **Derive "done" from real state where possible** rather than a separate flag: a step is complete if `user_gyms.count > 0` / `weekly_goal` set / `webhook_secret` configured. This sidesteps the orphan problem entirely — there's nothing to get out of sync.
-- Make the completion write **idempotent and safe to retry**; don't optimistically mark done before the server acknowledges for anything that gates the mandatory flow.
-- Validate the progress PATCH with Zod (the app's standard; CONCERNS.md notes `/api/profile` PATCH currently lacks it — don't extend that gap).
-
-**Warning signs:**
-A user is re-shown a step they finished; refreshing mid-tour loses progress or re-completes a step; concurrent taps drop a completed key; "resume" disagrees with what the user actually did.
-
-**Phase to address:**
-Persistence + resume/replay phase. Schema (per-step rows vs blob) and "derive from real state" are the core decisions.
+**Phase to address:** Instrumentation phase — the catalog must exist *before* events are sprinkled across 32 routes and the walkthrough.
 
 ---
 
@@ -189,93 +157,97 @@ Persistence + resume/replay phase. Schema (per-step rows vs blob) and "derive fr
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Anchor coachmarks with `document.querySelector('#id')` instead of refs | Fast to wire; no plumbing | Breaks on streamed/conditional targets, route changes, and any markup refactor (Pitfalls 1, 2, 6) | Never for SweatPact — its targets are streamed and route-spanning |
-| Store tour progress as one JSON blob PATCHed read-modify-write | One column, trivial API | Concurrent-update clobber; orphan/desync per CONCERNS.md (Pitfall 8) | Only if single-step writes are serialized and idempotent |
-| Persist step *index* rather than semantic key | Simplest model | Corrupts on any reorder/insert; version drift (Pitfall 6) | Never — UI is brownfield and changing |
-| Opaque full-screen modal overlay for the spotlight | Easy to build, guaranteed "focus" | User can't touch the real control; defeats act-don't-teach; z-fights nav/dialogs (Pitfalls 3, 5) | Never — use a click-through cutout |
-| Hardcode `z-[60]` and move on | Looks fine on the screen you tested | Collides with Radix dialogs / install gate elsewhere (Pitfall 3) | Only after reconciling the full z-stack |
-| Fire-and-forget "mark complete" PATCH (mirrors existing onboarding) | Matches current code | Silent failure re-prompts the user; no retry | Only for non-gating, derive-from-state steps |
+| Live-query PostHog from server components per render (no caching) | Fastest to build; always "fresh" | 429s at 120/hr, slow dashboard, cold-start timeouts | Only behind a cache/`revalidate`; never raw |
+| `capture()` with raw string event names inline at call sites | One line per event | Schema rot, no type safety, funnels break (Pitfall 7) | Never for the core funnel/financial events |
+| Owner allowlist by email instead of user ID | Easy to read/edit | Emails change/reassign → silent privilege drift | Acceptable only with magic-link + verified, ID preferred |
+| Skip the reverse proxy, ingest to `us.posthog.com` directly | No proxy/SW/middleware work | Ad-blocker + privacy-browser users invisible (skewed metrics) | Acceptable only if you accept blind spots and document it |
+| Fire-and-forget server events without `await shutdown()` | No latency added | Events dropped on Vercel (Pitfall 1) | Never on serverless |
+| Recharts SSR on (no `ssr:false`) | Slightly faster first paint | Hydration mismatches, blank charts | OK only when parent height is fixed and no drift observed |
 
 ## Integration Gotchas
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Radix Dialog (gym/schedule pickers the tour opens) | Coachmark overlay sits above the dialog, or Radix scroll-lock leaves `pointer-events:none` on `<body>` after the step | Pause/hide coachmark for the dialog's lifetime or raise the dialog above it; verify `<body>` is interactive after each step (the app already uses `modal={false}` on the dropdown for this exact reason) |
-| Next.js App Router navigation | Tour controller mounted in a page → unmounts on navigation; selector matches wrong page's node | Mount controller in the persistent `(tabs)` layout; bind steps to `pathname` + ref |
-| RSC streaming / Suspense / `force-dynamic` | Tour measures target before streamed content paints | Ref-presence/observer gating; never measure on tour start |
-| PWA standalone + `InstallGate` (`z-[100]`) | Tour renders behind the install wall on non-installed browsers | Gate the tour on `display-mode: standalone`; never run while `InstallGate` is visible |
-| Supabase `/api/profile` PATCH for progress | Unvalidated write (existing gap in CONCERNS.md) | Zod-validate; idempotent additive update; derive completion from real tables |
+| `posthog-node` on Vercel | Capture without flush/shutdown | `flushAt:1, flushInterval:0`, `await shutdown()` per request |
+| `posthog-js` in App Router | Init twice; rely on auto-pageviews | Single `instrumentation-client.ts`; manual `PostHogPageView` in `<Suspense>` |
+| Reverse proxy | Obvious path (`/analytics`), runs through middleware, cached by SW | Unique path, excluded from middleware `matcher`, bypassed in service worker |
+| PostHog Query API | One live query per panel per load | Server-side cache / Cron snapshot into Supabase; `Query Read` key server-only |
+| Supabase auth gate | `getSession()` for authz | `getUser()`/`getClaims()` at admin layout; 404 non-owners |
+| Recharts | Imported into RSC / unsized container | `"use client"`, explicit height, optional `next/dynamic ssr:false` |
+| PWA service worker | Caches PostHog/proxy requests | Network-only bypass for the ingest path |
 
 ## Performance Traps
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Re-measuring target on every `scroll`/`resize` without throttle | Jank/scroll lag while a coachmark is active | `requestAnimationFrame`-throttle measurement; use `ResizeObserver`/`IntersectionObserver` instead of polling | Immediately on low-end phones |
-| Mounting the whole tour engine for users who've finished it | Extra JS + observers on every dashboard load for everyone | Lazy-load the tour module; only mount when there's an active/replayed tour | At scale, on cold loads (the app already worries about cold-load paint) |
-| Per-step network round-trip to mark progress inline | Step transitions feel laggy; ties into "no job queue" inline-work concern | Optimistic-but-idempotent local advance with background confirm; or derive from already-fetched state | When network is slow — i.e. a new user's first session |
+| Per-panel live HogQL queries | Slow dashboard, 429s | Cache/`revalidate` or Cron snapshot | ~120 query requests/hour (any panel count × loads) |
+| Synchronous server capture blocking the request | Slower check-ins/settlements | Best-effort try/catch, flush off the hot path where possible | Immediately under any real traffic spike |
+| Reverse proxy through a function | Extra Vercel function invocations + bandwidth cost | Use edge rewrites where possible; monitor usage | Grows with event volume, not user count |
+| Shipping Recharts in every bundle | Large client JS, slow admin load | `next/dynamic` per chart, admin-only route | Noticeable as chart count grows |
 
 ## Security Mistakes
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Trusting a client-sent "step complete" / "onboarding done" flag without server check | User (or a bug) marks setup complete without doing it; mandatory-start bypassed | Server-authoritatively derive completion from real rows (`user_gyms`, `weekly_goal`, `webhook_secret`); RLS-scope the progress table to the owner |
-| Progress table without RLS | One user reading/altering another's onboarding state | RLS on the new table like every other user-facing table (project standard) |
-| Coachmark copy rendering user-provided text unescaped (e.g. gym name in a tooltip) | XSS via injected content (CONCERNS.md already flags missing sanitization on user text) | Render as text, never `dangerouslySetInnerHTML`; sanitize any echoed user data |
+| `getSession()` gating `/admin` | Spoofed owner → full data + PII exposure | `getUser()` at layout; ID allowlist; 404 non-owners |
+| Owner check only in client/UI | Bypass via direct API call | Re-check ownership in every admin data route (server-side) |
+| Personal API key (Query Read) leaked to client | Anyone queries all analytics | Server-only env var; never in client bundle or `NEXT_PUBLIC_*` |
+| PII / financial detail captured into events | Privacy exposure, PostHog as a data-leak vector | Capture IDs not raw amounts/PII; respect existing server-authoritative boundary |
+| `/admin` reachable without RLS-backed data scoping | Owner UI trusts client-supplied filters | Admin queries still go through trusted server paths; reuse privilege-scoped clients |
+| Redirect (not 404) on non-owner | Reveals `/admin` exists | `notFound()` for non-owners |
 
 ## UX Pitfalls
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Tour teaches ("this is the streak ring") instead of letting the user act | Boredom, drop-off, no real activation | Each step = a real in-context action (set gym, start challenge) |
-| No obvious skip / can't dismiss | Feels trapped; re-creates the front-loaded flow v1.1 is killing | Persistent, obvious skip per-step and whole-tour |
-| Re-teaching already-completed setup | Returning/partially-onboarded users insulted, distrust the app | Skip steps whose real state shows done (derive at runtime) |
-| Spotlight lands on empty space (cold load / missing target) | Looks broken, undermines a stakes product's credibility | Target-ready gating + graceful step skip |
-| Tooltip clipped by notch/home-indicator/bottom nav | Copy unreadable; action button unreachable | Safe-area-aware placement; reserve fixed-bar zones |
-| Forcing `router.push` between steps instead of real navigation | Disorienting teleports; resume lands wrong | Advance on the user's own taps on real nav |
+| Dashboard shows stale/cached numbers with no "as of" label | Owner mistrusts the data | Show `last updated` timestamp (PostHog `is_cached` / snapshot time) |
+| Blank charts during load (Recharts 0×0) | Looks broken | Sized skeleton fallback, explicit chart heights |
+| Corporate gray metric-card grid | Violates SweatPact's "no corporate SaaS dashboard" Out-of-Scope rule | SweatPact-branded, consequence-first admin layout (separate from `(tabs)`) |
+| Counting dev/staging traffic in metrics | Inflated/garbage funnels | Filter dev traffic (disable capture when not production / use a separate project) |
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Anchoring:** Works on a *cold, throttled* load and on the *first* navigation, not just warm cache — verify the spotlight hits streamed/`force-dynamic` content, not the `loading.tsx` skeleton.
-- [ ] **Cross-tab flow:** Tour survives every tab switch and re-acquires its target on the new route; resume lands on the correct screen.
-- [ ] **z-index:** Spotlight is above the page but the highlighted control is still tappable; Radix dialogs the tour opens appear correctly; tour never shows behind the `z-[100]` install gate; `<body>` is interactive after every step.
-- [ ] **a11y:** Keyboard can advance/skip/dismiss; SR announces the coachmark; focus stays on the real target; `prefers-reduced-motion` respected.
-- [ ] **Skip:** Skipping anywhere leaves the app fully usable and doesn't re-prompt forever.
-- [ ] **Replay/version:** Replaying after a UI change degrades gracefully (no empty spotlights); persisted progress uses semantic keys + version, not indices.
-- [ ] **Safe-area:** Verified standalone on a notched device — top and bottom tooltips clear the insets and the fixed bars.
-- [ ] **Persistence:** Marking a step done is idempotent, retry-safe, RLS-scoped, and (ideally) derived from real state; a partial write can't orphan progress.
-- [ ] **Skip-completed:** A user who already set gym/schedule/shortcut is not re-taught those steps.
+- [ ] **Server events:** Often missing `await shutdown()` — verify events appear in PostHog *from a Vercel preview deploy*, not just `npm run dev`.
+- [ ] **Reverse proxy:** Often untested in the installed PWA — verify events still arrive with the **service worker active** and an ad blocker on.
+- [ ] **Admin gate:** Often only checked in the page, not the data routes — verify a non-owner hitting the admin *API* directly gets 403/404.
+- [ ] **`getUser()` vs `getSession()`:** Grep the admin gate — verify no `getSession()` is used for authorization.
+- [ ] **Pageviews:** Often double or missing — verify exactly one pageview per client navigation and `useSearchParams` is inside `<Suspense>`.
+- [ ] **Query budget:** Often unbounded — verify dashboard load issues a *bounded, cached* number of PostHog requests (not N panels × every render).
+- [ ] **Dev traffic:** Often counted — verify local/preview events don't pollute the production project.
+- [ ] **Event catalog:** Often ad-hoc — verify all events flow through the typed wrapper, none as raw strings.
 
 ## Recovery Strategies
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Selector anchoring breaks on streamed/route-changed targets | MEDIUM | Refactor to ref+context anchoring and target-ready gating; touches every step definition |
-| Persisted progress corrupted by version drift / index keys | MEDIUM–HIGH | Migrate stored progress to versioned semantic keys; write a reconciliation that derives completion from real state for existing users |
-| z-index / Radix `pointer-events:none` body lock | LOW–MEDIUM | Centralize the tour z-index token; pause coachmark during dialogs; assert body interactivity after step transitions |
-| Concurrent progress writes clobbering keys | MEDIUM | Move from JSON-blob read-modify-write to per-step rows with a unique constraint (idempotent append) |
-| Tour teaches instead of acts (low activation) | HIGH | Redesign step model around real actions — this is a flow-design redo, not a tweak; cheapest if caught in the UX phase |
+| Dropped server events (no flush) | MEDIUM | Add flush/shutdown; backfill from Supabase rows where the source-of-truth exists (DB is authoritative, PostHog is not) |
+| `getSession()` admin gate shipped | LOW-MEDIUM | Swap to `getUser()`, rotate any exposed data assumptions, audit access logs |
+| Query API 429s | LOW | Introduce caching / Cron snapshot; reduce per-render queries |
+| Schema rot | HIGH | Define catalog retroactively, deprecate old events, version new ones; historical funnels may be unrecoverable |
+| Ad-blocked event loss (no proxy) | LOW | Add reverse proxy; past loss is unrecoverable but DB rows remain the financial source of truth |
+| Recharts blank / hydration | LOW | Add explicit heights / `ssr:false`; isolated to UI |
 
 ## Pitfall-to-Phase Mapping
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| 1. Unmounted/streamed anchor targets | Coachmark engine (foundations) | Cold-load + throttled-network test: spotlight hits real content, not skeleton |
-| 2. Cross-route persistence of the tour | Tour orchestration / cross-screen flow | Walk the full gym→challenge→money→shortcut path across tabs; tour never dies or mis-points |
-| 3. z-index / Radix / install-gate conflicts | Coachmark engine (overlay) | Highlighted control tappable; dialogs render; body interactive after each step; nothing behind install gate |
-| 4. Focus trap / a11y regression | Coachmark engine (a11y gate) | Keyboard + screen-reader pass; reduced-motion honored |
-| 5. Blocking / unskippable / teach-not-act | UX & flow design (mandatory-start + step model) | Skip works everywhere; steps complete via real actions; core loop usable with tour ignored |
-| 6. Tour-version drift on replay | Persistence + resume/replay | Replay after a deliberate UI change → graceful skip, no empty spotlight |
-| 7. PWA safe-area / viewport positioning | Coachmark engine (positioning) | On-device standalone test on a notched phone, scrolled and unscrolled |
-| 8. Progress write races / orphans | Persistence + resume/replay | Concurrent/double-tap completion test; partial-failure test; derive-from-state check |
+| Server events dropped (flush) | Instrumentation (server SDK) | Events visible from a Vercel preview deploy |
+| `getSession()` admin bypass | Admin auth-gate (ADMIN-01) | Non-owner gets 404 on page *and* API; grep shows `getUser()` |
+| Proxy × middleware × service worker | Instrumentation (proxy/client) | Events arrive in installed PWA with ad blocker on |
+| Query API rate limit / latency | Dashboard data (ADMIN-02..06) | Dashboard load issues bounded, cached request count |
+| Double init / duplicate pageviews | Instrumentation (client SDK) | One pageview per navigation; `useSearchParams` in Suspense |
+| Recharts blank / hydration | Dashboard UI | Charts render on first load with no 0×0 warning |
+| Event-schema rot | Instrumentation (catalog first) | All events via typed wrapper; funnel steps carry REQ-IDs |
 
 ## Sources
 
-- SweatPact codebase (HIGH confidence): `src/app/(tabs)/layout.tsx` (Suspense-streamed nav, fixed-bar safe-area math), `src/components/nav.tsx` (`z-40`/`z-50`, `modal={false}` scroll-lock workaround, conditional cycle tab, safe-area insets), `src/components/ui/dialog.tsx` (Radix portal at `z-50`), `src/components/install-gate.tsx` (`z-[100]`, standalone detection), `src/app/(tabs)/dashboard/page.tsx` (`force-dynamic`, awaited `Promise.all`, conditional ledger card, `100dvh` math), `src/app/onboarding/**` + redirect-everywhere `onboarding_complete` gate, `src/lib/supabase/rsc.ts` (profile fields).
-- `.planning/codebase/CONCERNS.md` (HIGH): no cross-table transactions / orphan writes, no job queue (inline work), unvalidated `/api/profile` PATCH, missing input sanitization, untyped complex client state.
-- React product-tour engineering write-ups (MEDIUM): RevereCRE "Product Tours with React" / react-spotlight-tour — refs-over-selectors, wait-for-mount, don't-omit-steps. https://eng.reverecre.com/blog/product-tours-with-react , https://github.com/RevereCRE/react-spotlight-tour
-- Sentry Engineering, "Building a Product Tour in React" (MEDIUM) — anchoring/positioning failure modes. https://sentry.engineering/blog/building-a-product-tour-in-react/
-- Adobe Spectrum "Coach mark" + Material/Appsilon coachmark guidance (MEDIUM) — UX: skippable, contextual, act-don't-teach. https://spectrum.adobe.com/page/coach-mark/
+- PostHog — Next.js library docs (client/server split, `instrumentation-client.ts`, `flushAt:1`/`shutdown()`): https://posthog.com/docs/libraries/next-js — HIGH
+- PostHog — Next.js reverse proxy (rewrites + middleware), non-obvious path guidance: https://posthog.com/docs/advanced/proxy/nextjs and https://posthog.com/docs/advanced/proxy/nextjs-middleware — MEDIUM/HIGH
+- PostHog — Query API reference and rate limits (120/hr personal API key, `is_cached`): https://posthog.com/docs/api/query , https://posthog.com/docs/endpoints/rate-limits — HIGH
+- Supabase — Server-Side Auth for Next.js (`getUser()` vs `getSession()` authorization warning): https://supabase.com/docs/guides/auth/server-side/nextjs — HIGH
+- Recharts — ResponsiveContainer 0×0 / Suspense issue: https://github.com/recharts/recharts/issues/2736 ; App Router charting guides — HIGH
+- SweatPact project context: `.planning/PROJECT.md` (existing middleware matcher excludes `api/checkin`/`api/cron`; PWA service worker; Vercel Cron; RLS; privilege-scoped Supabase clients) — HIGH
 
 ---
-*Pitfalls research for: interactive coachmark onboarding in a Next.js App Router PWA (SweatPact v1.1)*
-*Researched: 2026-06-14*
+*Pitfalls research for: PostHog + protected admin dashboard on a brownfield Next.js 14 App Router + Supabase PWA*
+*Researched: 2026-06-20*

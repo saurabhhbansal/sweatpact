@@ -2,6 +2,16 @@
    Handles push events (display the notification) and notificationclick
    (open or focus the relevant page). Activates immediately on install. */
 
+// Pass /ingest/ requests directly to the network so PostHog analytics bypass
+// service-worker interception for PWA users.
+self.addEventListener("fetch", (event) => {
+  if (event.request.url.includes("/ingest/")) {
+    event.respondWith(fetch(event.request));
+  }
+  // For all other requests, do nothing — fall through to browser default
+  // so push-notification click handling and offline behavior are unaffected.
+});
+
 self.addEventListener("install", () => {
   self.skipWaiting();
 });

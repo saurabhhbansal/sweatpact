@@ -8,6 +8,7 @@ type EnforcementResult = {
   skipped: number;
   weeklyChecked: number;
   errors: number;
+  penalized_user_ids: string[];
 };
 
 // Returns day-of-week for a YYYY-MM-DD string: 0=Sun, 1=Mon, …, 6=Sat
@@ -20,7 +21,7 @@ export async function runEnforcement(
   admin: SupabaseClient,
   now: Date = new Date()
 ): Promise<EnforcementResult> {
-  const result: EnforcementResult = { scanned: 0, penalized: 0, skipped: 0, weeklyChecked: 0, errors: 0 };
+  const result: EnforcementResult = { scanned: 0, penalized: 0, skipped: 0, weeklyChecked: 0, errors: 0, penalized_user_ids: [] };
 
   const { data: profiles, error } = await admin
     .from("profiles")
@@ -52,6 +53,7 @@ export async function runEnforcement(
 
       if (reconciled.status === "missed" && existing?.status !== "missed") {
         result.penalized += 1;
+        result.penalized_user_ids.push(profile.id);
       } else {
         result.skipped += 1;
       }

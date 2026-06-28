@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { captureServerEvent } from "@/lib/analytics/server";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,5 +80,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  await captureServerEvent(auth.user.id, EVENT.FINANCIAL_SETTLEMENT_RECORDED, {
+    obligation_id,
+    group_id: oblig.group_id,
+  });
   return NextResponse.json({ ok: true });
 }

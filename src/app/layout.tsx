@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { InstallGate } from "@/components/install-gate";
 import { SplashScreen } from "@/components/splash-screen";
+import { PostHogProvider } from "@/components/posthog-provider";
+import { PostHogPageview } from "@/components/posthog-pageview";
+import { PostHogIdentity } from "@/components/posthog-identity";
 
 export const metadata: Metadata = {
   title: "SweatPact",
@@ -41,13 +45,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <SplashScreen />
-        <InstallGate>{children}</InstallGate>
-        {/* Dedicated portal target for the coachmark engine (react-joyride
-            portalElement, consumed in Plan 03 via document.getElementById).
-            Sibling of InstallGate so the overlay renders outside the
-            InstallGate/Radix portal subtree. Empty, non-visual container. */}
-        <div id="tour-root" />
+        <PostHogProvider>
+          <Suspense fallback={null}><PostHogPageview /></Suspense>
+          <PostHogIdentity />
+          <SplashScreen />
+          <InstallGate>{children}</InstallGate>
+          {/* Dedicated portal target for the coachmark engine (react-joyride
+              portalElement, consumed in Plan 03 via document.getElementById).
+              Sibling of InstallGate so the overlay renders outside the
+              InstallGate/Radix portal subtree. Empty, non-visual container. */}
+          <div id="tour-root" />
+        </PostHogProvider>
       </body>
     </html>
   );

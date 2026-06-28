@@ -10,6 +10,8 @@ import { haversineMeters } from "@/lib/geo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { localDay, normalizeTimeZone } from "@/lib/time";
+import { captureServerEvent } from "@/lib/analytics/server";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,6 +140,11 @@ export async function POST(req: NextRequest) {
   // allow_unverified — the Shortcut runs on location automations that can fire
   // outside the gym radius; only the verified path is trustworthy there.
   if (!verified && (!body.allow_unverified || body.source === "shortcut")) {
+    // INSTR-02: geo-fail event fires before the 422 return (T-08-02-01: after auth/profile checks confirm user).
+    await captureServerEvent(profile.id, EVENT.CHECKIN_GEO_FAILED, {
+      method: body.source,
+      distance_m: distance,
+    });
     return NextResponse.json(
       { error: "location_outside_radius", distance_m: distance },
       { status: 422 }
@@ -320,6 +327,14 @@ export async function POST(req: NextRequest) {
       localDay: day,
     });
   }
+
+  // INSTR-02: success event — fires for both verified and unverified outcomes.
+  // outcome property distinguishes the two paths for funnel analysis.
+  await captureServerEvent(profile.id, EVENT.CHECKIN_SUBMITTED, {
+    outcome: verified ? "verified" : "unverified",
+    method: body.source,
+    distance_m: distance,
+  });
 
   return NextResponse.json({
     ok: true,

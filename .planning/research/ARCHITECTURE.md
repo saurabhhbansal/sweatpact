@@ -1,287 +1,351 @@
 # Architecture Research
 
-**Domain:** Interactive in-app onboarding / coachmark walkthrough on Next.js 14 App Router (brownfield SweatPact)
-**Researched:** 2026-06-14
-**Confidence:** HIGH (existing codebase grounded; coachmark-library landscape MEDIUM-HIGH)
+**Domain:** PostHog analytics + protected `/admin` dashboard integration into an existing Next.js 14 App Router server-driven monolith (SweatPact)
+**Researched:** 2026-06-20
+**Confidence:** HIGH (PostHog client/server patterns, App Router constraints, Supabase auth integration all verified against official docs and the existing codebase; one MEDIUM area flagged: PostHog HogQL query freshness/caching at scale)
 
 ## Standard Architecture
 
-The walkthrough is a **client-side overlay layer** that sits on top of the already-server-rendered `(tabs)` UI, driven by a **single tour context provider** mounted in the `(tabs)` layout, backed by a **server-persisted progress record** and a thin **read/update API**. It does not replace any existing flow — it orchestrates the *real* setup actions the current `onboarding/` wizard already performs.
+This milestone adds **two loosely-coupled subsystems** that both ride on the existing layered monolith without disturbing the financial/check-in core:
+
+1. **Analytics ingestion** — client + server events flowing *out* to PostHog Cloud.
+2. **Admin dashboard** — a new owner-only route group that pulls data *in* from two sources: Supabase (financial/business truth) and the PostHog Query API (product analytics).
+
+These are deliberately separate. PostHog is a fire-and-forget telemetry sink (never the source of truth for money). Supabase remains authoritative for anything financial. The dashboard *composes* both but never lets PostHog numbers influence enforcement.
+
+### System Overview
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│  (tabs) LAYOUT  (server)  — fetches viewer profile + tour progress     │
-│                                                                        │
-│   ┌────────────────────────────────────────────────────────────────┐  │
-│   │  <TourProvider>  ("use client")   ← tour state lives here       │  │
-│   │   - current stepId / index, running, version, dismissed         │  │
-│   │   - hydrated from server progress (props), persists on change   │  │
-│   │                                                                  │  │
-│   │   ┌─────────────────┐   ┌──────────────────┐                    │  │
-│   │   │ CoachmarkRenderer│   │  Step Registry   │  (static config)  │  │
-│   │   │ (spotlight+card) │◄──│ id→{route,anchor,│                    │  │
-│   │   │  portal overlay  │   │  teach,action}   │                    │  │
-│   │   └────────┬─────────┘   └──────────────────┘                    │  │
-│   │            │ anchors via data-tour="<id>" on live UI            │  │
-│   │   ┌────────▼──────────────────────────────────────────────────┐ │  │
-│   │   │   server-rendered tab pages (dashboard/groups/cycle/...)  │ │  │
-│   │   │   real action surfaces: GymPicker, SchedulePicker,        │ │  │
-│   │   │   ShortcutSecret  (reused from onboarding refactor)       │ │  │
-│   │   └───────────────────────────────────────────────────────────┘ │  │
-│   └──────────────────────────────────────────────────────────────────┘ │
+│                         CLIENT (browser / PWA)                         │
 ├──────────────────────────────────────────────────────────────────────┤
-│  API  /api/onboarding-progress  (GET read · PATCH upsert step/dismiss) │
+│  instrumentation-client.ts  ──init──▶  posthog-js (singleton)          │
+│        │                                      ▲                         │
+│        │                                      │ posthog.capture()       │
+│  ┌─────┴───────┐   ┌──────────────┐   ┌───────┴────────┐                │
+│  │ PageviewTrkr│   │ (tabs) client│   │ Coachmark /    │                │
+│  │ (usePathname│   │ components   │   │ check-in UI    │                │
+│  │  client cmp)│   │              │   │                │                │
+│  └─────────────┘   └──────────────┘   └────────────────┘                │
+└───────────────────────────┬───────────────────────────────────────────┘
+                            │  /ingest/* (rewrite → us.i.posthog.com)
+                            ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                          NEXT.JS SERVER (Vercel, Node runtime)         │
 ├──────────────────────────────────────────────────────────────────────┤
-│  Postgres  onboarding_progress (per-user, RLS self-only)  +  derived   │
-│  completion probes (user_gyms count, weekly_goal, profile_secrets)     │
-└──────────────────────────────────────────────────────────────────────┘
+│  Server-side capture          │   Admin dashboard (RSC)                 │
+│  ┌────────────────────┐       │   ┌──────────────────────────────┐     │
+│  │ src/lib/analytics/ │       │   │ /admin/layout.tsx (owner gate)│    │
+│  │   server.ts        │       │   │      ↓                        │     │
+│  │ (posthog-node,     │       │   │ /admin/page.tsx (RSC)         │     │
+│  │  flushAt:1)        │       │   │   ├─ getAdminMetrics()  ──────┼──▶ Supabase admin
+│  │  ▲ check-in,       │       │   │   └─ posthogQuery()     ──────┼──▶ PostHog Query API
+│  │    settlement,     │       │   │          ↓                    │     │   (HogQL, server-only key)
+│  │    enforcement     │       │   │   <ChartCard/> (client cmps)  │     │
+│  └────────────────────┘       │   └──────────────────────────────┘     │
+├───────────────────────────────┴────────────────────────────────────────┤
+│  Existing: api/**/route.ts (Zod), middleware.ts, cron/enforce          │
+└──────────────────────────┬───────────────────────────┬────────────────┘
+                           ▼                           ▼
+              ┌────────────────────────┐   ┌──────────────────────────┐
+              │   Supabase Postgres    │   │      PostHog Cloud        │
+              │   (RLS, source of      │   │  (events, funnels,        │
+              │    truth — money)      │   │   product analytics)      │
+              └────────────────────────┘   └──────────────────────────┘
 ```
 
 ### Component Responsibilities
 
 | Component | Responsibility | Typical Implementation |
 |-----------|----------------|------------------------|
-| **TourProvider** (new) | Owns live tour state (running, current step, version, dismissed); hydrates from server; debounced-persists changes; exposes `start/next/back/skip/replay` | `"use client"` React context in `(tabs)` layout |
-| **Step Registry** (new) | Declarative list of steps: `id`, target `route`, anchor selector, teaching copy, optional `action`, optional `isComplete(probe)` skip predicate, `tourVersion` | Pure TS module `src/lib/onboarding/steps.ts` (unit-testable) |
-| **CoachmarkRenderer** (new) | Renders spotlight + tooltip card for the active step, anchored to the live DOM element; handles "element not yet in DOM" waiting | Library-backed (Onborda / react-joyride) wrapped in a SweatPact-styled card |
-| **Cross-route navigator** (new) | When the next step lives on another route, push the route, wait for the anchor, then advance | `next/navigation` `useRouter().push` + anchor-ready callback |
-| **Persistence API** (new) | Read + update the per-user progress row | `src/app/api/onboarding-progress/route.ts` (GET/PATCH, Zod) |
-| **Completion probes** (new) | Derive "already done" from real data (gym set? goal set? secret viewed?) so the tour auto-skips | Pure fns in `src/lib/onboarding/completion.ts` over profile + `user_gyms` |
-| **Action surfaces** (refactor) | The gym/schedule/shortcut UIs, extracted from `onboarding/*/client.tsx` so both the wizard and the coachmark can mount them | Shared components in `src/components/onboarding/` |
+| `instrumentation-client.ts` | One-time `posthog.init()` for the whole session | Root file (Next ≥14.2) — no provider needed for init |
+| `PostHogPageview` (client) | Manual `$pageview` on App Router route change | `"use client"` component reading `usePathname()` + `useSearchParams()` |
+| `src/lib/analytics/client.ts` | Thin, typed wrappers over `posthog.capture()` | Named event functions, e.g. `trackCheckin()` — keeps event names centralized |
+| `src/lib/analytics/server.ts` | Server-side capture (`posthog-node`) for trusted/financial events | `flushAt:1, flushInterval:0` per request; `await shutdown()` |
+| `src/lib/analytics/query.ts` | Read product analytics back out via HogQL Query API | `fetch` POST with server-only personal API key, wrapped in cache |
+| `/admin/layout.tsx` | Owner-only auth gate (Supabase) | RSC; `getAuthUser()` + owner-id check → `notFound()` |
+| `/admin/page.tsx` (+ sub-pages) | Compose Supabase + PostHog data, render charts | RSC fetches both sources in parallel, passes plain data to client chart components |
+| `src/lib/admin/metrics.ts` | Pure/Supabase-backed business metrics (pacts, stakes, settlements) | Mirrors existing `src/lib/` domain-module convention; Vitest-tested |
+| Chart components | Visualize metrics | shadcn chart (Recharts) client components |
 
 ## Recommended Project Structure
 
 ```
 src/
+├── instrumentation-client.ts          # NEW — posthog.init(); runs once client-side
+├── middleware.ts                       # MODIFIED — add /ingest matcher exclusion
+├── next.config.mjs                     # MODIFIED — /ingest reverse-proxy rewrites
 ├── app/
-│   ├── (tabs)/
-│   │   ├── layout.tsx                # MODIFIED: wrap children in <TourProvider> (client), pass server progress
-│   │   ├── settings/
-│   │   │   └── client.tsx            # MODIFIED: add "Replay walkthrough" action
-│   │   └── ... (dashboard/groups/cycle/shortcut)   # MODIFIED: add data-tour="<id>" anchors only
-│   ├── onboarding/
-│   │   ├── username/                 # KEPT: mandatory minimal start (identity)
-│   │   ├── schedule|gym|shortcut/    # REFACTORED: page shells thin; logic moves to shared components
-│   │   └── ...
-│   └── api/
-│       └── onboarding-progress/
-│           └── route.ts              # NEW: GET read / PATCH upsert step + dismissed + version
+│   ├── layout.tsx                      # MODIFIED — mount <PostHogPageview/> (client)
+│   ├── (tabs)/…                         # MODIFIED — sprinkle event calls in client cmps
+│   └── admin/                          # NEW — route group, NOT under (tabs)
+│       ├── layout.tsx                  #   owner-only gate + admin shell (own chrome)
+│       ├── page.tsx                    #   overview (RSC composes both sources)
+│       ├── funnel/page.tsx             #   onboarding funnel (PostHog)
+│       ├── checkins/page.tsx           #   check-in rate over time
+│       ├── financial/page.tsx          #   pacts/stakes/settlements (Supabase)
+│       └── _components/                #   admin-only client chart components
+│           ├── chart-card.tsx
+│           ├── funnel-chart.tsx
+│           └── trend-chart.tsx
 ├── components/
-│   ├── onboarding/                   # NEW: extracted, reusable action surfaces
-│   │   ├── gym-picker.tsx            #   (Google Places search + /api/gyms POST)
-│   │   ├── schedule-picker.tsx       #   (weekly_goal + rest_days → /api/profile PATCH)
-│   │   └── shortcut-secret.tsx       #   (User ID + secret copy fields)
-│   └── tour/                         # NEW: the walkthrough machinery
-│       ├── tour-provider.tsx         #   ("use client") context + persistence
-│       ├── coachmark-renderer.tsx    #   spotlight + styled tooltip card
-│       └── coachmark-card.tsx        #   SweatPact-styled tooltip (Tailwind/glass-card)
+│   ├── analytics/
+│   │   └── posthog-pageview.tsx        # NEW — usePathname pageview tracker (client)
+│   └── ui/chart.tsx                    # NEW — shadcn chart primitive (Recharts)
 └── lib/
-    └── onboarding/                   # NEW: pure, testable logic
-        ├── steps.ts                  #   step registry + TOUR_VERSION constant
-        ├── completion.ts             #   isStepComplete(stepId, probe) skip predicates
-        └── completion.test.ts        #   co-located vitest
-supabase/migrations/
-└── 0030_onboarding_progress.sql      # NEW: per-user tour progress table + RLS
+    ├── analytics/
+    │   ├── client.ts                   # NEW — typed posthog.capture() wrappers
+    │   ├── server.ts                   # NEW — posthog-node factory + capture helper
+    │   ├── query.ts                    # NEW — HogQL Query API client (server-only)
+    │   └── events.ts                   # NEW — event-name constants + payload types
+    ├── admin/
+    │   ├── auth.ts                     # NEW — requireOwner() guard (server-only)
+    │   ├── metrics.ts                  # NEW — Supabase business-metric aggregations
+    │   └── metrics.test.ts             # NEW — Vitest, per existing convention
+    └── supabase/                       # UNCHANGED — reuse admin/rsc factories as-is
 ```
 
 ### Structure Rationale
 
-- **`components/onboarding/` (shared action surfaces):** The single most important refactor. The gym/schedule/shortcut logic currently lives *inside* `app/onboarding/*/client.tsx` and is coupled to `router.push("/onboarding/next")`. Extracting it into wizard-agnostic components (props for "what to do on success" instead of hard-coded navigation) lets both the legacy wizard **and** the coachmark mount the identical real action. This is what makes the walkthrough "complete real setup in-context" rather than fake it.
-- **`lib/onboarding/` (pure logic):** Matches the codebase's `src/lib/*` + co-located `*.test.ts` convention. The step registry and completion predicates are the parts most likely to change and most valuable to unit-test (skip logic must be correct or the tour shows redundant steps).
-- **`components/tour/` (machinery):** Isolates the chosen library so it can be swapped. Only `coachmark-renderer.tsx` imports the library directly.
-- **One new API folder** mirrors the "one folder per resource" route convention.
+- **`admin/` as a sibling of `(tabs)/`, not inside it:** `(tabs)/layout.tsx` enforces a *member* gate (username redirect, nav chrome, TourProvider). The admin dashboard needs a *different* gate (owner-only) and *different* chrome (no bottom tab nav, no coachmark engine). Nesting it under `(tabs)` would inherit the wrong layout and force the username/tour machinery onto an internal tool. A separate route group keeps the two shells fully isolated.
+- **`src/lib/analytics/` mirrors the existing `src/lib/` domain-module convention:** event definitions and the server/query clients are pure-ish modules, importable and (for `events.ts`/`metrics.ts`) unit-testable, exactly like `src/lib/money.ts` or `src/lib/period-stats.ts`.
+- **`events.ts` as a single registry:** centralizing event names (`onboarding_step_completed`, `checkin_succeeded`, `settlement_recorded`, …) prevents the classic "typo'd event name" analytics rot and lets ANL-02 attach REQ-IDs as event properties from one place.
+- **`src/lib/admin/auth.ts` separate from metrics:** the owner check is security-critical and reused by both `/admin/layout.tsx` and any future `/api/admin/*` route — give it one home, the way the codebase already isolates the Supabase client factories.
 
 ## Architectural Patterns
 
-### Pattern 1: Server-hydrated client tour state
+### Pattern 1: `instrumentation-client.ts` for init, separate client component for pageviews
 
-**What:** Tour progress is the source of truth in Postgres, but the *live* tour (which step is showing, is it running) is client state. The `(tabs)` server layout reads the progress row once (alongside the existing `getViewerProfile()` request-cache) and passes it as the provider's initial props. The provider never re-fetches on mount — it hydrates from props and persists forward.
+**What:** Initialize the `posthog-js` singleton once in `src/instrumentation-client.ts` (the Next.js-blessed client bootstrap file). Disable automatic pageviews there and fire them manually from a small `"use client"` component mounted in the root layout, because the App Router does not trigger full page loads on client navigation.
 
-**When to use:** Whenever an interactive overlay must survive reloads and resume mid-tour.
+**When to use:** Always, for App Router. This is the current PostHog-recommended pattern (preferred over a `PostHogProvider` purely for init, since init values are fixed for the session anyway).
 
-**Trade-offs:** Keeps RSC/client boundary clean (no client-side data fetch on first paint, no flash); cost is that "resume" granularity is whatever you persist (recommend persisting `last_step_id` on every advance, debounced).
+**Trade-offs:** Pro — survives client navigations, no SSR/hydration issues, no provider re-render churn. Con — you must remember to fire pageviews yourself (`capture_pageview: false`).
 
-```tsx
-// (tabs)/layout.tsx  (server)
-const [profile, progress] = await Promise.all([getViewerProfile(), getTourProgress()]);
-return <TourProvider initialProgress={progress} viewer={{ hasGym, hasGoal, ... }}>{children}</TourProvider>;
+**Example:**
+```typescript
+// src/instrumentation-client.ts
+import posthog from "posthog-js";
+posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+  api_host: "/ingest",              // reverse-proxied (Pattern 5)
+  ui_host: "https://us.posthog.com",
+  capture_pageview: false,          // App Router → manual
+  capture_pageleave: true,
+});
+
+// src/components/analytics/posthog-pageview.tsx
+"use client";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import posthog from "posthog-js";
+export function PostHogPageview() {
+  const pathname = usePathname();
+  const search = useSearchParams();
+  useEffect(() => {
+    posthog.capture("$pageview", { $current_url: window.location.href });
+  }, [pathname, search]);
+  return null;
+}
+// mount <Suspense><PostHogPageview/></Suspense> in app/layout.tsx (useSearchParams needs Suspense)
 ```
 
-### Pattern 2: Anchor-by-attribute, not by ref
+### Pattern 2: Server-side capture for trusted/financial events (`posthog-node`)
 
-**What:** Live tab pages are mostly Server Components; you cannot pass React refs into them from the client provider. Instead, anchor each step to a **stable `data-tour="<step-id>"` attribute** placed on the real UI element. The renderer queries the DOM (`[data-tour="set-gym"]`) when a step activates.
+**What:** For events that must be truthful and cannot be forged by the client — check-in *verified*, settlement recorded, penalty enforced — capture from the server using `posthog-node` at the exact code path that already owns the truth (the API route or the enforcement cron), not from the browser.
 
-**When to use:** Any coachmark over server-rendered or deeply-nested UI you don't want to rewire.
+**When to use:** Any event tied to money or server-authoritative state. Client capture is fine for UI/funnel events (button clicks, tab switches, coachmark steps).
 
-**Trade-offs:** Decouples tour from component internals (only attributes change in tab pages — minimal, low-risk diffs). The renderer must tolerate "anchor not yet mounted" (wait/poll with timeout — both react-joyride `targetWaitTimeout` and Onborda handle this).
+**Trade-offs:** Pro — uncheatable, fires even if the client never loads JS (iOS Shortcut check-ins have *no* browser at all → server capture is the *only* way to track them). Con — must `await shutdown()` (or `flush()`) per serverless invocation or events get dropped when the function freezes; adds a few ms to the request.
 
-### Pattern 3: Cross-route step sequencing via navigate-then-wait
+**Example:**
+```typescript
+// src/lib/analytics/server.ts
+import { PostHog } from "posthog-node";
+export function serverAnalytics() {
+  return new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    flushAt: 1, flushInterval: 0,   // serverless: send immediately
+  });
+}
+// in src/app/api/checkin/route.ts (or enforcement.ts) after verification succeeds:
+const ph = serverAnalytics();
+ph.capture({ distinctId: userId, event: "checkin_verified",
+             properties: { method: "shortcut", group_id } });
+await ph.shutdown();                // CRITICAL on Vercel
+```
+> Note: `api/checkin` and `api/cron` are *excluded* from middleware — that only affects session refresh, not server capture, which is independent. Good: the highest-value events (Shortcut check-ins, cron settlements) are exactly the ones with no client, so server capture is mandatory there.
 
-**What:** Steps carry a target `route`. On `next()`, if the next step's route differs from the current pathname, the provider `router.push(route)`, then waits for the step's anchor to appear before showing the coachmark. Tour state lives in the layout-level provider, which stays mounted across `(tabs)` client navigations (same reason the nav bar persists — see existing `(tabs)/layout.tsx`), so state survives the route change.
+### Pattern 3: Owner-only gate via a route-group layout (Supabase, not NextAuth)
 
-**When to use:** Multi-tab walkthroughs (dashboard → groups → cycle → shortcut).
+**What:** Guard the entire `/admin` tree in `admin/layout.tsx` using the existing Supabase auth, comparing the authenticated user against an allow-list of owner IDs held in a server-only env var. Return `notFound()` (404) rather than `redirect("/login")` so the admin surface is invisible to non-owners (no "this exists but you can't have it" signal).
 
-**Trade-offs:** Requires controlled-index orchestration. Confirmed by react-joyride's own guidance: multi-route tours need controlled mode where you stop, change `stepIndex`, and restart after the target mounts. Onborda/NextStep bake route transitions into the step config, removing most of this glue — a strong reason to prefer them here.
+**When to use:** This single-owner/tiny-team internal dashboard. A DB `is_admin` column or a Postgres `admins` table is the heavier alternative if owners will grow or need per-feature roles — overkill for v1.2 (one owner).
 
-```ts
-// steps.ts
-export const TOUR_VERSION = 1;
-export const STEPS = [
-  { id: "set-gym",   route: "/dashboard", anchor: "set-gym",  teach: "...", action: "gym" },
-  { id: "stakes",    route: "/groups",    anchor: "new-challenge", teach: "..." },
-  { id: "money",     route: "/groups",    anchor: "ledger",   teach: "..." },
-  { id: "shortcut",  route: "/shortcut",  anchor: "secret",   teach: "...", action: "shortcut" },
-] as const;
+**Trade-offs:** Env allow-list — zero migration, instant, but redeploy to change. DB flag — dynamic, RLS-enforceable, but needs a migration + an admin-management path. Recommend **env allow-list now**, leave a note to migrate to a DB flag if a second admin ever appears.
+
+**Example:**
+```typescript
+// src/lib/admin/auth.ts (server-only)
+import "server-only";
+import { getAuthUser } from "@/lib/supabase/rsc";
+const OWNER_IDS = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
+export async function requireOwner() {
+  const user = await getAuthUser();
+  if (!user || !OWNER_IDS.includes(user.id)) return null;
+  return user;
+}
+// src/app/admin/layout.tsx
+import { notFound } from "next/navigation";
+import { requireOwner } from "@/lib/admin/auth";
+export const dynamic = "force-dynamic";
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const owner = await requireOwner();
+  if (!owner) notFound();           // invisible to non-owners
+  return <div className="admin-shell">{children}</div>; // own chrome, no tab nav
+}
+```
+> Reuse `getAuthUser()` from `src/lib/supabase/rsc.ts` — it's already `React.cache()`-memoized, so the layout + page share one auth round trip, matching the existing `(tabs)` pattern. Defense in depth: also call `requireOwner()` inside any `/api/admin/*` route (don't trust the layout alone), exactly as every existing route re-checks `auth.getUser()`.
+
+### Pattern 4: RSC parallel-compose two data sources, hand plain data to client charts
+
+**What:** The admin page is a Server Component. It fetches Supabase business metrics and PostHog HogQL results **in parallel** (`Promise.all`), then passes the resulting plain JSON down to small `"use client"` chart components. Charts never fetch — they receive props.
+
+**When to use:** Every admin page mixing financial truth (Supabase) and product analytics (PostHog).
+
+**Trade-offs:** Pro — one server round trip, no client API keys exposed, no loading spinners for the data itself, charts stay dumb/testable. Con — slowest source gates the page; mitigate with `Suspense` boundaries per card so financial data paints while PostHog queries stream.
+
+**Example:**
+```typescript
+// src/app/admin/page.tsx (RSC)
+import { getAdminMetrics } from "@/lib/admin/metrics";   // Supabase admin client
+import { posthogQuery } from "@/lib/analytics/query";    // HogQL
+import { TrendChart } from "./_components/trend-chart";
+export const dynamic = "force-dynamic";
+export default async function AdminOverview() {
+  const [biz, checkinTrend] = await Promise.all([
+    getAdminMetrics(),                                   // active pacts, avg stake, settlement rate
+    posthogQuery("select toStartOfWeek(timestamp) wk, count() from events " +
+                 "where event='checkin_verified' group by wk order by wk"),
+  ]);
+  return (<>
+    <StatCard label="Active pacts" value={biz.activePacts} />
+    <TrendChart data={checkinTrend.results} />          {/* client component */}
+  </>);
+}
+```
+```typescript
+// src/lib/analytics/query.ts (server-only — personal API key NEVER reaches the client)
+import "server-only";
+export async function posthogQuery(hogql: string) {
+  const res = await fetch(
+    `${process.env.POSTHOG_HOST}/api/projects/${process.env.POSTHOG_PROJECT_ID}/query/`,
+    { method: "POST",
+      headers: { Authorization: `Bearer ${process.env.POSTHOG_PERSONAL_API_KEY!}`,
+                 "Content-Type": "application/json" },
+      body: JSON.stringify({ query: { kind: "HogQLQuery", query: hogql } }),
+      next: { revalidate: 300 },     // cache 5 min — dashboards don't need real-time
+    });
+  if (!res.ok) throw new Error(`posthog_query_${res.status}`);
+  return res.json() as Promise<{ results: unknown[][]; columns: string[] }>;
+}
 ```
 
-### Pattern 4: Real-action coachmarks (in-context completion)
+### Pattern 5: Reverse-proxy PostHog ingestion through `/ingest`
 
-**What:** A step with an `action` doesn't just point at UI — it mounts the extracted action surface (`<GymPicker>`, `<SchedulePicker>`, `<ShortcutSecret>`) inside or beside the coachmark card and calls the *same* APIs the wizard uses (`POST /api/gyms`, `PATCH /api/profile`, read `profile_secrets`). On success the surface reports completion; the provider marks the step done and advances.
+**What:** Route `posthog-js` traffic through your own domain via `next.config.mjs` rewrites so ad/tracker blockers (which block `*.posthog.com` directly) don't silently drop events — critical for funnel accuracy.
 
-**When to use:** The differentiator for this milestone — teach + do in one place.
+**When to use:** Always in production. Cheap insurance against under-counting.
 
-**Trade-offs:** Demands the Pattern-from-structure refactor (shared surfaces). Pays off because there is exactly one code path per setup action, so the wizard and tour can never drift.
+**Trade-offs:** Pro — meaningfully higher capture rate. Con — adds rewrite rules; must also add `/ingest` to the middleware matcher *exclusions* (no session refresh needed on telemetry) and set PostHog `ui_host` so the toolbar still works.
+
+**Example:**
+```javascript
+// next.config.mjs
+async rewrites() {
+  return [
+    { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+    { source: "/ingest/:path*",        destination: "https://us.i.posthog.com/:path*" },
+  ];
+}
+// next.config.mjs also needs: skipTrailingSlashRedirect: true
+```
 
 ## Data Flow
 
-### Request Flow (advance a step that performs a real action)
+### Event ingestion flow (out to PostHog)
 
 ```
-[User taps "Set my gym" in coachmark]
-    ↓
-<GymPicker> (shared) → POST /api/gyms (existing handler, unchanged)
-    ↓                                    ↓
-onSuccess() → TourProvider.markDone("set-gym")        user_gyms row inserted
-    ↓
-PATCH /api/onboarding-progress { stepId:"set-gym", done:true }   (debounced)
-    ↓                                    ↓
-advance to next step                 onboarding_progress upserted (RLS self)
-    ↓
-if next.route !== pathname → router.push(next.route) → wait for anchor → show coachmark
+Client UI action ──▶ posthog.capture() ──▶ /ingest/* (same-origin)
+                                              │ Next rewrite
+                                              ▼
+Server truth event ──▶ posthog-node.capture()──▶  us.i.posthog.com  (events store)
+   (checkin/cron)         + await shutdown()
 ```
 
-### State Management
+### Dashboard read flow (in from both sources)
 
 ```
-Postgres onboarding_progress ──(server read, once)──► TourProvider initialProgress
-                                                            │
-   live: running, stepIndex, dismissed  ◄── user actions ──┤
-                                                            ▼
-                              PATCH /api/onboarding-progress (debounced persist)
+Owner hits /admin
+    ↓
+admin/layout.tsx → requireOwner() → (Supabase getAuthUser) → 404 if not owner
+    ↓ pass
+admin/page.tsx (RSC)
+    ├── getAdminMetrics() ──▶ Supabase admin client ──▶ Postgres  (pacts, stakes, settlements)
+    └── posthogQuery()    ──▶ HogQL Query API (Bearer personal key) ──▶ PostHog  (funnel, retention)
+    ↓ Promise.all → plain JSON
+client chart components (Recharts/shadcn) render
 ```
 
 ### Key Data Flows
 
-1. **Resume:** On any `(tabs)` load, server reads progress; if `mandatory_done && !dismissed && !fully_complete && version === TOUR_VERSION`, provider auto-starts at `last_step_id`.
-2. **Auto-skip already-done steps:** Before showing a step, the provider checks `isStepComplete(stepId, probe)` where `probe = { hasGym, hasWeeklyGoal, hasViewedSecret }` derived server-side from `user_gyms` count, `profiles.weekly_goal`, and a `shortcut_viewed` flag. If complete, it advances without rendering — so a user who already set a gym never sees the gym step.
-3. **Replay:** Settings action PATCHes `dismissed=false` and resets `last_step_id` to the first step (keeps per-step "done" flags so replayed steps that are genuinely done still skip, unless replay is "force show all").
-4. **Version bump for replay:** Incrementing `TOUR_VERSION` (new teaching content) makes resume logic treat the persisted progress as stale and re-offer the tour.
-
-## Migration Shape
-
-```sql
--- 0030_onboarding_progress.sql
-create table if not exists public.onboarding_progress (
-  user_id        uuid primary key references public.profiles(id) on delete cascade,
-  mandatory_done boolean not null default false,   -- minimal identity start completed
-  tour_version   integer not null default 0,       -- version of tour content last seen
-  last_step_id   text,                              -- resume point
-  completed_steps jsonb not null default '[]'::jsonb, -- per-step completion ids
-  dismissed      boolean not null default false,    -- user skipped the walkthrough
-  completed_at   timestamptz,                       -- tour fully finished
-  updated_at     timestamptz not null default now()
-);
-
-alter table public.onboarding_progress enable row level security;
-
-create policy "onboarding_progress_select_own" on public.onboarding_progress
-  for select using (auth.uid() = user_id);
-create policy "onboarding_progress_insert_own" on public.onboarding_progress
-  for insert with check (auth.uid() = user_id);
-create policy "onboarding_progress_update_own" on public.onboarding_progress
-  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-```
-
-**Schema notes:**
-- **`mandatory_done`** replaces the semantic of the existing `profiles.onboarding_complete` for the *minimal start*. Recommendation: keep `profiles.onboarding_complete` as-is (it still gates dashboard redirect today) and have the minimal-start username step set it; let `onboarding_progress` own the *walkthrough* lifecycle. Avoids a risky rewrite of the existing redirect chain in `dashboard/page.tsx`.
-- **`completed_steps` as jsonb array** is the simplest per-step model; a child `onboarding_step_completions(user_id, step_id, completed_at)` table is the normalized alternative if you later need per-step timestamps/analytics. jsonb is sufficient for MVP and matches the codebase's preference for fewer tables.
-- **`tour_version`** vs the code `TOUR_VERSION` constant drives replay: `progress.tour_version < TOUR_VERSION` ⇒ re-offer.
-- A `shortcut_viewed boolean` on `profiles` (or in `completed_steps`) is needed because viewing the secret has no other observable side-effect to probe.
-
-## API Surface
-
-```
-GET   /api/onboarding-progress      → { mandatory_done, tour_version, last_step_id,
-                                         completed_steps, dismissed, completed_at }
-PATCH /api/onboarding-progress      body (Zod, all optional):
-        { stepDone?: string, lastStepId?: string, dismissed?: boolean,
-          tourVersion?: number, completed?: boolean, mandatoryDone?: boolean }
-        → upsert (insert-on-first-write), returns updated row
-```
-
-- Node runtime, `dynamic = "force-dynamic"`, `supabase.auth.getUser()` gate, Zod body — identical shape to existing `/api/profile`.
-- Upsert via the authenticated server client (RLS-scoped, no admin needed since it's self-only and no locked columns).
-- The actual setup actions reuse **existing** endpoints untouched: `POST /api/gyms` (gym), `PATCH /api/profile` (weekly_goal/rest_days), and `profile_secrets` read (shortcut). No new endpoints for those.
-
-## Refactor: mandatory vs deferred split
-
-| Step | Today | After |
-|------|-------|-------|
-| **username** | `/onboarding/username` (step 0/4) | **Mandatory** — kept as the minimal start; on submit sets `mandatory_done` and lands user in `/dashboard` |
-| **schedule** | `/onboarding/schedule` (1/4) | **Deferred** — logic → `<SchedulePicker>`, surfaced as a coachmark on dashboard/profile |
-| **gym** | `/onboarding/gym` (2/4) | **Deferred** — logic → `<GymPicker>`, surfaced as a coachmark on dashboard |
-| **shortcut** | `/onboarding/shortcut` (3/4) | **Deferred** — logic → `<ShortcutSecret>`, surfaced as a coachmark on the shortcut tab |
-
-The redirect chain in `dashboard/page.tsx` (`!username → /onboarding/username`, `!onboarding_complete → /onboarding/schedule`) must change: only the **username** gate remains a hard redirect; the `!onboarding_complete → schedule` redirect is **removed** so users enter the app immediately, and the walkthrough (not a redirect) handles the deferred steps. The legacy `/onboarding/schedule|gym|shortcut` pages can remain as thin shells over the shared components (graceful fallback / direct links) or be deleted once the tour covers them.
-
-## Completion-probe detection ("step already done")
-
-| Step | Probe (server-derived, no new query cost beyond one count) | Skip when |
-|------|------------------------------------------------------------|-----------|
-| set-gym | `count(user_gyms where user_id = me) > 0` | ≥ 1 gym exists |
-| schedule | `profiles.weekly_goal is set` (and/or non-default `rest_days`) | goal already chosen |
-| shortcut | `shortcut_viewed` flag (no side-effect to probe otherwise) | flag true |
-
-Probe values are computed in the `(tabs)` layout (cheap, alongside `getViewerProfile`) and passed to the provider, so skip decisions are made before any coachmark paints — no flicker of a step the user already finished.
+1. **Onboarding funnel (ANL-01/ANL-02):** coachmark client fires `onboarding_step_completed` with `{ step_id, req_id }` → PostHog funnel insight → `/admin/funnel` reads it back via HogQL. The funnel is *defined* in PostHog from these events; the existing server-side `onboarding_progress` table stays the source of truth for resume/replay logic (do not derive product funnels from it — events are richer and time-stamped per attempt).
+2. **Check-in rate over time:** `checkin_verified` / `checkin_geo_failed` captured **server-side** in `api/checkin` and the manual route → weekly aggregation via HogQL → trend chart. (Server capture is non-negotiable here: Shortcut check-ins have no browser.)
+3. **Financial overview:** read **straight from Supabase** (settlements, group stakes) via the admin client in `src/lib/admin/metrics.ts` — never from PostHog. Money is Supabase-authoritative per the project constraints; PostHog financial events are for trend/volume only.
 
 ## Scaling Considerations
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| 0-1k users | Single `onboarding_progress` row per user, jsonb steps — trivial. No concerns. |
-| 1k-100k users | Still trivial: one indexed PK lookup per session, one debounced write per advance. The provider read piggybacks on the existing per-request profile fetch. |
-| 100k+ users | Unchanged; if per-step analytics become a product need, migrate `completed_steps` jsonb → normalized completion table for queryability. |
+| 0-1k users | Everything as-is. `flushAt:1` server capture, 5-min-cached HogQL, single owner gate — all comfortable. |
+| 1k-100k users | Watch HogQL query cost on the dashboard; lean harder on `next: { revalidate }` and consider pre-building PostHog **Insights** and reading saved-insight results instead of raw HogQL each load. Server `await shutdown()` per request is fine; consider batching non-critical server events. |
+| 100k+ users | Move heavy dashboard aggregations to scheduled materialization (a cron writing daily rollups to a Supabase `admin_metrics_daily` table) rather than live HogQL; admin reads the rollup. This also de-risks PostHog API rate limits. |
 
 ### Scaling Priorities
 
-1. **First (non-)bottleneck:** Progress write volume is bounded by tour length (~4 steps) per user lifetime — negligible. Debounce advances to avoid a write per click.
-2. **Second:** None at this layer. The known codebase ceilings (enforcement cron, no transactions) are unrelated to onboarding.
+1. **First bottleneck — PostHog Query API latency/rate on dashboard load.** Fix: aggressive `revalidate` caching (already in Pattern 4) + parallel `Promise.all`; charts behind per-card `Suspense` so the page never blocks on the slowest query.
+2. **Second bottleneck — dropped server events under serverless concurrency.** Fix: ensure every server-capture path `await`s `shutdown()`/`flush()`; never fire-and-forget `posthog-node` on Vercel (the function freezes and the event is lost). This is the single most common PostHog-on-Vercel bug.
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Tour state in a route or URL param
+### Anti-Pattern 1: Wrapping the whole app in a `PostHogProvider` just to init
 
-**What people do:** Encode the current step in the pathname (`/onboarding/tour/3`) or wrap tabs in a new route group.
-**Why it's wrong:** Fights the requirement that the user is in the *real live app* immediately; breaks deep links and the existing `(tabs)` layout/nav persistence.
-**Do this instead:** Keep the user on real routes; hold step state in the layout-level client provider; persist to the DB, not the URL.
+**What people do:** Create a `providers.tsx` client component that calls `posthog.init()` in `useEffect` and wraps `{children}` in root layout.
+**Why it's wrong:** Forces the entire tree under a client boundary, can double-init under React strict mode, and init values are session-fixed anyway so the provider buys nothing. It also collides awkwardly with the existing server-driven `(tabs)` layout.
+**Do this instead:** `instrumentation-client.ts` for init + a tiny `<PostHogPageview/>` client component for route-change pageviews (Pattern 1). Keep the rest of the tree server-rendered.
 
-### Anti-Pattern 2: Faking the setup actions inside the tour
+### Anti-Pattern 2: Querying PostHog from a client component (or shipping the personal API key)
 
-**What people do:** Build tour-only gym/schedule inputs that write through a new "tour" endpoint.
-**Why it's wrong:** Duplicates business logic, drifts from the wizard, and risks the financial/verification invariants (gym geo data).
-**Do this instead:** Extract the existing action UIs into shared components that call the existing `/api/gyms` and `/api/profile` endpoints — one code path.
+**What people do:** `fetch('/api/projects/.../query')` from the dashboard client with the personal API key in `NEXT_PUBLIC_*`.
+**Why it's wrong:** The **personal API key has account-wide read access** — exposing it in client bundles is a credential leak far worse than the project token. The project token (`NEXT_PUBLIC_POSTHOG_KEY`) is write-only and safe to ship; the **personal/query key must never be `NEXT_PUBLIC_`**.
+**Do this instead:** Query only from RSC / server modules marked `import "server-only"` (Pattern 4). Two distinct keys: public project token (client, ingest) vs server personal key (dashboard reads).
 
-### Anti-Pattern 3: Driving `stepIndex` from a `useEffect` reacting to app state
+### Anti-Pattern 3: Putting `/admin` inside the `(tabs)` group
 
-**What people do:** Sync the library's controlled index off a `useEffect` watching route/state.
-**Why it's wrong:** Documented react-joyride failure mode — desyncs the overlay lifecycle and breaks keyboard/overlay handlers.
-**Do this instead:** Use the library's async before/after-step hooks (Onborda/NextStep route config, or joyride callback) to perform navigation, then advance.
+**What people do:** Add `admin/` under `src/app/(tabs)/` to reuse the shell.
+**Why it's wrong:** Inherits the username-redirect gate, the bottom tab nav, the TourProvider, and the coachmark engine — none of which belong on an internal owner tool, and the member gate is the *wrong* authorization boundary.
+**Do this instead:** Separate `app/admin/` route group with its own `layout.tsx` and owner gate (Pattern 3).
 
-### Anti-Pattern 4: Anchoring coachmarks with React refs into Server Components
+### Anti-Pattern 4: Treating PostHog as a source of financial truth
 
-**What people do:** Try to forward refs from the client provider into server-rendered tab pages.
-**Why it's wrong:** Server Components can't receive client refs; forces converting pages to client components.
-**Do this instead:** `data-tour="<id>"` attributes + DOM query at activation (Pattern 2).
+**What people do:** Compute "settlement rate" or "amount owed" from PostHog events on the dashboard.
+**Why it's wrong:** PostHog events are lossy (ad-blockers, dropped server flushes, sampling) and explicitly *not* the system of record. Money is Supabase-authoritative per project constraints.
+**Do this instead:** Read all financial/pact metrics from Supabase (`src/lib/admin/metrics.ts`); use PostHog only for product/behavioral analytics (funnels, adoption, retention).
+
+### Anti-Pattern 5: Forgetting middleware/matcher updates
+
+**What people do:** Add `/ingest` and `/admin` without touching `middleware.ts`.
+**Why it's wrong:** `/ingest` telemetry doesn't need (and shouldn't pay for) a Supabase session refresh; `/admin` *does* need session cookies fresh for the owner gate to work. The current matcher already excludes `api/checkin`/`api/cron` and static assets.
+**Do this instead:** Add `ingest` to the matcher exclusion list (like `api/checkin`); leave `/admin` covered by middleware so the owner's session stays refreshed.
 
 ## Integration Points
 
@@ -289,43 +353,46 @@ Probe values are computed in the `(tabs)` layout (cheap, alongside `getViewerPro
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| Google Places | Reuse `/api/places/search` + `/api/places/details` via `<GymPicker>` | No change; already proxied/rate-limited |
-| Coachmark library | Single import inside `coachmark-renderer.tsx` | Prefer App-Router-native (Onborda/NextStep) for built-in routing + `"use client"` provider pattern; react-joyride is the mature fallback but needs hand-rolled cross-route controlled mode and is React-18-only (fine here, but not React-19-ready) |
+| PostHog Cloud (ingest) | `posthog-js` via `/ingest` reverse proxy; `posthog-node` server-side | Project token is `NEXT_PUBLIC_`; reverse proxy beats ad-blockers; `await shutdown()` server-side on Vercel |
+| PostHog Query API (read) | RSC `fetch` POST to `/api/projects/:id/query/`, HogQL body, Bearer **personal** key | Server-only key; `query:read` scope; cache with `next.revalidate` (~5 min); default 100-row limit, up to 50k with explicit LIMIT |
+| Supabase (dashboard reads) | Existing `createAdminClient()` (service-role, bypasses RLS) inside `src/lib/admin/metrics.ts` | Already server-only; reuse as-is — no new client factory needed |
+| Vercel | env vars for both PostHog keys; Node runtime on admin + capture routes | `runtime = "nodejs"` already standard for admin-client routes; same here |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| TourProvider ↔ tab pages | DOM `data-tour` attributes (one-way anchor) | Tab page diffs are attribute-only, low risk |
-| TourProvider ↔ action surfaces | props/callbacks (`onComplete`) | Surfaces are wizard-agnostic; same components power legacy `/onboarding/*` |
-| TourProvider ↔ persistence | `/api/onboarding-progress` (debounced PATCH) | RLS self-only; no admin client needed |
-| Action surfaces ↔ existing APIs | `POST /api/gyms`, `PATCH /api/profile`, `profile_secrets` read | Unchanged endpoints — guarantees no logic drift |
+| client UI ↔ `src/lib/analytics/client.ts` | direct import, typed `capture()` wrappers | event names from `events.ts` registry — never raw strings at call sites |
+| `api/checkin` & `cron/enforce` ↔ `src/lib/analytics/server.ts` | direct import inside existing handler, post-success | additive only — must not alter financial control flow; wrap in try/catch so a PostHog outage never fails a check-in |
+| `/admin` RSC ↔ `src/lib/admin/metrics.ts` | direct async import | Supabase admin client; unit-test the pure aggregation shape with Vitest |
+| `/admin` RSC ↔ `src/lib/analytics/query.ts` | direct async import | server-only HogQL; the only place the personal key is read |
+| `/admin/layout.tsx` ↔ `src/lib/admin/auth.ts` | `requireOwner()` | reuses memoized `getAuthUser()` from `rsc.ts`; re-checked in any `/api/admin/*` |
 
-## Suggested Build Order (dependencies)
+## Suggested Build Order (for the roadmap)
 
-1. **Migration `0030_onboarding_progress` + `/api/onboarding-progress` (GET/PATCH).** Foundation; nothing depends on UI. Add `shortcut_viewed` (and decide `mandatory_done` vs reusing `onboarding_complete`).
-2. **`lib/onboarding/steps.ts` + `completion.ts` (+ tests).** Pure, no UI deps; defines the contract everything else consumes.
-3. **Extract shared action surfaces** (`components/onboarding/gym-picker|schedule-picker|shortcut-secret`) and re-point the legacy `onboarding/*` pages at them. Independently shippable, de-risks the refactor before the tour exists.
-4. **`TourProvider` + persistence wiring**, mounted in `(tabs)/layout.tsx`, hydrated from server progress + probes. No coachmarks yet — verify state/resume/persist.
-5. **`CoachmarkRenderer` + `CoachmarkCard`** (library integration), single-route steps first.
-6. **Cross-route sequencing** (navigate-then-wait) once single-route works.
-7. **Add `data-tour` anchors** to dashboard/groups/cycle/shortcut and the four teaching steps; wire action steps to the shared surfaces.
-8. **Skip-on-complete + minimal-start redirect change** (remove `!onboarding_complete → /onboarding/schedule`).
-9. **Replay from Settings + version bump path.**
+1. **Analytics foundation** — `next.config.mjs` rewrites, `instrumentation-client.ts`, `PostHogPageview`, env keys, `events.ts` registry, middleware matcher update. Ship pageviews first; verify capture before anything else.
+2. **Event instrumentation (ANL-01/02)** — client wrappers + sprinkle calls (coachmark steps with REQ-IDs, tab usage); **server capture** in `api/checkin` and `cron/enforce` (highest-value, no-browser events). Co-locate event-name tests.
+3. **Admin shell + owner gate (ADMIN-01)** — `app/admin/` route group, `requireOwner()`, branded chrome, `notFound()` for non-owners. No data yet — prove the gate.
+4. **Supabase-backed cards (ADMIN-04)** — `src/lib/admin/metrics.ts` + Vitest; financial/pact overview reads straight from Postgres. Independent of PostHog data latency.
+5. **PostHog-backed cards (ADMIN-02/03/05/06)** — `query.ts` HogQL client, funnel/check-in-rate/adoption/retention charts; requires step 2's events to have accumulated.
 
-Steps 1-3 are parallelizable and unblock the rest; 4 gates 5-9.
+> Order rationale: ingestion must exist before any dashboard can read it; the owner gate must exist before any data is exposed; Supabase cards can land before PostHog cards because they don't depend on event backfill, de-risking the dashboard's first visible win.
+
+## Notable Decisions / Caveats
+
+- **`@posthog/next` is pre-release** (as of research date PostHog explicitly flags it "not production-ready; API may change"). It bundles provider + server client + proxy + identity sync nicely, but for a shipping product use the **stable manual setup** (`posthog-js` + `posthog-node` + manual rewrites) described above. Revisit `@posthog/next` once it hits stable — it would collapse Patterns 1, 2, and 5 into one package.
+- **Chart library:** no chart lib exists in the codebase today. Recommend **shadcn `chart` (Recharts)** — it's the natural fit for the existing shadcn/Radix/Tailwind stack and ships copy-in components, avoiding a heavyweight dependency. Add via the shadcn CLI; charts are client components fed by RSC data.
+- **No existing owner/admin concept** in the schema (verified — no `is_admin`, no `admins` table; `role: "owner"` exists only on `group_members`, which is per-group, not platform-admin). The env allow-list (Pattern 3) introduces the platform-owner concept cleanly without a migration.
 
 ## Sources
 
-- [Evaluating tour libraries for React — Sandro Roth](https://sandroroth.com/blog/evaluating-tour-libraries/) (MEDIUM)
-- [React Joyride vs Shepherd vs Driver.js vs Intro.js 2026 benchmark — usertourkit](https://usertourkit.com/blog/react-tour-library-benchmark-2026) (MEDIUM)
-- [react-joyride: How It Works (controlled mode)](https://react-joyride.com/docs/how-it-works) (HIGH)
-- [react-joyride multi-route tour discussion #1000 / #756](https://github.com/gilbarbara/react-joyride/discussions/1000) (HIGH)
-- [Onborda — App Router docs (provider in layout, routing integration)](https://www.onborda.dev/docs/app-router) (HIGH)
-- [NextStep — lightweight Next.js onboarding library](https://nextstepjs.com/docs/v1) (MEDIUM)
-- [What product tour tool works with Next.js App Router — userTourKit](https://usertourkit.com/blog/product-tool-nextjs-app-router) (MEDIUM)
-- Existing codebase (HIGH): `(tabs)/layout.tsx`, `onboarding/*/client.tsx`, `api/profile/route.ts`, `lib/supabase/rsc.ts`, `migrations/0012_user_gyms.sql`, `0014_onboarding_complete.sql`
+- [PostHog — Next.js library docs](https://posthog.com/docs/libraries/next-js) — `instrumentation-client.ts` init, App Router pageviews, `posthog-node` server capture, reverse proxy (HIGH)
+- [PostHog — `@posthog/next` package](https://posthog.com/docs/libraries/next-js/posthog-next) — confirmed **pre-release / not production-ready** as of research date; recommend manual setup instead (HIGH)
+- [PostHog — Query API reference](https://posthog.com/docs/api/query) — HogQL `POST /api/projects/:id/query/`, Bearer personal key, `query:read` scope, row limits (HIGH)
+- [PostHog — Next.js reverse proxy](https://posthog.com/docs/advanced/proxy/nextjs) — `/ingest` rewrites, `skipTrailingSlashRedirect` (HIGH)
+- [Vercel KB — PostHog with Next.js App Router](https://vercel.com/kb/guide/posthog-nextjs-vercel-feature-flags-analytics) — Vercel-specific serverless flush guidance (MEDIUM)
+- Existing codebase: `src/middleware.ts`, `src/app/layout.tsx`, `src/app/(tabs)/layout.tsx`, `src/lib/supabase/{rsc,server,admin,browser}.ts`, `src/app/api/groups/create/route.ts` (HIGH — direct read)
 
 ---
-*Architecture research for: in-app coachmark walkthrough on Next.js App Router (SweatPact v1.1)*
-*Researched: 2026-06-14*
+*Architecture research for: PostHog analytics + protected /admin dashboard in a Next.js 14 App Router monolith*
+*Researched: 2026-06-20*

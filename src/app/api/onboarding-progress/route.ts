@@ -7,6 +7,8 @@ import {
   defaultProgress,
   type ProgressRow,
 } from "@/lib/onboarding-progress";
+import { captureServerEvent } from "@/lib/analytics/server";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,6 +86,22 @@ export async function PATCH(req: NextRequest) {
       { error: "db_error", detail: error.message },
       { status: 500 }
     );
+  }
+
+  // INSTR-01: Onboarding step event — fires only when a complete_step is set.
+  if (parsed.data.complete_step) {
+    await captureServerEvent(auth.user.id, EVENT.ONBOARDING_STEP_COMPLETED, {
+      step_id: parsed.data.complete_step,
+      tour_version: data.tour_version,
+    });
+  }
+
+  // INSTR-01: Walkthrough completed — gate on null→set transition of completed_at
+  // to avoid re-firing when the user replays the tour (Pitfall 4).
+  if (data.completed_at && !existing?.completed_at) {
+    await captureServerEvent(auth.user.id, EVENT.ONBOARDING_WALKTHROUGH_COMPLETED, {
+      tour_version: data.tour_version,
+    });
   }
 
   revalidateTag(`onboarding:${auth.user.id}`);
