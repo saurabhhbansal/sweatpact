@@ -411,19 +411,22 @@ Confirm the exact step-id property name against the Phase 8 INSTR-01 implementat
 | A4 | `POSTHOG_PROJECT_ID` should be server-only (CONTEXT floated `NEXT_PUBLIC_` variant). | Env vars | Minor: project id is not highly sensitive, but server-only is cleaner |
 | A5 | "Total penalties issued" counts/sums `penalty_events` (not `obligations`). | DASH-01 | Double-counting if pacts split a penalty into two obligations |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What defines an "active pact" and its stake?**
    - What we know: `groups` + `group_members` (one group per user, `unique(user_id)`), `challenge_invitations` (status `pending|accepted|declined|cancelled|expired`, `penalty_cents`), `groups.default_penalty_cents`. No boolean "active" column.
    - What's unclear: whether "active" = group with 2 members, or group with an `accepted` invitation, and which field holds the stake amount.
    - Recommendation: Plan should define active-pact as a group with ≥2 members AND surface the chosen stake field; confirm during plan-check or with user.
+   - **RESOLVED (Plan 02):** Active pact = group with ≥2 members in `group_members`; stake = `groups.default_penalty_cents` for that group.
 
 2. **Notification CTR denominator (DASH-05) has no PostHog "sent" event.**
    - What we know: `feature:notification_clicked` is captured client-side (INSTR-05); there is no `notification_sent` event in `events.ts`.
    - What's unclear: CTR = clicked ÷ sent — but "sent" lives in the push pipeline (`src/lib/push.ts`), not PostHog.
    - Recommendation: Either (a) compute CTR with a Supabase/push "sent" count as denominator, (b) re-scope DASH-05 to show click counts only, or (c) add a sent event (likely out of scope — Phase 8 is closed). Flag for user.
+   - **RESOLVED (Plan 05):** Show click count only, labeled "Notification clicks" — no denominator fabricated. Comment in `feature-adoption.tsx` documents the missing-sent-event limitation.
 
 3. **DASH-02 geo-fail series source (see Pitfall 1).** Recommendation: source from PostHog `checkin:geo_failed`, or re-scope to "unverified." Needs explicit decision.
+   - **RESOLVED (Plans 02+03):** Geo-fail series sourced from PostHog `checkin:geo_failed` event via `geoFailByWeekQuery(days)` HogQL; merged into Supabase week buckets via `mergeGeoFailByWeek` before passing to `CheckinTrendChart`.
 
 ## Environment Availability
 
