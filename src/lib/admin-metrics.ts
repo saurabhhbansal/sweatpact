@@ -47,6 +47,92 @@ export function totalStakesCents(
   return activeGroups.reduce((sum, g) => sum + g.default_penalty_cents, 0);
 }
 
+// --- DASH-02: check-in trend ---------------------------------------------
+
+// One ISO-week bucket of check-in activity. `week` is the isoWeekMonday key
+// (e.g. "2026-06-22"). `geoFail` is sourced from PostHog (never written to
+// checkin_events) and merged in via mergeGeoFailByWeek — it starts at 0.
+export type WeekBucket = {
+  week: string;
+  verified: number;
+  unverified: number;
+  manual: number;
+  shortcut: number;
+  geoFail: number;
+  total: number;
+};
+
+// Map a Zod-validated `?range` enum value to a day count. The page boundary
+// (Plan 06) validates the searchParam against z.enum(["7d","30d","90d"]); this
+// only maps the validated value to a fixed integer — no raw input interpolation.
+export function rangeToDays(range: string): 7 | 30 | 90 {
+  if (range === "7d") return 7;
+  if (range === "90d") return 90;
+  return 30; // default 30d (covers "30d" and any unexpected value)
+}
+
+// Inclusive-window start: the YYYY-MM-DD that is (days - 1) days before `today`,
+// so the [start, today] window spans exactly `days` calendar days inclusive.
+// e.g. rangeStartDay("2026-06-28", 7) === "2026-06-22".
+export function rangeStartDay(today: string, days: number): string {
+  const [y, m, d] = today.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() - (days - 1));
+  return date.toISOString().slice(0, 10);
+}
+
+// Bucket raw checkin_events rows into ISO-week buckets keyed by
+// isoWeekMonday(local_day) (reused from derived-status — no new week math).
+// Counts verified/unverified by status and manual/shortcut by source; "admin"
+// source rows count toward total but neither manual nor shortcut. geoFail is
+// initialized to 0 (merged later from PostHog). Returns weeks ascending.
+export function bucketCheckinsByWeek(
+  rows: Array<{
+    local_day: string;
+    status: "verified" | "unverified";
+    source: "shortcut" | "manual" | "admin";
+  }>
+): WeekBucket[] {
+  const byWeek = new Map<string, WeekBucket>();
+  for (const r of rows) {
+    const week = isoWeekMonday(r.local_day);
+    let bucket = byWeek.get(week);
+    if (!bucket) {
+      bucket = {
+        week,
+        verified: 0,
+        unverified: 0,
+        manual: 0,
+        shortcut: 0,
+        geoFail: 0,
+        total: 0,
+      };
+      byWeek.set(week, bucket);
+    }
+    if (r.status === "verified") bucket.verified++;
+    else bucket.unverified++;
+    if (r.source === "manual") bucket.manual++;
+    else if (r.source === "shortcut") bucket.shortcut++;
+    bucket.total++;
+  }
+  return [...byWeek.values()].sort((a, b) => a.week.localeCompare(b.week));
+}
+
+// Join seam between the Supabase trend buckets and the PostHog
+// `checkin:geo_failed` series (Plan 03). Geo-fail is never written to
+// checkin_events, so each bucket's geoFail is set from the matching geoFailRows
+// entry; weeks with no geo-fail row stay at 0. Returns the same bucket objects.
+export function mergeGeoFailByWeek(
+  buckets: WeekBucket[],
+  geoFailRows: Array<{ week: string; count: number }>
+): WeekBucket[] {
+  const byWeek = new Map(geoFailRows.map((g) => [g.week, g.count]));
+  for (const bucket of buckets) {
+    bucket.geoFail = byWeek.get(bucket.week) ?? 0;
+  }
+  return buckets;
+}
+
 // --- DASH-03: user overview ----------------------------------------------
 
 // Count distinct user_ids that belong to a group with >= 2 members. A user is
