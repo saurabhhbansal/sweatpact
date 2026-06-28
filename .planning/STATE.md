@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Analytics & Admin Dashboard
-current_phase: 07
-current_phase_name: analytics-foundation
+current_phase: 08
+current_phase_name: event-instrumentation
 status: executing
-stopped_at: Roadmap complete, awaiting Phase 7 planning
-last_updated: "2026-06-27T06:25:23.240Z"
+stopped_at: Phase 9 UI-SPEC approved
+last_updated: "2026-06-28T09:12:51.596Z"
 last_activity: 2026-06-27
-last_activity_desc: Phase 07 execution started
+last_activity_desc: Phase 08 execution started
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 9
+  percent: 67
 ---
 
 # Project State: SweatPact
@@ -24,14 +24,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-06-20)
 
 **Core value:** Make showing up have a consequence — if you skip, you owe your partner.
-**Current focus:** Phase 07 — analytics-foundation
+**Current focus:** Phase 08 — event-instrumentation
 
 ## Current Position
 
-Phase: 07 (analytics-foundation) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 07
-Last activity: 2026-06-27 — Phase 07 execution started
+Phase: 08 (event-instrumentation) — EXECUTING
+Plan: 1 of 5
+Status: Ready to execute
+Last activity: 2026-06-27 — Phase 08 execution started
 
 Progress: [----------] 0/3 phases
 
@@ -143,6 +143,6 @@ Still deferred beyond v1.2:
 
 ## Session Continuity
 
-Last session: 2026-06-20 — v1.2 roadmap created
-Stopped at: Roadmap complete, awaiting Phase 7 planning
-Resume file: None
+Last session: 2026-06-28T08:20:28.961Z
+Stopped at: Phase 9 UI-SPEC approved
+Resume file: .planning/phases/09-admin-dashboard/09-UI-SPEC.md

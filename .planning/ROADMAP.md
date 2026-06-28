@@ -69,6 +69,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans**: 5 plans
 
 Plans:
+
 - [x] 08-01-PLAN.md — Create captureServerEvent server helper + unit tests (INSTR-01)
 - [x] 08-02-PLAN.md — Instrument onboarding-progress and checkin routes (INSTR-01, INSTR-02)
 - [x] 08-03-PLAN.md — Instrument pact lifecycle routes: create, join, respond, leave (INSTR-03)
@@ -94,12 +95,21 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 09-01-PLAN.md — Owner gate: parseAdminUserIds + requireOwner (404, fail-closed) with tests (ADMIN-01)
 - [ ] 09-02-PLAN.md — Supabase metrics helpers: settlement rate, active-pact, ISO-week trend buckets, geo-fail merge (DASH-01/02/03)
 - [ ] 09-03-PLAN.md — PostHog Query API client + static HogQL builders + Zod parsers + env docs (DASH-04/05/06)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 09-04-PLAN.md — Supabase panel components + recharts: financial, user, range control, trend chart (DASH-01/02/03)
 - [ ] 09-05-PLAN.md — PostHog panel components: onboarding funnel, feature adoption, engagement/retention (DASH-04/05/06)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 09-06-PLAN.md — Admin shell (layout + error) + dashboard page integration of all 6 panels (ADMIN-01/02, DASH-01..06)
+
 **UI hint**: yes
 
 ## Progress
