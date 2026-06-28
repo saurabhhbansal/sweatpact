@@ -1,5 +1,7 @@
 import "server-only";
 
+import { z } from "zod";
+
 import { EVENT } from "@/lib/analytics/events";
 
 /**
@@ -127,4 +129,66 @@ FROM events
 WHERE timestamp >= now() - INTERVAL ${n} DAY
 GROUP BY day
 ORDER BY day`;
+}
+
+// ---------------------------------------------------------------------------
+// Zod response parsers (DASH-04/05/06)
+//
+// HogQL responses are `{ results: [[col1, col2, ...], ...] }` — rows are arrays
+// indexed by column order. Each parser validates the raw rows with `safeParse`
+// and returns `null` when input is null OR the shape does not match, so a
+// malformed/injected response degrades to the panel's empty state rather than
+// rendering bad data (Security V5/V7, T-09-09).
+// ---------------------------------------------------------------------------
+
+/** A single onboarding-funnel row: a step id and its distinct-user count. */
+export type FunnelRow = { step: string; users: number };
+/** A single feature-adoption row: a label and its event count. */
+export type AdoptionRow = { label: string; count: number };
+/** A single engagement row: a day/week key and its count. */
+export type EngagementRow = { key: string; count: number };
+/** A single geo-fail row: an ISO-week start and its count. */
+export type GeoFailRow = { week: string; count: number };
+
+const funnelSchema = z.array(z.tuple([z.string(), z.number()]));
+const labelCountSchema = z.array(z.tuple([z.string(), z.number()]));
+
+/** Map HogQL `[step, users]` rows to typed funnel rows; null on null/bad shape. */
+export function parseFunnelRows(
+  results: unknown[] | null
+): FunnelRow[] | null {
+  if (results === null) return null;
+  const parsed = funnelSchema.safeParse(results);
+  if (!parsed.success) return null;
+  return parsed.data.map(([step, users]) => ({ step, users }));
+}
+
+/** Map HogQL `[label, count]` rows to typed adoption rows; null on null/bad shape. */
+export function parseAdoptionRows(
+  results: unknown[] | null
+): AdoptionRow[] | null {
+  if (results === null) return null;
+  const parsed = labelCountSchema.safeParse(results);
+  if (!parsed.success) return null;
+  return parsed.data.map(([label, count]) => ({ label, count }));
+}
+
+/** Map HogQL `[dayOrWeek, count]` rows to typed engagement rows; null on null/bad shape. */
+export function parseEngagementRows(
+  results: unknown[] | null
+): EngagementRow[] | null {
+  if (results === null) return null;
+  const parsed = labelCountSchema.safeParse(results);
+  if (!parsed.success) return null;
+  return parsed.data.map(([key, count]) => ({ key, count }));
+}
+
+/** Map HogQL `[week, count]` rows to typed geo-fail rows; null on null/bad shape. */
+export function parseGeoFailRows(
+  results: unknown[] | null
+): GeoFailRow[] | null {
+  if (results === null) return null;
+  const parsed = labelCountSchema.safeParse(results);
+  if (!parsed.success) return null;
+  return parsed.data.map(([week, count]) => ({ week, count }));
 }
