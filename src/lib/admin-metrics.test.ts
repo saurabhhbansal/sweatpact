@@ -8,6 +8,7 @@ import {
   rangeStartDay,
   bucketCheckinsByWeek,
   mergeGeoFailByWeek,
+  computeAverageStreak,
   type WeekBucket,
 } from "./admin-metrics";
 
@@ -195,5 +196,69 @@ describe("mergeGeoFailByWeek", () => {
       { week: "2099-01-01", count: 9 },
     ]);
     expect(merged[0].geoFail).toBe(0);
+  });
+});
+
+describe("computeAverageStreak", () => {
+  const today = "2026-06-28";
+
+  it("returns 0 when there are no rows", () => {
+    expect(computeAverageStreak([], today)).toBe(0);
+  });
+
+  it("counts consecutive days back from today for one user", () => {
+    const rows = [
+      { user_id: "u1", local_day: "2026-06-28" },
+      { user_id: "u1", local_day: "2026-06-27" },
+      { user_id: "u1", local_day: "2026-06-26" },
+    ];
+    expect(computeAverageStreak(rows, today)).toBe(3);
+  });
+
+  it("stops the streak at the first gap", () => {
+    const rows = [
+      { user_id: "u1", local_day: "2026-06-28" },
+      { user_id: "u1", local_day: "2026-06-27" },
+      // gap on 2026-06-26
+      { user_id: "u1", local_day: "2026-06-25" },
+    ];
+    expect(computeAverageStreak(rows, today)).toBe(2);
+  });
+
+  it("gives a user with no row for today a streak of 0", () => {
+    const rows = [
+      { user_id: "u1", local_day: "2026-06-27" },
+      { user_id: "u1", local_day: "2026-06-26" },
+    ];
+    expect(computeAverageStreak(rows, today)).toBe(0);
+  });
+
+  it("averages streaks across distinct users", () => {
+    const rows = [
+      // u1: streak 2 (28, 27)
+      { user_id: "u1", local_day: "2026-06-28" },
+      { user_id: "u1", local_day: "2026-06-27" },
+      // u2: streak 1 (28 only)
+      { user_id: "u2", local_day: "2026-06-28" },
+    ];
+    expect(computeAverageStreak(rows, today)).toBe(1.5);
+  });
+
+  it("does not double-count duplicate day rows for a user", () => {
+    const rows = [
+      { user_id: "u1", local_day: "2026-06-28" },
+      { user_id: "u1", local_day: "2026-06-28" },
+      { user_id: "u1", local_day: "2026-06-27" },
+    ];
+    expect(computeAverageStreak(rows, today)).toBe(2);
+  });
+
+  it("walks correctly across a month boundary", () => {
+    const rows = [
+      { user_id: "u1", local_day: "2026-07-01" },
+      { user_id: "u1", local_day: "2026-06-30" },
+      { user_id: "u1", local_day: "2026-06-29" },
+    ];
+    expect(computeAverageStreak(rows, "2026-07-01")).toBe(3);
   });
 });

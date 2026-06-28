@@ -133,6 +133,54 @@ export function mergeGeoFailByWeek(
   return buckets;
 }
 
+// --- DASH-06: engagement / retention (Supabase-sourced) ------------------
+
+// Average current check-in streak across members, computed from verified
+// daily_status rows (RESEARCH D-06: streak/churn have no PostHog event source,
+// so they are derived server-side from Supabase). For each user we walk
+// backwards from `today` over their set of verified local_day values, counting
+// consecutive present days until the first gap. The streak is therefore anchored
+// to `today` (a user with no verified row for `today` has a streak of 0, even if
+// they checked in earlier). The returned value is the mean streak across every
+// user that has >= 1 verified row; returns 0 when there are no rows.
+export function computeAverageStreak(
+  rows: Array<{ user_id: string; local_day: string }>,
+  today: string
+): number {
+  if (rows.length === 0) return 0;
+
+  const daysByUser = new Map<string, Set<string>>();
+  for (const { user_id, local_day } of rows) {
+    let set = daysByUser.get(user_id);
+    if (!set) {
+      set = new Set<string>();
+      daysByUser.set(user_id, set);
+    }
+    set.add(local_day);
+  }
+
+  let totalStreak = 0;
+  for (const days of daysByUser.values()) {
+    let streak = 0;
+    let cursor = today;
+    while (days.has(cursor)) {
+      streak++;
+      cursor = shiftDay(cursor, -1);
+    }
+    totalStreak += streak;
+  }
+  return totalStreak / daysByUser.size;
+}
+
+// Shift a YYYY-MM-DD calendar day by `delta` days using UTC date math (DATE
+// columns are timezone-naive; UTC arithmetic avoids any DST drift).
+function shiftDay(day: string, delta: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + delta);
+  return date.toISOString().slice(0, 10);
+}
+
 // --- DASH-03: user overview ----------------------------------------------
 
 // Count distinct user_ids that belong to a group with >= 2 members. A user is
