@@ -16,7 +16,13 @@ export default async function AdminLayout({
     <>
       <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between border-b border-white/10 bg-black/80 px-4 backdrop-blur" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="flex h-14 w-full items-center justify-between">
-          <span className="text-sm font-semibold text-white">SweatPact Admin</span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-semibold text-white">SweatPact Admin</span>
+            <nav className="flex items-center gap-3">
+              <a href="/admin" className="text-sm text-white/55 hover:text-white">Dashboard</a>
+              <a href="/admin/users" className="text-sm text-white/55 hover:text-white">Users</a>
+            </nav>
+          </div>
           <a href="/" className="text-sm text-white/55 hover:text-white">
             Back to app
           </a>

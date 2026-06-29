@@ -39,9 +39,17 @@ export function UserOverview({
             <p className="text-xs uppercase tracking-[0.08em] text-white/55">
               {m.label}
             </p>
-            <p className="mt-1.5 text-3xl font-bold leading-tight text-white">
-              {m.value}
-            </p>
+            {m.label === "Registered" ? (
+              <a href="/admin/users" className="group block">
+                <p className="mt-1.5 text-3xl font-bold leading-tight text-white group-hover:text-white/70 transition-colors">
+                  {m.value}
+                </p>
+              </a>
+            ) : (
+              <p className="mt-1.5 text-3xl font-bold leading-tight text-white">
+                {m.value}
+              </p>
+            )}
           </div>
         ))}
       </CardContent>
