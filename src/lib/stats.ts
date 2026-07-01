@@ -3,6 +3,7 @@ import {
   EXCUSED_STATUSES,
   computeWeekStreak,
   isoWeekMonday,
+  proratedWeeklyGoal,
   shouldCountTowardStreak,
 } from "@/lib/derived-status";
 
@@ -15,6 +16,9 @@ export type ProfileStats = {
   totalExcusedDays: number;
   totalMissedDays: number;
   weeklyGoal: number;
+  // Effective goal for the CURRENT week — equals weeklyGoal except during the
+  // user's first (partial) week, when it is prorated. Use this for "X / goal".
+  currentWeekGoal: number;
   joinedAt: string;
   history: { local_day: string; status: string }[];
 };
@@ -37,7 +41,8 @@ export async function computeProfileStats(
   userId: string,
   today: string,
   weeklyGoal: number,
-  joinedAt: string
+  joinedAt: string,
+  restDays: number[] = []
 ): Promise<ProfileStats> {
   const [
     { data: dailyHistory },
@@ -85,9 +90,11 @@ export async function computeProfileStats(
   }
   const totalCheckins = totalGymDays;
 
-  const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal);
+  const joinDay = joinedAt.slice(0, 10);
+  const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal, joinDay, restDays);
 
   const currentWeekMonday = isoWeekMonday(today);
+  const currentWeekGoal = proratedWeeklyGoal(weeklyGoal, currentWeekMonday, joinDay, restDays);
   let thisWeekCheckins = 0;
   for (const [day, status] of statusByDay) {
     if (shouldCountTowardStreak(status) && isoWeekMonday(day) === currentWeekMonday) {
@@ -109,6 +116,7 @@ export async function computeProfileStats(
     totalExcusedDays,
     totalMissedDays,
     weeklyGoal,
+    currentWeekGoal,
     joinedAt,
     history,
   };
