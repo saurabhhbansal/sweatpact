@@ -3,6 +3,7 @@ import {
   computeWeekStreak,
   deriveDayStatus,
   isoWeekMonday,
+  proratedWeeklyGoal,
   shouldCountTowardStreak,
 } from "./derived-status";
 
@@ -146,5 +147,66 @@ describe("computeWeekStreak", () => {
 
   it("empty history is a zero streak", () => {
     expect(computeWeekStreak(new Map(), today, 4)).toBe(0);
+  });
+});
+
+describe("proratedWeeklyGoal", () => {
+  // ISO week: Mon 2026-06-08 … Sun 2026-06-14.
+  const mon = "2026-06-08";
+
+  it("returns the full goal when the user joined on or before the week's Monday", () => {
+    expect(proratedWeeklyGoal(5, mon, "2026-06-01", [])).toBe(5); // joined earlier
+    expect(proratedWeeklyGoal(5, mon, "2026-06-08", [])).toBe(5); // joined that Monday
+  });
+
+  it("returns 0 for a week entirely before the user joined", () => {
+    expect(proratedWeeklyGoal(5, mon, "2026-06-15", [])).toBe(0);
+  });
+
+  it("prorates a mid-week join by round(goal * daysLeft / 7), min 1", () => {
+    expect(proratedWeeklyGoal(5, mon, "2026-06-10", [])).toBe(4); // Wed, 5 days → 3.57→4
+    expect(proratedWeeklyGoal(5, mon, "2026-06-12", [])).toBe(2); // Fri, 3 days → 2.14→2
+    expect(proratedWeeklyGoal(5, mon, "2026-06-13", [])).toBe(1); // Sat, 2 days → 1.43→1
+    expect(proratedWeeklyGoal(5, mon, "2026-06-14", [])).toBe(1); // Sun, 1 day → 0.71→min 1
+  });
+
+  it("caps the prorated goal at the achievable (non-rest) days remaining", () => {
+    // Wed join (raw 4), but Sat(6) & Sun(0) are rest days → only Wed/Thu/Fri usable.
+    expect(proratedWeeklyGoal(5, mon, "2026-06-10", [6, 0])).toBe(3);
+  });
+
+  it("returns 0 when every remaining day in the join week is a rest day", () => {
+    // Fri join with Fri(5)/Sat(6)/Sun(0) all rest → nothing achievable → no debt.
+    expect(proratedWeeklyGoal(5, mon, "2026-06-12", [5, 6, 0])).toBe(0);
+  });
+});
+
+describe("computeWeekStreak — proration for the join week", () => {
+  // Weeks (Mondays): W1 = 2026-05-25 (Sun 05-31), W2 = 2026-06-01. today in W2.
+  const today = "2026-06-03";
+  const statusMap = (days: Record<string, string>) => new Map(Object.entries(days));
+
+  it("counts the first partial week when the prorated goal is met (would fail at full goal)", () => {
+    const m = statusMap({
+      // W1: joined Wed 05-27 → prorated goal round(5*5/7)=4; exactly 4 check-ins.
+      "2026-05-27": "verified",
+      "2026-05-28": "verified",
+      "2026-05-29": "verified",
+      "2026-05-31": "verified",
+    });
+    // With proration the partial week counts (streak 1); at the flat goal of 5 it wouldn't.
+    expect(computeWeekStreak(m, today, 5, "2026-05-27", [])).toBe(1);
+    expect(computeWeekStreak(m, today, 5)).toBe(0); // no joinDay → flat goal, week breaks
+  });
+
+  it("skips weeks entirely before the join without breaking the streak", () => {
+    const m = statusMap({
+      "2026-05-18": "missed", // W0 (before join) — forces the week into the map
+      "2026-05-27": "verified",
+      "2026-05-28": "verified",
+      "2026-05-29": "verified",
+      "2026-05-31": "verified",
+    });
+    expect(computeWeekStreak(m, today, 5, "2026-05-27", [])).toBe(1);
   });
 });
