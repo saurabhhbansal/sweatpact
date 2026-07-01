@@ -19,6 +19,9 @@ type Seed = {
     group_id: string;
     penalty_cents: number | null;
     defaultPenaltyCents: number | null;
+    // Membership join day (YYYY-MM-DD). Defaults to well before the test week so
+    // existing cases exercise full-week (un-prorated) enforcement.
+    joinedAt?: string;
   }>;
   // Other members per group (the user is excluded by the .neq filter).
   peersByGroup: Record<string, string[]>;
@@ -148,7 +151,7 @@ class FakeQuery {
           user_id: d.userId,
           role: "member",
           penalty_cents: m.penalty_cents,
-          joined_at: "2026-01-01",
+          joined_at: m.joinedAt ?? "2026-01-01",
           groups: { id: m.group_id, default_penalty_cents: m.defaultPenaltyCents },
         }));
         return { data: rows, error: null };
@@ -348,6 +351,66 @@ describe("reconcileUserWeek — weekly penalty & obligation split", () => {
     await reconcileUserWeek(db as any, opts);
     expect(db.penalties).toHaveLength(1); // kept — a settled debt is never reversed
     expect(db.obligations).toHaveLength(3);
+  });
+});
+
+describe("reconcileUserWeek — mid-week join proration", () => {
+  // Test week: Mon 2026-06-08 … Sun 2026-06-14 (weekEndDay passed by `run`).
+  it("penalizes a mid-week joiner only against the prorated goal", async () => {
+    // Joined Fri 2026-06-12 with goal 5 → prorated goal = round(5*3/7)=2; 0 check-ins.
+    const db = await run({
+      weeklyGoal: 5,
+      statuses: [],
+      memberships: [
+        { group_id: "g1", penalty_cents: 5000, defaultPenaltyCents: 5000, joinedAt: "2026-06-12" },
+      ],
+      peersByGroup: { g1: ["u-self", "p1"] },
+    });
+    expect(db.penalties).toHaveLength(1); // 0 < prorated 2
+  });
+
+  it("creates no penalty when the prorated goal is met by post-join check-ins", async () => {
+    // Joined Fri; two check-ins on/after join meet the prorated goal of 2.
+    const db = await run({
+      weeklyGoal: 5,
+      statuses: [verified("2026-06-12"), verified("2026-06-13")],
+      memberships: [
+        { group_id: "g1", penalty_cents: 5000, defaultPenaltyCents: 5000, joinedAt: "2026-06-12" },
+      ],
+      peersByGroup: { g1: ["u-self", "p1"] },
+    });
+    expect(db.penalties).toHaveLength(0);
+  });
+
+  it("ignores check-ins from before the join day when counting the partial week", async () => {
+    // Four check-ins BEFORE joining Fri don't count → still short of prorated 2.
+    const db = await run({
+      weeklyGoal: 5,
+      statuses: [
+        verified("2026-06-08"),
+        verified("2026-06-09"),
+        verified("2026-06-10"),
+        verified("2026-06-11"),
+      ],
+      memberships: [
+        { group_id: "g1", penalty_cents: 5000, defaultPenaltyCents: 5000, joinedAt: "2026-06-12" },
+      ],
+      peersByGroup: { g1: ["u-self", "p1"] },
+    });
+    expect(db.penalties).toHaveLength(1);
+  });
+
+  it("never penalizes a week that ended before the user joined the group", async () => {
+    const db = await run({
+      weeklyGoal: 4,
+      statuses: [],
+      memberships: [
+        { group_id: "g1", penalty_cents: 5000, defaultPenaltyCents: 5000, joinedAt: "2026-06-20" },
+      ],
+      peersByGroup: { g1: ["u-self", "p1"] },
+    });
+    expect(db.penalties).toHaveLength(0); // effective goal 0 → no debt
+    expect(db.obligations).toHaveLength(0);
   });
 });
 

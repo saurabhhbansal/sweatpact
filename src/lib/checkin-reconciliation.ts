@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listUserMemberships, normalizeRelation } from "@/lib/groups";
 import { localDay, normalizeTimeZone } from "@/lib/time";
-import { isoWeekMonday } from "@/lib/derived-status";
+import { isoWeekMonday, proratedWeeklyGoal } from "@/lib/derived-status";
 import type { CheckinStatus, DailyStatus } from "@/lib/types";
 
 const ACTIVE_STATUSES = new Set<CheckinStatus>([
@@ -154,13 +154,16 @@ async function ensurePenaltyForGroup(
 ) {
   const { userId, groupId, localDay: day, amountCents, reason = "missed_checkin" } = params;
 
-  // Upsert on the DB unique key (user_id, local_day, reason) so concurrent
-  // enforcement runs cannot create duplicate penalties for the same day.
+  // Upsert on the DB unique key so concurrent enforcement runs cannot create
+  // duplicate penalties for the same (user, day, reason, group). The conflict
+  // target must match a real unique index: migration 0004 dropped the old
+  // 3-column constraint, so we target the plain 4-column unique index added in
+  // 0033 (group_id is always non-null on this path). See onConflict guard test.
   const { data: penalty, error: penaltyError } = await admin
     .from("penalty_events")
     .upsert(
       { user_id: userId, group_id: groupId, local_day: day, amount_cents: amountCents, reason },
-      { onConflict: "user_id,local_day,reason" }
+      { onConflict: "user_id,local_day,reason,group_id" }
     )
     .select("id")
     .single();
@@ -406,13 +409,16 @@ export async function reconcileUserWeek(
 
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("id, weekly_goal")
+    .select("id, weekly_goal, rest_days")
     .eq("id", userId)
     .single();
 
   if (profileError || !profile) throw profileError ?? new Error("Profile not found");
 
   const weeklyGoal: number = (profile as any).weekly_goal ?? 4;
+  const restDays: number[] = Array.isArray((profile as any).rest_days)
+    ? (profile as any).rest_days
+    : [];
 
   const { data: statuses, error: statusError } = await admin
     .from("daily_status")
@@ -423,14 +429,33 @@ export async function reconcileUserWeek(
 
   if (statusError) throw statusError;
 
-  const checkinDays = (statuses ?? []).filter(
+  const qualifying = (statuses ?? []).filter(
     (s) => s.status === "verified" || s.status === "unverified"
-  ).length;
+  );
 
-  const goalMet = checkinDays >= weeklyGoal;
   const memberships = await listUserMemberships(admin, userId);
 
   for (const membership of memberships) {
+    // Proration: the goal (and the counting window) are scaled to the days the
+    // user was actually a member of THIS group during the week. joined_at is
+    // per-membership, so two groups can have different effective goals for the
+    // same user/week. weeklyGoal/restDays are the user's current settings.
+    const joinDay = membership.joined_at ? membership.joined_at.slice(0, 10) : weekStartDay;
+    const effectiveGoal = proratedWeeklyGoal(weeklyGoal, weekStartDay, joinDay, restDays);
+
+    if (effectiveGoal === 0) {
+      // Week entirely before the user joined this group (or no achievable days):
+      // never a debt. Reverse any stale unsettled penalty and move on.
+      await clearWeeklyPenaltyForGroup(admin, userId, membership.group_id, weekEndDay);
+      continue;
+    }
+
+    // Count only check-ins from the join day onward so numerator and prorated
+    // denominator cover the same window (a no-op for full-membership weeks).
+    const countStart = joinDay > weekStartDay ? joinDay : weekStartDay;
+    const checkinDays = qualifying.filter((s) => s.local_day >= countStart).length;
+    const goalMet = checkinDays >= effectiveGoal;
+
     if (goalMet) {
       // Goal met — reverse any weekly penalty for this group/week. This makes
       // the weekly check self-correcting: a back-dated check-in that pushes the
