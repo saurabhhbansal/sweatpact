@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { reconcileUserWeek } from "./checkin-reconciliation";
+import { reconcileMostRecentClosedWeek, reconcileUserWeek } from "./checkin-reconciliation";
 
 // ── Minimal in-memory Supabase stand-in ──────────────────────────────────────
 // Implements just the slice of the PostgREST query builder that the weekly
@@ -348,5 +348,50 @@ describe("reconcileUserWeek — weekly penalty & obligation split", () => {
     await reconcileUserWeek(db as any, opts);
     expect(db.penalties).toHaveLength(1); // kept — a settled debt is never reversed
     expect(db.obligations).toHaveLength(3);
+  });
+});
+
+describe("reconcileMostRecentClosedWeek — daily catch-up for the last closed week", () => {
+  // A Wednesday mid-week run: today's ISO week is Mon 2026-06-15…Sun 2026-06-21.
+  // The most recently closed week ends on the prior Sunday, 2026-06-14.
+  const today = "2026-06-17";
+  const now = new Date("2026-06-17T00:00:00Z");
+
+  it("creates last week's missed-goal penalty on a non-Monday run", async () => {
+    const seed: Seed = {
+      weeklyGoal: 4,
+      statuses: [], // no qualifying check-ins for 2026-06-08…2026-06-14 → goal missed
+      memberships: [{ group_id: "g1", penalty_cents: 9000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1", "p2", "p3"] },
+    };
+    const db = new FakeDb("u-self", seed);
+
+    await reconcileMostRecentClosedWeek(db as any, { userId: "u-self", today, now });
+
+    expect(db.penalties).toHaveLength(1);
+    expect(db.penalties[0]).toMatchObject({
+      user_id: "u-self",
+      local_day: "2026-06-14", // the prior Sunday, not the current in-progress week
+      reason: "missed_weekly_goal",
+    });
+    expect(db.obligations).toHaveLength(3);
+    expect(db.obligations.map((o) => o.to_user).sort()).toEqual(["p1", "p2", "p3"]);
+    expect(db.obligations.map((o) => o.amount_cents)).toEqual([3000, 3000, 3000]);
+  });
+
+  it("is idempotent — a second identical catch-up call does not double the debt", async () => {
+    const seed: Seed = {
+      weeklyGoal: 4,
+      statuses: [],
+      memberships: [{ group_id: "g1", penalty_cents: 9000, defaultPenaltyCents: 5000 }],
+      peersByGroup: { g1: ["u-self", "p1", "p2", "p3"] },
+    };
+    const db = new FakeDb("u-self", seed);
+
+    await reconcileMostRecentClosedWeek(db as any, { userId: "u-self", today, now });
+    await reconcileMostRecentClosedWeek(db as any, { userId: "u-self", today, now });
+
+    expect(db.penalties).toHaveLength(1); // penalty upsert returns the same row
+    expect(db.obligations).toHaveLength(3); // not 6 — obligations upsert dedupes
   });
 });
