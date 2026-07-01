@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { reconcileUserDay, reconcileUserWeek } from "@/lib/checkin-reconciliation";
-import { normalizeTimeZone, previousLocalDay } from "@/lib/time";
+import { reconcileUserDay, reconcileMostRecentClosedWeek } from "@/lib/checkin-reconciliation";
+import { localDay, normalizeTimeZone, previousLocalDay } from "@/lib/time";
 
 type EnforcementResult = {
   scanned: number;
@@ -10,12 +10,6 @@ type EnforcementResult = {
   errors: number;
   penalized_user_ids: string[];
 };
-
-// Returns day-of-week for a YYYY-MM-DD string: 0=Sun, 1=Mon, …, 6=Sat
-function dayOfWeekFor(localDay: string): number {
-  const [y, m, d] = localDay.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-}
 
 export async function runEnforcement(
   admin: SupabaseClient,
@@ -58,15 +52,18 @@ export async function runEnforcement(
         result.skipped += 1;
       }
 
-      // If yesterday was a Sunday (day 0), the ISO week just ended — run weekly check.
-      if (dayOfWeekFor(day) === 0) {
-        result.weeklyChecked += 1;
-        await reconcileUserWeek(admin, {
-          userId: profile.id,
-          weekEndDay: day,
-          now,
-        });
-      }
+      // Daily catch-up: re-check the most recently closed ISO week on every run.
+      // On a Monday run this is behavior-identical to the old Sunday-only trigger
+      // (last closed week's Sunday == yesterday); on every other day it safely
+      // re-reconciles that same week via the idempotent reconciler, healing a
+      // missed/timed-out post-Sunday run. weeklyChecked now counts catch-up attempts.
+      const today = localDay(now, timezone);
+      result.weeklyChecked += 1;
+      await reconcileMostRecentClosedWeek(admin, {
+        userId: profile.id,
+        today,
+        now,
+      });
     } catch (err) {
       // A money-cron failure must not be invisible: log it with context and
       // count it so the cron response surfaces a non-zero error total.
