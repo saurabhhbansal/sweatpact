@@ -28,17 +28,10 @@ See: `.planning/PROJECT.md` (updated 2026-06-20)
 
 ## Current Position
 
-<<<<<<< HEAD
-Phase: 09 (admin-dashboard) — EXECUTING
-Plan: 6 of 6
-Status: Phase complete — ready for verification
-Last activity: 2026-06-28 — Phase 09 execution started
-=======
 Phase: 09 (admin-dashboard) — VERIFIED
 Plan: 6 of 6
 Status: UAT passed 8/8 — v1.2 milestone complete
-Last activity: 2026-06-28 — Phase 09 UAT passed
->>>>>>> 6a10d4ecfa6d1d508e7a4bb4bc31c4e456f68e8a
+Last activity: 2026-07-01 — Completed quick task 260701-ut9: the penalty calculations are not updating after end of week
 
 Progress: [----------] 0/3 phases
 
@@ -123,6 +116,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 | Date | Slug | Summary |
 |------|------|---------|
 | 2026-06-19 | tour-bug-fixes | Fixed 4 tour bugs: Joyride arrow/off-viewport card, replay button broken, gym step no auto-advance, past users seeing tour |
+| 2026-07-01 | the-penalty-calculations-are-not-updatin | Weekly penalty enforcement was Sunday-only (no catch-up if that cron run was skipped/failed); added idempotent `reconcileMostRecentClosedWeek` catch-up run on every daily cron |
 
 ### Pending Todos
 
