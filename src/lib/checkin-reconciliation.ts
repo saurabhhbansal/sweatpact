@@ -453,6 +453,24 @@ export async function reconcileUserWeek(
   }
 }
 
+// Daily self-healing catch-up: reconcile the most recently *closed* ISO week
+// (the Sunday one day before this week's Monday) on every run. Because it
+// delegates to the idempotent reconcileUserWeek, running it every day recovers a
+// skipped, timed-out, or deploy-clobbered post-Sunday run — the missed week's
+// penalty is created on the next successful run, while the still-open current
+// week is never touched (we step strictly before today's ISO-week Monday).
+export async function reconcileMostRecentClosedWeek(
+  admin: SupabaseClient,
+  params: { userId: string; today: string; now: Date }
+): Promise<void> {
+  const weekEndDay = addDaysStr(weekMonday(params.today), -1); // prior Sunday
+  await reconcileUserWeek(admin, {
+    userId: params.userId,
+    weekEndDay,
+    now: params.now,
+  });
+}
+
 // Re-run the weekly check for the ISO week containing `day`, but only once that
 // week has fully closed (its Sunday is before the user's local today). Lets the
 // back-dated check-in and reversal paths create or reverse a past week's penalty
