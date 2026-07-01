@@ -19,6 +19,7 @@ import {
   EXCUSED_STATUSES,
   computeWeekStreak,
   isoWeekMonday,
+  proratedWeeklyGoal,
   shouldCountTowardStreak,
 } from "@/lib/derived-status";
 
@@ -108,7 +109,10 @@ export default async function Dashboard() {
     statusByDay.set(today, todayStatus);
 
     const currentWeekMonday = isoWeekMonday(today);
-    const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal);
+    const weekStreak = computeWeekStreak(statusByDay, today, weeklyGoal, joinedDay, restDays);
+    // Effective goal for the current week: prorated only during the user's first
+    // (partial) week, otherwise the full goal. Keeps the "X / goal" badge honest.
+    const currentWeekGoal = proratedWeeklyGoal(weeklyGoal, currentWeekMonday, joinedDay, restDays);
 
     // ── Owed totals (aggregated by unique counterparty) ────────────────────
     const totalOwes = (pendingOwes ?? []).reduce(
@@ -141,11 +145,11 @@ export default async function Dashboard() {
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-white/45">This week</p>
                 <p className="mt-0.5 text-xs">
-                  <span className={thisWeekCheckins >= weeklyGoal ? "font-semibold text-white" : "text-white/70"}>
+                  <span className={thisWeekCheckins >= currentWeekGoal ? "font-semibold text-white" : "text-white/70"}>
                     {thisWeekCheckins}
                   </span>
-                  <span className="text-white/35">/{weeklyGoal}</span>
-                  {thisWeekCheckins >= weeklyGoal ? (
+                  <span className="text-white/35">/{currentWeekGoal}</span>
+                  {thisWeekCheckins >= currentWeekGoal ? (
                     <span className="ml-1.5 font-medium text-emerald-400">goal met</span>
                   ) : (
                     <span className="ml-1.5 text-white/35">days done</span>
@@ -179,7 +183,7 @@ export default async function Dashboard() {
             </div>
             {weekStreak === 0 ? (
               <p className="text-sm text-white/65">
-                A week counts when you hit your {weeklyGoal}-day goal. Partial weeks don&apos;t break the streak.
+                A week counts when you hit your {weeklyGoal}-day goal. Your first partial week uses a prorated goal, so it never breaks the streak.
               </p>
             ) : null}
             <p className="mt-2 text-xs text-white/45">

@@ -70,7 +70,8 @@ export default async function ProfilePage({
           profile.id,
           today,
           profile.weekly_goal ?? 4,
-          profile.created_at
+          joinedDay,
+          Array.isArray(profile.rest_days) ? profile.rest_days : []
         )
       : Promise.resolve(null),
     // Gym names — visible to anyone who can see stats (owner + challenge partners).
@@ -200,7 +201,7 @@ export default async function ProfilePage({
                 </div>
                 <p className="mt-2 text-3xl font-bold leading-none text-white">
                   {stats.thisWeekCheckins}
-                  <span className="text-base font-medium text-white/35">/{stats.weeklyGoal}</span>
+                  <span className="text-base font-medium text-white/35">/{stats.currentWeekGoal}</span>
                 </p>
               </div>
             </div>

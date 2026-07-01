@@ -46,17 +46,23 @@ export async function POST(req: NextRequest) {
   if (oblig.from_user !== auth.user.id && oblig.to_user !== auth.user.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  if (oblig.status === "settled") {
-    return NextResponse.json({ error: "already_settled" }, { status: 409 });
+  // Only a live (pending) debt can be settled — never a voided/disputed one, and
+  // never one already settled. `amount_cents` from the body is intentionally
+  // ignored: partial settlement isn't modeled, so we always record the full debt.
+  if (oblig.status !== "pending") {
+    return NextResponse.json(
+      { error: "not_settleable", status: oblig.status },
+      { status: 409 }
+    );
   }
+  void amount_cents; // accepted for backward-compat but not used
 
-  const amt = amount_cents ?? oblig.amount_cents;
   const { data: settleRow, error: settleErr } = await admin
     .from("settlements")
     .insert({
       obligation_id,
       marked_by: auth.user.id,
-      amount_cents: amt,
+      amount_cents: oblig.amount_cents,
       note: note ?? null,
     })
     .select("id")
@@ -67,17 +73,26 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-  const { error: updateErr } = await admin
+  // Atomic transition: only flip pending→settled. If another concurrent request
+  // already settled it, this matches 0 rows — roll back our settlement and 409,
+  // so a raced double-submit can never record two settlements.
+  const { data: updatedRows, error: updateErr } = await admin
     .from("obligations")
     .update({ status: "settled" })
-    .eq("id", obligation_id);
+    .eq("id", obligation_id)
+    .eq("status", "pending")
+    .select("id");
   if (updateErr) {
-    // Best-effort rollback: remove the orphaned settlement row.
     await admin.from("settlements").delete().eq("id", settleRow.id);
     return NextResponse.json(
       { error: "db_error", detail: updateErr.message },
       { status: 500 }
     );
+  }
+  if (!updatedRows || updatedRows.length === 0) {
+    // Lost the race: someone else settled/voided between our read and update.
+    await admin.from("settlements").delete().eq("id", settleRow.id);
+    return NextResponse.json({ error: "not_settleable" }, { status: 409 });
   }
 
   await captureServerEvent(auth.user.id, EVENT.FINANCIAL_SETTLEMENT_RECORDED, {
