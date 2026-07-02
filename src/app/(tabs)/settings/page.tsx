@@ -13,6 +13,13 @@ export default async function SettingsPage() {
 
   const isOwner = parseAdminUserIds(process.env.ADMIN_USER_IDS).includes(profile.id);
 
+  const { data: secretRow } = await supabase
+    .from("profile_secrets")
+    .select("webhook_secret")
+    .eq("user_id", profile.id)
+    .maybeSingle();
+  const webhookSecret = secretRow?.webhook_secret ?? "";
+
   const { data: gyms } = await supabase
     .from("user_gyms")
     .select("id, name, address, lat, lng, radius_m, created_at")
@@ -50,6 +57,8 @@ export default async function SettingsPage() {
             initialGyms={gyms ?? []}
             sharesWithMe={sharesWithMe}
             isOwner={isOwner}
+            userId={profile.id}
+            webhookSecret={webhookSecret}
           />
         </section>
       </main>
